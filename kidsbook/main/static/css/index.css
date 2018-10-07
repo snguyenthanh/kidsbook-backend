@@ -1,0 +1,15 @@
+body {
+  font-family: Roboto
+}
+
+
+.result-example .spe {
+  width: 60px;
+  height: 60px;
+}
+.sub-title {
+  color: #888;
+  font-size: 14px;
+  padding: 30px 0 18px 0;
+  margin-left: 15px;
+}
