@@ -1,54 +1,46 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.decorators import login_required, user_passes_test
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
 from kidsbook.models import Post, Comment
-from kidsbook.serializers import PostSerializer, CommentSerializer
+from kidsbook.serializers import PostSerializer, CommentSerializer, UserSerializer
+from rest_framework import generics
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from rest_framework import permissions
 
-# Create your views here.
-
-@login_required(login_url='/api/v1/rest-auth/login')
-def post_list(request):
+class IsOwnerOrReadOnly(permissions.BasePermission):
     """
-    List all code posts, or create a new post.
+    Custom permission to only allow owners of an object to edit it.
     """
-    if request.method == 'GET':
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return JsonResponse(serializer.data, safe=False)
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = PostSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=201)
-        return JsonResponse(serializer.errors, status=400)
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-@user_passes_test(lambda u: u.is_superuser)
-def post_detail(request, post_id):
-    """
-    Retrieve, update or delete a code post.
-    """
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return HttpResponse(status=404)
+        # Write permissions are only allowed to the owner of the snippet.
+        return obj.owner == request.user
 
-    if request.method == 'GET':
-        serializer = PostSerializer(post)
-        return JsonResponse(serializer.data)
+class IsSuperUser(permissions.BasePermission):
 
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = PostSerializer(post, data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
+    def has_object_permission(self, request, view, obj):
+        print(request.user)
+        return request.user.is_superuser;
 
-    elif request.method == 'DELETE':
-        post.delete()
-        return HttpResponse(status=204)
+class PostList(generics.ListCreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+class PostDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = (IsSuperUser,)
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUser,)
+
 

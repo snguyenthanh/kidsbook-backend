@@ -1,6 +1,13 @@
 from rest_framework import serializers
 from kidsbook.models import Post, Comment
+from django.contrib.auth.models import User
 
+class UserSerializer(serializers.ModelSerializer):
+    posts = serializers.PrimaryKeyRelatedField(many=True, queryset=Post.objects.all())
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'posts')
 
 # class PostSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
@@ -23,9 +30,12 @@ from kidsbook.models import Post, Comment
 #         return instance
 
 class PostSerializer(serializers.ModelSerializer):
+    comments = serializers.PrimaryKeyRelatedField(many=True, queryset=Comment.objects.all())
+    post_user = serializers.ReadOnlyField(source='post_user.username')
+
     class Meta:
         model = Post
-        fields = ('id', 'created', 'title', 'content')
+        fields = ('id', 'created', 'title', 'content', 'comments', 'post_user')
 
 # class CommentSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)

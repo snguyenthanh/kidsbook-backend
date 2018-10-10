@@ -1,6 +1,6 @@
 from django.urls import include, path
 
 urlpatterns = [
-    path('rest-auth/', include('rest_auth.urls')),
-    path('post/', include('kidsbook.urls')),
+    path('api-auth/', include('rest_auth.urls')),
+    path('', include('kidsbook.urls')),
 ]
