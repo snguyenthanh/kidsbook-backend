@@ -4,10 +4,11 @@ from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
     posts = serializers.PrimaryKeyRelatedField(many=True, queryset=Post.objects.all())
+    comments = serializers.PrimaryKeyRelatedField(many=True, queryset=Comment.objects.all())
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'posts')
+        fields = ('id', 'username', 'posts', 'comments')
 
 # class PostSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
@@ -29,13 +30,19 @@ class UserSerializer(serializers.ModelSerializer):
 #         instance.save()
 #         return instance
 
-class PostSerializer(serializers.ModelSerializer):
-    comments = serializers.PrimaryKeyRelatedField(many=True, queryset=Comment.objects.all())
-    post_user = serializers.ReadOnlyField(source='post_user.username')
+class CensoredPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'created', 'title', 'content', 'comments', 'post_user')
+        fields = ('id', 'created', 'title', 'content', 'comments', 'owner')
+        depth = 1
+
+class ActualPostSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = ('id', 'created', 'title', 'content', 'comments', 'owner')
+        depth = 1
 
 # class CommentSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
@@ -57,6 +64,7 @@ class PostSerializer(serializers.ModelSerializer):
 #         return instance
 
 class CommentSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'post')
+        fields = ('id', 'text', 'post', 'owner')
