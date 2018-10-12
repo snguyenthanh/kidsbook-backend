@@ -9,9 +9,7 @@ from django.contrib.auth.models import (
 import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-# from django.contrib.auth import get_user_model
 
-# User = get_user_model()
 # Create your models here.
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -25,7 +23,13 @@ class UserManager(BaseUserManager):
         email_address = self.normalize_email(email_address)
         user = self.model(username=username, email_address=email_address, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        print("ABOUT TO SAVE")
+        print(self._db)
+        try:
+            user.save(using=self._db)
+            print("HIEU")
+        except Exception as e:
+            print(e)
         return user
 
     def create_user(self, username, email_address=None, password=None, **extra_fields):

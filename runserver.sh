@@ -1,5 +1,8 @@
 # modify database scheme according to the change of models.py
-python3 manage.py makemigrations
+rm db.sqlite3
+echo "Generating new migrations."
+
+python3 manage.py makemigrations kidsbook
 
 # apply above migrations
 python3 manage.py migrate

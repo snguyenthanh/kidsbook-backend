@@ -1,11 +1,11 @@
 FIXTURES="fixtures.py"
 
 echo "Deleting existing database."
-rm dividesmart/db.sqlite3
+rm db.sqlite3
 echo "Generating new migrations."
-python3 dividesmart/manage.py makemigrations
+python3 manage.py makemigrations kidsbook
 echo "Migrating database."
-python3 dividesmart/manage.py migrate
+python3 manage.py migrate
 echo "Adding fixtures data from $FIXTURES"
 python3 ${FIXTURES}
 

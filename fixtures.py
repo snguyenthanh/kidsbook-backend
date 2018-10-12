@@ -7,8 +7,9 @@ os.environ.setdefault(
 )
 django.setup()
 
-from main.models import *  # noqa
+from kidsbook.models import *  # noqa
 
+print("COME HRERE")
 User.objects.create_superuser(
     email_address='a@a.com',
     username='a',
