@@ -4,9 +4,11 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from rest_framework import permissions
 from profanity import profanity
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class IsOwner(permissions.BasePermission):
     """
