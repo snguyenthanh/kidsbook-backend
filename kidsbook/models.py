@@ -9,9 +9,9 @@ from django.contrib.auth.models import (
 import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 
-User = get_user_model()
+# User = get_user_model()
 # Create your models here.
 class UserManager(BaseUserManager):
     use_in_migrations = True
