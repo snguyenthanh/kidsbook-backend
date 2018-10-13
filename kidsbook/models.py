@@ -10,9 +10,14 @@ import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+
+class Role(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=100)
+
 # Create your models here.
 class UserManager(BaseUserManager):
-    use_in_migrations = True
+    # use_in_migrations = True
 
     def _create_user(self, username, email_address, password, **extra_fields):
         """
@@ -54,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_address = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
+    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -67,16 +73,38 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["username"]
     objects = UserManager()
 
+class PostManager(models.Manager):
+    def create_post(self, title, content, creator):
+        post = self.model(title=title, content=content, creator=creator)
+        post.save(using=self._db)
+        return post
+
 class Post(models.Model):
+    # use_in_migrations = True
+
+    objects = PostManager()
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100, blank=False)
     content = models.TextField(blank=False)
-    owner = models.ForeignKey(User, related_name='posts', on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
 
     class Meta:
         ordering = ('created',)
-
+ 
+class CommentManager(models.Manager):
+    def create_comment(self, text, post, creator):
+        comment = self.model(text=text, post=post, creator=creator)
+        comment.save(using=self._db)
+        return comment
+    
 class Comment(models.Model):
+
+    # use_in_migrations = True
+
+    objects = CommentManager()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     text = models.CharField(max_length=100, blank=False)
-    post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
+    creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
