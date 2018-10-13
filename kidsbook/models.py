@@ -19,6 +19,11 @@ class Role(models.Model):
 class UserManager(BaseUserManager):
     # use_in_migrations = True
 
+    def create_roles(self):
+        role1 = Role(id=0, name='student')
+        role2 = Role(id=1, name='teacher')
+        role1.save()
+        role2.save()
     def _create_user(self, username, email_address, password, **extra_fields):
         """
         Creates and saves a User with the given username, email and password.
@@ -73,6 +78,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["username"]
     objects = UserManager()
 
+class FakeStudent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student_id = models.ForeignKey(User, related_name='student_id', on_delete=models.CASCADE)
+    teacher_id = models.ForeignKey(User, related_name='teacher_id', on_delete=models.CASCADE)
+
 class GroupManager(models.Manager):
     def create_group(self, name, creator):
         group = self.model(name=name)
@@ -116,15 +126,22 @@ class Post(models.Model):
     title = models.CharField(max_length=100, blank=False)
     content = models.TextField(blank=False)
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
-    likes = models.ManyToManyField(User, related_name='likes')
+    likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
+    shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
 
     class Meta:
         ordering = ('created_at',)
  
-# class UserLikePost(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     liker = models.ForeignKey(User, on_delete=models.CASCADE)
-#     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+class UserLikePost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    liker = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+class UserSharePost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sharer = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
 
 class CommentManager(models.Manager):
     def create_comment(self, text, post, creator):
