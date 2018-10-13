@@ -39,3 +39,10 @@ SON_COMMENT = Comment.objects.create_comment(
     post = HIEU_POST,
     creator= SON
 )
+
+HIEU_GROUP = Group.objects.create_group(
+    name='HIEU_GROUP',
+    creator = HIEU
+)
+
+HIEU_GROUP.add_member(SON)

@@ -11,6 +11,7 @@ class UserModelAdmin(admin.ModelAdmin):
     list_filter = ['is_superuser', 'is_staff']
     search_fields = ['pk', 'username', 'email_address']
     # filter_horizontal = ['groups', 'user_permissions', 'friends']
+    filter_horizontal = ['groups']
 
 class SessionAdmin(admin.ModelAdmin):
     def _session_data(self, obj):
@@ -23,7 +24,15 @@ class PostModelAdmin(admin.ModelAdmin):
 class CommentModelAdmin(admin.ModelAdmin):
     list_display = ['pk', 'text', 'post', 'creator']
 
+class GroupModelAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'name']
+
+class GroupMemberModelAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'user', 'group']
+
 admin.site.register(Session, SessionAdmin)
 admin.site.register(models.User, UserModelAdmin)
 admin.site.register(models.Post, PostModelAdmin)
 admin.site.register(models.Comment, CommentModelAdmin)
+admin.site.register(models.Group, GroupModelAdmin)
+admin.site.register(models.GroupMember, GroupMemberModelAdmin)

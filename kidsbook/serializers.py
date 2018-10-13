@@ -36,7 +36,7 @@ class CensoredPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'created', 'title', 'content', 'comments', 'owner')
+        fields = ('id', 'created_at', 'title', 'content', 'comments', 'owner')
         depth = 1
 
 class ActualPostSerializer(serializers.ModelSerializer):

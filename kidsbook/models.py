@@ -73,6 +73,33 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["username"]
     objects = UserManager()
 
+class GroupManager(models.Manager):
+    def create_group(self, name, creator):
+        group = self.model(name=name)
+        group.creator = creator
+        group.save(using=self._db)
+        group.add_member(creator)
+        return group
+
+class Group(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=120)
+    creator = models.ForeignKey(User, related_name='group_owner', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    users = models.ManyToManyField(User, related_name='group_users', through='GroupMember')
+
+    objects = GroupManager()
+
+    def add_member(self, user):
+        group_member = GroupMember(group=self, user=user)
+        group_member.save()
+
+
+class GroupMember(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+
 class PostManager(models.Manager):
     def create_post(self, title, content, creator):
         post = self.model(title=title, content=content, creator=creator)
@@ -85,14 +112,20 @@ class Post(models.Model):
     objects = PostManager()
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100, blank=False)
     content = models.TextField(blank=False)
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    likes = models.ManyToManyField(User, related_name='likes')
 
     class Meta:
-        ordering = ('created',)
+        ordering = ('created_at',)
  
+# class UserLikePost(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     liker = models.ForeignKey(User, on_delete=models.CASCADE)
+#     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
 class CommentManager(models.Manager):
     def create_comment(self, text, post, creator):
         comment = self.model(text=text, post=post, creator=creator)
@@ -108,3 +141,5 @@ class Comment(models.Model):
     text = models.CharField(max_length=100, blank=False)
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+
