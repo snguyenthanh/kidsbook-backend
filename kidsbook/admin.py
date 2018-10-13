@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.sessions.models import Session
 
 # Register your models here.
- 
+
 from . import models
 
 
@@ -19,16 +19,16 @@ class SessionAdmin(admin.ModelAdmin):
     list_display = ['session_key', '_session_data', 'expire_date']
 
 class PostModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'content', 'creator']
+    list_display = ['pk', 'content', 'creator']
 
 class CommentModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'text', 'post', 'creator']
+    list_display = ['pk', 'content', 'post_id', 'creator']
 
 class GroupModelAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name']
 
 class GroupMemberModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'user', 'group']
+    list_display = ['pk', 'user_id', 'group']
 
 admin.site.register(Session, SessionAdmin)
 admin.site.register(models.User, UserModelAdmin)

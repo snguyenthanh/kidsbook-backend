@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class Role(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.PositiveSmallIntegerField(primary_key=True)
     name = models.CharField(max_length=100)
 
 # Create your models here.
@@ -62,8 +62,14 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email_address = models.EmailField(max_length=255, unique=True)
-    username = models.CharField(max_length=128)
+    email_address = models.EmailField(max_length=255, unique=True, editable=False)
+    username = models.CharField(max_length=50, unique=True)
+    password = models.CharField(max_length=65530)
+    gender = models.BooleanField(null=True)
+    date_of_birth = models.DateField(null=True)
+    avatar_url = models.CharField(max_length=65530, null=True)
+    login_time = models.PositiveIntegerField(default=0)
+    screen_time = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
 
@@ -76,9 +82,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email_address'
     EMAIL_FIELD = 'email_address'
 
-    REQUIRED_FIELDS = ["username"]
+    REQUIRED_FIELDS = ["username", "password", "is_active"]
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
+
 
 class FakeStudent(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -96,69 +103,74 @@ class GroupManager(models.Manager):
 class Group(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120)
+    description = models.TextField(null=True)
     creator = models.ForeignKey(User, related_name='group_owner', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     users = models.ManyToManyField(User, related_name='group_users', through='GroupMember')
 
+    REQUIRED_FIELDS = ["name"]
     objects = GroupManager()
 
     def add_member(self, user):
-        group_member = GroupMember(group=self, user=user)
+        group_member = GroupMember(group=self, user_id=user)
         group_member.save()
 
 
 class GroupMember(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
+
 class PostManager(models.Manager):
-    def create_post(self, title, content, creator):
-        post = self.model(title=title, content=content, creator=creator)
+    #def create_post(self, title, content, creator):
+    def create_post(self, **kargs):
+        post = self.model(**kargs)
         post.save(using=self._db)
         return post
 
 class Post(models.Model):
     # use_in_migrations = True
-
-    objects = PostManager()
-    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    title = models.CharField(max_length=100, blank=False)
-    content = models.TextField(blank=False)
+    content = models.TextField()
+
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
 
+    REQUIRED_FIELDS = ["content"]
+
+    objects = PostManager()
     class Meta:
         ordering = ('created_at',)
- 
+
 class UserLikePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    liker = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sharer = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 
 class CommentManager(models.Manager):
-    def create_comment(self, text, post, creator):
-        comment = self.model(text=text, post=post, creator=creator)
+    def create_comment(self, **kargs):
+        comment = self.model(**kargs)
         comment.save(using=self._db)
         return comment
-    
+
 class Comment(models.Model):
-
-    # use_in_migrations = True
-
-    objects = CommentManager()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    text = models.CharField(max_length=100, blank=False)
-    post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
-    creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    content = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    post_id = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
+    creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+
+    REQUIRED_FIELDS = ['content']
+
+    # use_in_migrations = True
+    objects = CommentManager()

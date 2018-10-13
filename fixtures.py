@@ -33,14 +33,13 @@ SON = User.objects.create_superuser(
 )
 
 HIEU_POST = Post.objects.create_post(
-    title='PGP LUNCH',
-    content = 'Need someone to eat lunch at pgp?',
+    content='Need someone to eat lunch at pgp?',
     creator= HIEU
 )
 
 SON_COMMENT = Comment.objects.create_comment(
-    text = 'OKAY',
-    post = HIEU_POST,
+    content = 'OKAY',
+    post_id = HIEU_POST,
     creator= SON
 )
 

@@ -19,7 +19,6 @@ from django.contrib.auth import (
 from django.contrib.auth import get_user_model, get_user
 
 class GetInfo(generics.ListAPIView):
-    # queryset = 
     serializer_class = UserSerializer
     def list(self, request):
         current_user = get_user(request)
