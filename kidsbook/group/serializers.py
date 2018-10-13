@@ -12,29 +12,25 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username')
 
-class PostSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    title = serializers.CharField(required=True, max_length=100)
-    content = serializers.CharField(required=True)
+# class PostSerializer(serializers.Serializer):
+#     id = serializers.IntegerField(read_only=True)
+#     title = serializers.CharField(required=True, max_length=100)
+#     content = serializers.CharField(required=True)
 
-    class Meta:
-        model = Post
-        fields = ('id', 'creator', 'content')
+#     def create(self, validated_data):
+#         """
+#         Create and return a new `Post` instance, given the validated data.
+#         """
+#         return Post.objects.create(**validated_data)
 
-    def create(self, validated_data):
-        """
-        Create and return a new `Post` instance, given the validated data.
-        """
-        return Post.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Update and return an existing `Post` instance, given the validated data.
-        """
-        instance.title = validated_data.get('title', instance.title)
-        instance.content = validated_data.get('content', instance.content)
-        instance.save()
-        return instance
+#     def update(self, instance, validated_data):
+#         """
+#         Update and return an existing `Post` instance, given the validated data.
+#         """
+#         instance.title = validated_data.get('title', instance.title)
+#         instance.content = validated_data.get('content', instance.content)
+#         instance.save()
+#         return instance
 
 class CensoredPostSerializer(serializers.ModelSerializer):
 
