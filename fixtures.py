@@ -15,3 +15,27 @@ User.objects.create_superuser(
     username='a',
     password='a'
 )
+
+HIEU = User.objects.create_superuser(
+    email_address='hieu@gmail.com',
+    username='hieu',
+    password='a'
+)
+
+SON = User.objects.create_superuser(
+    email_address='son@gmail.com',
+    username='son',
+    password='a'
+)
+
+HIEU_POST = Post.objects.create_post(
+    title='PGP LUNCH',
+    content = 'Need someone to eat lunch at pgp?',
+    creator= HIEU
+)
+
+SON_COMMENT = Comment.objects.create_comment(
+    text = 'OKAY',
+    post = HIEU_POST,
+    creator= SON
+)

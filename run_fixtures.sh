@@ -8,4 +8,3 @@ echo "Migrating database."
 python3 manage.py migrate
 echo "Adding fixtures data from $FIXTURES"
 python3 ${FIXTURES}
-
