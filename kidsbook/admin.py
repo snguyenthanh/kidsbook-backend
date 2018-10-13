@@ -7,7 +7,7 @@ from . import models
 
 
 class UserModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'username', 'email_address', 'is_superuser', 'is_staff']
+    list_display = ['pk', 'username', 'email_address', 'is_superuser', 'is_staff', 'role']
     list_filter = ['is_superuser', 'is_staff']
     search_fields = ['pk', 'username', 'email_address']
     # filter_horizontal = ['groups', 'user_permissions', 'friends']

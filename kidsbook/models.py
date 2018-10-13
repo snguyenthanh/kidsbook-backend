@@ -24,7 +24,8 @@ class UserManager(BaseUserManager):
         role2 = Role(id=1, name='teacher')
         role1.save()
         role2.save()
-    def _create_user(self, username, email_address, password, **extra_fields):
+
+    def _create_user(self, username, email_address, password, role, **extra_fields):
         """
         Creates and saves a User with the given username, email and password.
         """
@@ -32,6 +33,7 @@ class UserManager(BaseUserManager):
             raise ValueError('The given username must be set')
         email_address = self.normalize_email(email_address)
         user = self.model(username=username, email_address=email_address, **extra_fields)
+        user.role = Role(id=role)
         user.set_password(password)
         print("ABOUT TO SAVE")
         print(self._db)
@@ -42,12 +44,12 @@ class UserManager(BaseUserManager):
             print(e)
         return user
 
-    def create_user(self, username, email_address=None, password=None, **extra_fields):
+    def create_user(self, username, email_address=None, password=None, role=None, **extra_fields):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        return self._create_user(username, email_address, password, **extra_fields)
+        return self._create_user(username, email_address, password, role, **extra_fields)
 
-    def create_superuser(self, username, email_address, password, **extra_fields):
+    def create_superuser(self, username, email_address, password, role, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -56,8 +58,7 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self._create_user(username, email_address, password, **extra_fields)
-
+        return self._create_user(username, email_address, password, role, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -76,6 +77,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = 'email_address'
 
     REQUIRED_FIELDS = ["username"]
+    role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
 class FakeStudent(models.Model):

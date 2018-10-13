@@ -10,22 +10,26 @@ django.setup()
 from kidsbook.models import *  # noqa
 
 print("COME HRERE")
+User.objects.create_roles()
 User.objects.create_superuser(
     email_address='a@a.com',
     username='a',
-    password='a'
+    password='a',
+    role=1
 )
 
 HIEU = User.objects.create_superuser(
     email_address='hieu@gmail.com',
     username='hieu',
-    password='a'
+    password='a',
+    role=1
 )
 
 SON = User.objects.create_superuser(
     email_address='son@gmail.com',
     username='son',
-    password='a'
+    password='a',
+    role=0
 )
 
 HIEU_POST = Post.objects.create_post(
