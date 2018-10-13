@@ -17,5 +17,13 @@ class SessionAdmin(admin.ModelAdmin):
         return obj.get_decoded()
     list_display = ['session_key', '_session_data', 'expire_date']
 
+class PostModelAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'title', 'content', 'creator']
+
+class CommentModelAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'text', 'post', 'creator']
+
 admin.site.register(Session, SessionAdmin)
 admin.site.register(models.User, UserModelAdmin)
+admin.site.register(models.Post, PostModelAdmin)
+admin.site.register(models.Comment, CommentModelAdmin)
