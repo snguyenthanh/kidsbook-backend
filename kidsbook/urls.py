@@ -4,7 +4,9 @@ from kidsbook import views
 from django.conf.urls import include
 
 urlpatterns = [
-    path('user/', include('kidsbook.user.urls'))
+    path('user/', include('kidsbook.user.urls')),
+    path('group/', include('kidsbook.group.urls')),
+
     # path('post/', views.PostList.as_view()),
     # path('posts/<int:pk>/', views.PostDetail.as_view()),
     # path('comments/', views.CommentList.as_view()),

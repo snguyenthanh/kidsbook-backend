@@ -9,7 +9,7 @@ django.setup()
 
 from kidsbook.models import *  # noqa
 
-print("COME HRERE")
+print("COME HERE")
 User.objects.create_roles()
 User.objects.create_superuser(
     email_address='a@a.com',
@@ -49,3 +49,8 @@ HIEU_GROUP = Group.objects.create_group(
 )
 
 HIEU_GROUP.add_member(SON)
+
+SON_GROUP = Group.objects.create_group(
+    name='SON_GROUP',
+    creator = SON
+)
