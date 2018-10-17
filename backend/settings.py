@@ -42,11 +42,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework.authtoken',
     'rest_auth',
-    'rest_auth.registration',
     'rest_framework',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
 ]
 
 # REST_FRAMEWORK = {
@@ -80,9 +76,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # "django.core.context_processors.request",
-                # "allauth.account.context_processors.account",
-                # "allauth.account.context_processors.socialaccount",
             ],
         },
     },
@@ -141,5 +134,3 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'kidsbook.User'
-
-SITE_ID = 1
