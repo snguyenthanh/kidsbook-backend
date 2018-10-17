@@ -32,7 +32,7 @@ SON = User.objects.create_superuser(
     role=0
 )
 
-HIEU_POST = Post.objects.create_post(
+"""HIEU_POST = Post.objects.create_post(
     content='Need someone to eat lunch at pgp?',
     creator= HIEU
 )
@@ -54,3 +54,5 @@ SON_GROUP = Group.objects.create_group(
     name='SON_GROUP',
     creator = SON
 )
+
+HIEU_GROUP.add_member(SON)"""

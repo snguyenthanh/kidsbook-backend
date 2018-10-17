@@ -30,12 +30,12 @@ class IsOwner(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to the owner of the snippet.
-        return obj.owner == request.user
+        return obj.owner == get_user(request)
 
 class IsSuperUser(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_superuser;
+        return get_user(request).is_superuser;
 
 class PostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
@@ -43,7 +43,8 @@ class PostList(generics.ListCreateAPIView):
     permission_classes = (IsSuperUser,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(group=Group.objects.get(id=self.kwargs['group_id']))        
+        serializer.save(creator=get_user(self.request))
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()

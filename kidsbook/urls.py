@@ -6,11 +6,10 @@ from django.conf.urls import include
 urlpatterns = [
     path('user/', include('kidsbook.user.urls')),
     path('group/', include('kidsbook.group.urls')),
-
-    # path('post/', views.PostList.as_view()),
-    # path('posts/<int:pk>/', views.PostDetail.as_view()),
-    # path('comments/', views.CommentList.as_view()),
-    # path('comments/<int:pk>/', views.CommentDetail.as_view()),
+    path('group/<uuid:group_id>/post/', views.PostList.as_view()),
+    path('posts/<uuid:pk>/', views.PostDetail.as_view()),
+    path('comments/', views.CommentList.as_view()),
+    path('comments/<uuid:pk>/', views.CommentDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
