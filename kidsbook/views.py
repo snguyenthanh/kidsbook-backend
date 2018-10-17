@@ -43,7 +43,8 @@ class PostList(generics.ListCreateAPIView):
     permission_classes = (IsSuperUser,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        print("Here1")
+        serializer.save(creator=get_user(self.request))
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
@@ -56,7 +57,7 @@ class CommentList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(creator=get_user(self.request))
 
 class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()

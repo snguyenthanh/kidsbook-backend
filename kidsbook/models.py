@@ -65,13 +65,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_address = models.EmailField(max_length=255, unique=True, editable=False)
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=65530)
-    gender = models.BooleanField(null=True)
+    gender = models.NullBooleanField()
     date_of_birth = models.DateField(null=True)
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
-    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
+    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE, default=0)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -122,12 +122,12 @@ class GroupMember(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 
-class PostManager(models.Manager):
-    #def create_post(self, title, content, creator):
-    def create_post(self, **kargs):
-        post = self.model(**kargs)
-        post.save(using=self._db)
-        return post
+# class PostManager(models.Manager):
+#     #def create_post(self, title, content, creator):
+#     def create_post(self, **kargs):
+#         post = self.model(**kargs)
+#         post.save(using=self._db)
+#         return post
 
 class Post(models.Model):
     # use_in_migrations = True
@@ -141,7 +141,7 @@ class Post(models.Model):
 
     REQUIRED_FIELDS = ["content"]
 
-    objects = PostManager()
+    # objects = PostManager()
     class Meta:
         ordering = ('created_at',)
 
@@ -156,11 +156,11 @@ class UserSharePost(models.Model):
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 
-class CommentManager(models.Manager):
-    def create_comment(self, **kargs):
-        comment = self.model(**kargs)
-        comment.save(using=self._db)
-        return comment
+# class CommentManager(models.Manager):
+#     def create_comment(self, **kargs):
+#         comment = self.model(**kargs)
+#         comment.save(using=self._db)
+#         return comment
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -173,4 +173,4 @@ class Comment(models.Model):
     REQUIRED_FIELDS = ['content']
 
     # use_in_migrations = True
-    objects = CommentManager()
+    # objects = CommentManager()
