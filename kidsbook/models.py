@@ -9,7 +9,7 @@ from django.contrib.auth.models import (
 import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
+from django.contrib.auth.hashers import make_password
 
 class Role(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True)
@@ -29,6 +29,7 @@ class UserManager(BaseUserManager):
         """
         Creates and saves a User with the given username, email and password.
         """
+        self.create_roles()
         if not username:
             raise ValueError('The given username must be set')
         email_address = self.normalize_email(email_address)
@@ -60,12 +61,13 @@ class UserManager(BaseUserManager):
 
         return self._create_user(username, email_address, password, role, **extra_fields)
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email_address = models.EmailField(max_length=255, unique=True, editable=False)
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=65530)
-    gender = models.BooleanField(null=True)
+    gender = models.NullBooleanField()
     date_of_birth = models.DateField(null=True)
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
@@ -85,6 +87,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["username", "password", "is_active"]
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
+
+    def check_password(self, raw_password):
+        print("REACH")
+        print(make_password(raw_password))
+        print(self.password)
+        if self.password == raw_password:
+            return True
+        else:
+            return False
 
 
 class FakeStudent(models.Model):
