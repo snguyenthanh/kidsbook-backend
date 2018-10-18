@@ -54,11 +54,11 @@ SON_GROUP = Group.objects.create_group(
 HIEU_POST = Post.objects.create_post(
     content='Need someone to eat lunch at pgp?',
     creator= HIEU,
-    group_id=HIEU_GROUP
+    group=HIEU_GROUP
 )
 
 SON_COMMENT = Comment.objects.create_comment(
     content = 'OKAY',
-    post_id = HIEU_POST,
+    post = HIEU_POST,
     creator= SON
 )

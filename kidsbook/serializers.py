@@ -9,11 +9,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email_address', 'is_active', 'is_staff', 'description', "realname")
         # fields = ('email_address',)
-        
+
 class PostSerializer(serializers.ModelSerializer):
 
     def create(self, data):
-        group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
+        group = Group.objects.get(id=self.context['view'].kwargs.get("group_id"))
         current_user = self.context['request'].user
         return Post.objects.create(content=data["content"], group=group, creator=current_user)
 
@@ -39,7 +39,7 @@ class PostLikeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
         new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
         return new_post
@@ -52,7 +52,7 @@ class PostFlagSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
         new_post, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'flag_or_unflag': data["flag_or_unflag"]})
         return new_post
@@ -65,7 +65,7 @@ class PostShareSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
         new_post, created = UserSharePost.objects.get_or_create(post=post, user=current_user)
         return new_post
@@ -78,7 +78,7 @@ class CommentSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 

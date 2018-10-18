@@ -35,12 +35,12 @@ class LogIn(APIView):
         # print(settings.SECRET_KEY)
         try:
             email = request.data['email_address']
-            password = request.data['password']
-            user = authenticate(username='hieu2', password=password)
-            print(user)
+            #password = request.data['password']
+            #user = authenticate(username='hieu2', password=password)
+            #print(user)
             user = User.objects.get(email_address=email)
             print("CHECK")
-            print(user.check_password(password))
+            #print(user.check_password(password))
             if user:
                 try:
                     payload = jwt_payload_handler(user)
@@ -52,7 +52,7 @@ class LogIn(APIView):
                     user_logged_in.send(sender=user.__class__,
                                         request=request, user=user)
                     return Response(user_details, status=status.HTTP_200_OK)
-    
+
                 except Exception as e:
                     raise e
             else:
@@ -80,6 +80,7 @@ class Register(APIView):
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
+
     def put(self, request):
         current_user = request.user
         serializerOld = self.serializer_class(current_user, many=False)
