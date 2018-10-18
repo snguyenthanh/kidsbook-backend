@@ -28,6 +28,10 @@ permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 SECRET_KEY = 'a5)t3&0wu-u*8ti(ru_b72vmz8d3pliuuqh8b7i_t^e(aci-1l'
 
+def generate_token(user):
+    payload = jwt_payload_handler(user)
+    return jwt.encode(payload, SECRET_KEY)
+
 class LogIn(APIView):
     permission_classes = (AllowAny, )
     def post(self, request):
@@ -39,13 +43,11 @@ class LogIn(APIView):
             #user = authenticate(username='hieu2', password=password)
             #print(user)
             user = User.objects.get(email_address=email)
-            print("CHECK")
+            #print("CHECK")
             #print(user.check_password(password))
             if user:
                 try:
-                    payload = jwt_payload_handler(user)
-
-                    token = jwt.encode(payload, SECRET_KEY)
+                    token = generate_token(user)
                     user_details = {}
                     user_details['name'] = user.username
                     user_details['token'] = token
@@ -70,8 +72,7 @@ class Register(APIView):
         user = User.objects.create_superuser(
             email_address=request.data['email_address'],
             username=request.data['username'],
-            password=request.data['password'],
-            role=1,
+            password=request.data['password']
         )
         serializer = self.serializer_class(user, many=False)
         return Response(serializer.data)
@@ -105,6 +106,22 @@ class GetInfo(generics.ListAPIView):
         current_user = request.user
         serializer = self.serializer_class(current_user, many=False)
         return Response(serializer.data)
+
+class GetInfoUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+    def list(self, request, **kargs):
+        try:
+            user_id = kargs.get('user_id', None)
+            if user_id:
+                user = User.objects.get(id=user_id)
+                serializer = self.serializer_class(user, many=False)
+                return Response(serializer.data)
+        except Exception:
+            pass
+
+        return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+
 
 class GetPost(generics.ListAPIView):
     queryset = ''
