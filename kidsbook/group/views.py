@@ -21,9 +21,7 @@ class IsGroupCreator(BasePermission):
         group_id = view.kwargs.get('group_id', None)
         #sender_id = request.data.get('sender_id', None)
         sender_id = request.user.id
-        print(sender_id)
-        print(type(sender_id))
-        print(str(Group.objects.get(id=group_id).creator.id))
+
         # If sender is not the Creator of group
         if not sender_id or str(sender_id) != str(Group.objects.get(id=group_id).creator.id):
             return False
@@ -99,10 +97,8 @@ def delete_member_from_group(user, group):
     # Remove the link between the user and group
     if user.id == group.creator.id:
         raise ValueError('Cannot delete the Creator from the group.')
-        
+
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
-
-
 
 @api_view(['POST', 'DELETE'])
 @permission_classes((IsAuthenticated, IsGroupCreator))
@@ -136,8 +132,9 @@ def group_member(request, **kargs):
 
 @api_view(['DELETE'])
 @permission_classes((IsAuthenticated, IsGroupCreator))
-def delele_group(request, **kargs):
+def delete_group(request, **kargs):
     """Delete a group."""
+
     try:
         group_id = kargs.get('group_id', None)
         if group_id:
@@ -145,7 +142,6 @@ def delele_group(request, **kargs):
 
             # The relations in GroupMember table are also auto-removed
             target_group.delete()
-
             return Response({'result': 'Successful'}, status=status.HTTP_202_ACCEPTED)
     except Exception:
         pass
