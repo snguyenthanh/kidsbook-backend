@@ -22,9 +22,10 @@ class IsGroupCreator(BasePermission):
         #sender_id = request.data.get('sender_id', None)
         sender_id = request.user.id
         print(sender_id)
-
+        print(type(sender_id))
+        print(str(Group.objects.get(id=group_id).creator.id))
         # If sender is not the Creator of group
-        if not sender_id or sender_id != str(Group.objects.get(id=group_id).creator.id):
+        if not sender_id or str(sender_id) != str(Group.objects.get(id=group_id).creator.id):
             return False
         return True
 
@@ -55,8 +56,7 @@ def create_group(request):
     request_data = request.data.copy()
 
     try:
-        user_id = UUID(get_user_id_from_request_data(request_data))
-        creator = User.objects.get(id=user_id)
+        creator = request.user
     except Exception:
         return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
 
@@ -97,7 +97,12 @@ def add_member_to_group(user, group):
 
 def delete_member_from_group(user, group):
     # Remove the link between the user and group
+    if user.id == group.creator.id:
+        raise ValueError('Cannot delete the Creator from the group.')
+        
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
+
+
 
 @api_view(['POST', 'DELETE'])
 @permission_classes((IsAuthenticated, IsGroupCreator))
