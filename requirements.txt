@@ -7,3 +7,4 @@ six==1.11.0
 PyJWT
 ujson
 djangorestframework-jwt
+django-cors-headers

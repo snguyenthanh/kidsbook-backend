@@ -13,23 +13,29 @@ print("COME HRERE")
 User.objects.create_roles()
 User.objects.create_superuser(
     email_address='a@a.com',
-    username='a',
+    username='Best teacher',
     password='a',
-    role=1
+    role=1,
+    description='Call me by A',
+    realname="Sreyans Sipanis"
 )
 
 HIEU = User.objects.create_superuser(
     email_address='hieu@gmail.com',
-    username='hieu',
+    username='Tall Guy',
     password='a',
-    role=1
+    role=1,
+    description='Call me by Hieu',
+    realname="Le Trung Hieu"
 )
 
 SON = User.objects.create_superuser(
     email_address='son@gmail.com',
-    username='son',
+    username='Assasin',
     password='a',
-    role=0
+    role=0,
+    description='Call me by Son',
+    realname="Nguyen Thanh Son"
 )
 
 HIEU_POST = Post.objects.create_post(
