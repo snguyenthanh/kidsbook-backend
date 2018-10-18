@@ -28,7 +28,7 @@ class GroupModelAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name']
 
 class GroupMemberModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'user_id', 'group']
+    list_display = ['pk', 'user_id', 'group_id']
 
 admin.site.register(Session, SessionAdmin)
 admin.site.register(models.User, UserModelAdmin)

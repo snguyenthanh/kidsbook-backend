@@ -11,6 +11,12 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
 
+def format_value(value):
+    if isinstance(value, list) and len(value) == 1:
+        return value[0]
+    return value
+
+
 class Role(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -104,8 +110,16 @@ class FakeStudent(models.Model):
     teacher_id = models.ForeignKey(User, related_name='teacher_id', on_delete=models.CASCADE)
 
 class GroupManager(models.Manager):
-    def create_group(self, name, creator):
-        group = self.model(name=name)
+    #def create_group(self, name, creator):
+    def create_group(self, **kargs):
+        # The arguments passed formats the `value` in <list>, need to extract them
+        kargs = {key: format_value(value) for key,value in iter(kargs.items())}
+
+        creator = kargs.pop('creator', None)
+        if creator is None:
+            raise ValueError('creator is missing.')
+
+        group = self.model(**kargs)
         group.creator = creator
         group.save(using=self._db)
         group.add_member(creator)
@@ -113,8 +127,8 @@ class GroupManager(models.Manager):
 
 class Group(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=120)
-    description = models.TextField(null=True)
+    name = models.CharField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
     creator = models.ForeignKey(User, related_name='group_owner', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     users = models.ManyToManyField(User, related_name='group_users', through='GroupMember')
@@ -123,18 +137,19 @@ class Group(models.Model):
     objects = GroupManager()
 
     def add_member(self, user):
-        group_member = GroupMember(group=self, user_id=user)
+        group_member = GroupMember(group_id=self, user_id=user)
         group_member.save()
 
 
 class GroupMember(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('user_id', 'group_id')
 
 
 class PostManager(models.Manager):
-    #def create_post(self, title, content, creator):
     def create_post(self, **kargs):
         post = self.model(**kargs)
         post.save(using=self._db)
@@ -147,6 +162,7 @@ class Post(models.Model):
     content = models.TextField()
 
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    group_id = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
 
@@ -158,13 +174,20 @@ class Post(models.Model):
 
 class UserLikePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    like_or_dislike = models.BooleanField()
+
+class UserFlagPost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    flag_or_unflag = models.BooleanField()
 
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 
 class CommentManager(models.Manager):
