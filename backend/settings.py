@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_auth',
     'rest_framework',
+    'corsheaders',
 ]
 
 # REST_FRAMEWORK = {
@@ -61,6 +62,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -157,3 +160,4 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'Bearer'
 }
 
+CORS_ORIGIN_ALLOW_ALL = True   

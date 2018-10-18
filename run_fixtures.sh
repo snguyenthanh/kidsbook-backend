@@ -1,5 +1,6 @@
 FIXTURES="fixtures.py"
 
+rm -r kidsbook/migrations
 echo "Deleting existing database."
 rm db.sqlite3
 echo "Generating new migrations."

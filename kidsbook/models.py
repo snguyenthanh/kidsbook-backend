@@ -72,8 +72,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email_address = models.EmailField(max_length=255, unique=True, editable=False)
     username = models.CharField(max_length=50, unique=True)
+    realname = models.CharField(max_length=50)
     password = models.CharField(max_length=65530)
     gender = models.NullBooleanField()
+    description = models.TextField(default="")
     date_of_birth = models.DateField(null=True)
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
@@ -90,7 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email_address'
     EMAIL_FIELD = 'email_address'
 
-    REQUIRED_FIELDS = ["username", "password", "is_active"]
+    REQUIRED_FIELDS = ["username", "password", "is_active", "realname"]
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
