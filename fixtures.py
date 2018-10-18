@@ -65,6 +65,6 @@ HIEU_POST2 = Post.objects.create_post(
 
 SON_COMMENT = Comment.objects.create_comment(
     content = 'OKAY',
-    post_id = HIEU_POST,
+    post = HIEU_POST,
     creator= SON
 )

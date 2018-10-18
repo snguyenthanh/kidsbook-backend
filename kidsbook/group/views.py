@@ -48,6 +48,7 @@ def get_groups(request):
     except Exception:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+    
     serializer = GroupSerializer(groups, many=True)
     return Response(serializer.data)
 
