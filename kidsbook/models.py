@@ -162,7 +162,7 @@ class Post(models.Model):
     content = models.TextField()
 
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
-    group_id = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
+    group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
 
@@ -201,7 +201,7 @@ class Comment(models.Model):
     content = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    post_id = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
+    post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
 
     REQUIRED_FIELDS = ['content']

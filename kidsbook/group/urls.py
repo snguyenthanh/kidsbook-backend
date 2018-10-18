@@ -6,6 +6,7 @@ urlpatterns = [
 
     # Return all groups or create a new group
     path('', views.group),
+    #path('', views.GroupCreateAndGet.as_view()),
 
     # Add new member or remove a member in a group
     path('<group_id>/user/<user_id>', views.group_member),

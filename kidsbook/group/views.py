@@ -1,16 +1,33 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework import generics, status
 from uuid import UUID
-from pprint import pprint
 
 #from kidsbook.group.serializers import GroupSerializer
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
 
 User = get_user_model()
+
+#################################################################################################################
+## PERMISSIONS ##
+
+class IsGroupCreator(BasePermission):
+    def has_permission(self, request, view):
+        group_id = view.kwargs.get('group_id', None)
+        #sender_id = request.data.get('sender_id', None)
+        sender_id = request.user.id
+        print(sender_id)
+
+        # If sender is not the Creator of group
+        if not sender_id or sender_id != str(Group.objects.get(id=group_id).creator.id):
+            return False
+        return True
+
 
 #################################################################################################################
 ## GROUP ##
@@ -20,7 +37,6 @@ def get_user_id_from_request_data(request_data: dict):
 
     if isinstance(uuid, list) and len(uuid) == 1:
         return uuid[0]
-
     return uuid
 
 def get_groups(request):
@@ -40,7 +56,6 @@ def create_group(request):
 
     try:
         user_id = UUID(get_user_id_from_request_data(request_data))
-        print(User.objects.all().values())
         creator = User.objects.get(id=user_id)
     except Exception:
         return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
@@ -60,8 +75,8 @@ def create_group(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
 def group(request):
     """Return all groups or create a new group."""
 
@@ -85,6 +100,7 @@ def delete_member_from_group(user, group):
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
 
 @api_view(['POST', 'DELETE'])
+@permission_classes((IsAuthenticated, IsGroupCreator))
 def group_member(request, **kargs):
     """Add new member or remove a member in a group."""
 
@@ -114,6 +130,7 @@ def group_member(request, **kargs):
 ## GROUP MANAGE ##
 
 @api_view(['DELETE'])
+@permission_classes((IsAuthenticated, IsGroupCreator))
 def delele_group(request, **kargs):
     """Delete a group."""
     try:
