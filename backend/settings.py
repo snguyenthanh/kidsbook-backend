@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +45,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 ]
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.TokenAuthentication',
+#     ),
+#     # 'DEFAULT_PERMISSION_CLASSES': (
+#         # 'rest_framework.permissions.IsAuthenticated', )
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
