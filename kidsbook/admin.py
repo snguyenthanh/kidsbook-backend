@@ -22,7 +22,7 @@ class PostModelAdmin(admin.ModelAdmin):
     list_display = ['pk', 'content', 'creator']
 
 class CommentModelAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'content', 'post_id', 'creator']
+    list_display = ['pk', 'content', 'post', 'creator']
 
 class GroupModelAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name']
