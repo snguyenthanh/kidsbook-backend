@@ -14,22 +14,19 @@ User.objects.create_roles()
 User.objects.create_superuser(
     email_address='a@a.com',
     username='a',
-    password='a',
-    role=1
+    password='a'
 )
 
 HIEU = User.objects.create_superuser(
     email_address='hieu@gmail.com',
     username='hieu',
-    password='a',
-    role=1
+    password='a'
 )
 
 SON = User.objects.create_superuser(
     email_address='son@gmail.com',
     username='son',
-    password='a',
-    role=0
+    password='a'
 )
 
 HIEU_GROUP = Group.objects.create_group(

@@ -26,8 +26,8 @@ class UserManager(BaseUserManager):
     # use_in_migrations = True
 
     def create_roles(self):
-        role1 = Role(id=0, name='student')
-        role2 = Role(id=1, name='teacher')
+        role1 = Role(id=1, name='teacher')
+        role2 = Role(id=2, name='student')
         role1.save()
         role2.save()
 
@@ -42,21 +42,21 @@ class UserManager(BaseUserManager):
         user = self.model(username=username, email_address=email_address, **extra_fields)
         user.role = Role(id=role)
         user.set_password(password)
-        print("ABOUT TO SAVE")
-        print(self._db)
+        #print("ABOUT TO SAVE")
+        #print(self._db)
         try:
             user.save(using=self._db)
-            print("HIEU")
+            #print("HIEU")
         except Exception as e:
             print(e)
         return user
 
-    def create_user(self, username, email_address=None, password=None, role=None, **extra_fields):
+    def create_user(self, username, email_address=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        return self._create_user(username, email_address, password, role, **extra_fields)
+        return self._create_user(username, email_address, password, 2, **extra_fields)
 
-    def create_superuser(self, username, email_address, password, role, **extra_fields):
+    def create_superuser(self, username, email_address, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -65,7 +65,7 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self._create_user(username, email_address, password, role, **extra_fields)
+        return self._create_user(username, email_address, password, 1, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
