@@ -4,3 +4,6 @@ djangorestframework==3.8.2
 profanity==1.1
 pytz==2018.5
 six==1.11.0
+PyJWT
+ujson
+djangorestframework-jwt
