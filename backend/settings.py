@@ -113,7 +113,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+#Authentication backends
+AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.ModelBackend',
+    )
+    
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -134,3 +138,22 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'kidsbook.User'
+
+REST_FRAMEWORK = {
+  'DEFAULT_AUTHENTICATION_CLASSES': (
+    'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+  ),
+#   'DEFAULT_PERMISSION_CLASSES': (
+#     'rest_framework.permissions.AllowAny'
+#   )
+}
+
+import datetime
+JWT_AUTH = {
+ 
+#     # 'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer'
+}
+
