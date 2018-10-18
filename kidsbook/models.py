@@ -126,14 +126,16 @@ class Group(models.Model):
     objects = GroupManager()
 
     def add_member(self, user):
-        group_member = GroupMember(group=self, user_id=user)
+        group_member = GroupMember(group_id=self, user_id=user)
         group_member.save()
 
 
 class GroupMember(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('user_id', 'group_id')
 
 
 class PostManager(models.Manager):
@@ -149,7 +151,7 @@ class Post(models.Model):
     content = models.TextField()
 
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
-    group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
+    group_id = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
 
@@ -188,7 +190,7 @@ class Comment(models.Model):
     content = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
+    post_id = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
 
     REQUIRED_FIELDS = ['content']
