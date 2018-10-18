@@ -6,8 +6,8 @@ from rest_framework import generics, status
 from uuid import UUID
 from pprint import pprint
 
-from kidsbook.group.serializers import GroupSerializer
-from kidsbook.serializers import UserSerializer
+#from kidsbook.group.serializers import GroupSerializer
+from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
 
 User = get_user_model()
@@ -40,6 +40,7 @@ def create_group(request):
 
     try:
         user_id = UUID(get_user_id_from_request_data(request_data))
+        print(User.objects.all().values())
         creator = User.objects.get(id=user_id)
     except Exception:
         return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
@@ -125,6 +126,6 @@ def delele_group(request, **kargs):
 
             return Response({'result': 'Successful'}, status=status.HTTP_202_ACCEPTED)
     except Exception:
-        passed
+        pass
 
     return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)

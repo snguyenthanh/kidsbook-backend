@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email_address', 'is_active', 'is_staff')
 
 class PostSerializer(serializers.ModelSerializer):
-    
+
     def create(self, data):
         group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
@@ -22,7 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
         depth = 1
 
 class CompletePostSerializer(serializers.ModelSerializer):
-    
+
     comments_post = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -80,3 +80,8 @@ class CommentSerializer(serializers.ModelSerializer):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'name', 'description', 'creator', 'created_at', 'users')
