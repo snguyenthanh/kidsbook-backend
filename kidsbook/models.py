@@ -31,15 +31,22 @@ class UserManager(BaseUserManager):
         role1.save()
         role2.save()
 
-    def _create_user(self, username, email_address, password, role, **extra_fields):
+    #def _create_user(self, username, email_address, password, role, **extra_fields):
+    def _create_user(self, **kargs):
         """
         Creates and saves a User with the given username, email and password.
         """
         self.create_roles()
-        if not username:
+        if 'username' not in kargs:
             raise ValueError('The given username must be set')
-        email_address = self.normalize_email(email_address)
-        user = self.model(username=username, email_address=email_address, **extra_fields)
+
+        role = kargs.pop('role', 2)
+        password = kargs.pop('password', '12345')
+
+        #email_address = self.normalize_email(kargs['email_address'])
+        kargs['email_address'] = self.normalize_email(kargs['email_address'])
+        user = self.model(**kargs)
+
         user.role = Role(id=role)
         user.set_password(password)
         #print("ABOUT TO SAVE")
@@ -51,21 +58,25 @@ class UserManager(BaseUserManager):
             print(e)
         return user
 
-    def create_user(self, username, email_address=None, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
-        return self._create_user(username, email_address, password, 2, **extra_fields)
+    #def create_user(self, username, email_address=None, password=None, **extra_fields):
+    def create_user(self, **kargs):
+        kargs.setdefault('is_staff', False)
+        kargs.setdefault('is_superuser', False)
+        return self._create_user(role=2, **kargs)
 
-    def create_superuser(self, username, email_address, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+    #def create_superuser(self, username, email_address, password, **extra_fields):
+    def create_superuser(self, **kargs):
+        if 'is_staff' not in kargs:
+            kargs['is_staff'] = True
+        if 'is_superuser' not in kargs:
+            kargs['is_superuser'] = True
 
-        if extra_fields.get('is_staff') is not True:
+        if kargs.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
+        if kargs.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self._create_user(username, email_address, password, 1, **extra_fields)
+        return self._create_user(role=1, **kargs)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -74,7 +85,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     realname = models.CharField(max_length=50)
     password = models.CharField(max_length=65530)
-    gender = models.NullBooleanField()
+    gender = models.BooleanField(default=False)
     description = models.TextField(default="")
     date_of_birth = models.DateField(null=True)
     avatar_url = models.CharField(max_length=65530, null=True)
@@ -206,7 +217,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
 
-    REQUIRED_FIELDS = ['content']
+    REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
     objects = CommentManager()

@@ -15,7 +15,7 @@ class TestUser(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.user = User.objects.create_user(self.username, self.email, self.password)
+        self.user = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
 
 
     def test_login(self):
@@ -44,7 +44,7 @@ class TestUser(APITestCase):
         username = "hey"
         email = "kid@s.sss"
         password = "want_some_cookies?"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
 
         response = self.client.get("{}{}/".format(self.url, str(user.id)), HTTP_AUTHORIZATION=token)
 
@@ -55,7 +55,7 @@ class TestUser(APITestCase):
         username = "hey"
         email = "kid@s.sss"
         password = "want_some_cookies?"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
 
         response = self.client.get("{}{}/".format(self.url, str(user.id)))
         self.assertEqual(401, response.status_code)

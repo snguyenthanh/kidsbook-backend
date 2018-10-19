@@ -36,8 +36,7 @@ class IsOwner(permissions.BasePermission):
 
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
-        print(get_user(request).is_superuser)
-        return get_user(request).is_superuser;
+        return request.user.is_superuser
 
 class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):

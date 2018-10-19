@@ -15,7 +15,7 @@ class TestGroup(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.user = User.objects.create_user(self.username, self.email, self.password)
+        self.user = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.user)
         self.token = 'Bearer {0}'.format(token.decode('utf-8'))
         self.api_authentication(self.token)
@@ -43,7 +43,7 @@ class TestGroupMember(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.creator = User.objects.create_user(self.username, self.email, self.password)
+        self.creator = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.creator)
         self.creator_token = 'Bearer {0}'.format(token.decode('utf-8'))
 
@@ -51,7 +51,7 @@ class TestGroupMember(APITestCase):
         self.username = "hey"
         self.email = "kid@s.sss"
         self.password = "want_some_cookies?"
-        self.member = User.objects.create_user(self.username, self.email, self.password)
+        self.member = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.member)
         self.member_token = 'Bearer {0}'.format(token.decode('utf-8'))
 
@@ -72,7 +72,7 @@ class TestGroupMember(APITestCase):
         username = "Another"
         email = "one@b.ites"
         password = "the_dust"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
 
         # Add the user to be a member
         url = "{}user/{}/".format(self.url, str(user.id))
@@ -98,7 +98,7 @@ class TestGroupMember(APITestCase):
         username = "Another"
         email = "one@b.ites"
         password = "the_dust"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
 
         # Add the user to be a member
         url = self.url + 'user/' + str(user.id) + '/'
@@ -113,7 +113,7 @@ class TestGroupMember(APITestCase):
         username = "Another"
         email = "one@b.ites"
         password = "the_dust"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
 
         url = self.url + 'user/' + str(user.id) + '/'
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
@@ -133,7 +133,7 @@ class TestGroupManage(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.creator = User.objects.create_user(self.username, self.email, self.password)
+        self.creator = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.creator)
         self.creator_token = 'Bearer {0}'.format(token.decode('utf-8'))
 
@@ -158,7 +158,7 @@ class TestGroupManage(APITestCase):
         username = "james"
         email = "james@yong.com"
         password = "testing_ppp"
-        user = User.objects.create_user(username, email, password)
+        user = User.objects.create_user(username=username, email_address=email, password=password)
         token = 'Bearer {0}'.format(generate_token(user).decode('utf-8'))
 
         response = self.client.delete(url, HTTP_AUTHORIZATION=token)

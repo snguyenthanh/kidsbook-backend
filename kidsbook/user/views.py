@@ -122,6 +122,13 @@ class GetInfoUser(generics.ListAPIView):
 
         return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
 
+class GetAllUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+    def list(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
 class GetPost(generics.ListAPIView):
     queryset = ''

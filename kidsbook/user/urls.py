@@ -4,9 +4,10 @@ from kidsbook.user import views
 
 urlpatterns = [
     # Get User's Info
+    path('all/', views.GetAllUser.as_view()),
     path('profile/', views.GetInfo.as_view()),
     path('<uuid:user_id>/', views.GetInfoUser.as_view()),
-    
+
     path('posts/', views.GetPost.as_view()),
     path('login/', views.LogIn.as_view()),
     path('update/', views.Update.as_view()),
