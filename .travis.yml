@@ -16,6 +16,7 @@ before_script:
   - psql -U postgres -c "ALTER ROLE app_user SET timezone TO 'UTC';"
   - psql -U postgres -c "ALTER USER app_user CREATEDB;"
   - psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE app_db TO app_user;"
+  - rm -rf kidsbook/migrations
   - python manage.py makemigrations kidsbook
   - python manage.py migrate
 
