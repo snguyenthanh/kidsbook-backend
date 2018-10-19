@@ -8,3 +8,4 @@ PyJWT
 ujson
 djangorestframework-jwt
 django-cors-headers
+psycopg2

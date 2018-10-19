@@ -60,11 +60,8 @@ HIEU_POST2 = Post.objects.create_post(
     group=HIEU_GROUP
 )
 
-print('added')
-SON_COMMENT = Comment.objects.create_comment(
+SON_COMMENT = Comment.objects.create_comment(son
     content='OKAY',
     post=HIEU_POST,
     creator=SON
 )
-
-print('trying')
