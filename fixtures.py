@@ -15,7 +15,6 @@ User.objects.create_superuser(
     email_address='a@a.com',
     username='Best teacher',
     password='a',
-    role=1,
     description='Call me by A',
     realname="Sreyans Sipanis"
 )
@@ -24,7 +23,6 @@ HIEU = User.objects.create_superuser(
     email_address='hieu@gmail.com',
     username='Tall Guy',
     password='a',
-    role=1,
     description='Call me by Hieu',
     realname="Le Trung Hieu"
 )
@@ -33,7 +31,6 @@ SON = User.objects.create_superuser(
     email_address='son@gmail.com',
     username='Assasin',
     password='a',
-    role=0,
     description='Call me by Son',
     realname="Nguyen Thanh Son"
 )
