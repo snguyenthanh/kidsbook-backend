@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'kidsbook',
-    'api',
     'backend',
     'rest_framework.authtoken',
     'rest_auth',
