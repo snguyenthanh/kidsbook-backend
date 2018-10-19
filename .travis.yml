@@ -8,6 +8,9 @@ install:
 services:
   - postgresql
 
+addons:
+  postgresql: "10"
+
 before_script:
   - psql -U postgres -c "CREATE DATABASE app_db;"
   - psql -U postgres -c "CREATE USER app_user WITH PASSWORD 'password';"
