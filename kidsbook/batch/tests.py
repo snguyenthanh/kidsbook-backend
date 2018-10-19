@@ -41,7 +41,5 @@ class TestBatch(APITestCase):
         }
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=body)
-        with open('output.txt', 'w') as out_file:
-            out_file.write(str(response.data))
 
         self.assertEqual(202, response.status_code)

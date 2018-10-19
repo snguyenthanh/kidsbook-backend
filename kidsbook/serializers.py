@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
 
     def create(self, data):
-        group = Group.objects.get(id=self.context['view'].kwargs.get("group_id"))
+        group = Group.objects.get(id=self.context['view'].kwargs.get("group"))
         current_user = self.context['request'].user
         return Post.objects.create(content=data["content"], group=group, creator=current_user)
 

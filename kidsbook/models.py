@@ -119,8 +119,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class FakeStudent(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student_id = models.ForeignKey(User, related_name='student_id', on_delete=models.CASCADE)
-    teacher_id = models.ForeignKey(User, related_name='teacher_id', on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
+    teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
 
 class GroupManager(models.Manager):
     #def create_group(self, name, creator):
@@ -150,16 +150,16 @@ class Group(models.Model):
     objects = GroupManager()
 
     def add_member(self, user):
-        group_member = GroupMember(group_id=self, user_id=user)
+        group_member = GroupMember(group=self, user=user)
         group_member.save()
 
 
 class GroupMember(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     class Meta:
-        unique_together = ('user_id', 'group_id')
+        unique_together = ('user', 'group')
 
 
 class PostManager(models.Manager):
