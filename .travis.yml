@@ -11,7 +11,7 @@ virtualenv:
 services:
   - postgresql
 
- before_script:
+before_script:
   - psql -U postgres -c "create database app_db;CREATE DATABASE app_db; \
     CREATE USER app_user WITH PASSWORD 'password'; \
     ALTER ROLE app_user SET client_encoding TO 'utf8'; \
