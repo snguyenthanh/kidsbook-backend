@@ -6,6 +6,7 @@ from django.conf.urls import include
 urlpatterns = [
     path('user/', include('kidsbook.user.urls')),
     path('group/', include('kidsbook.group.urls')),
+    path('batch/', include('kidsbook.batch.urls')),
     path('group/<uuid:group_id>/posts/', views.GroupPostList.as_view()),
     path('post/<uuid:post_id>/', views.PostDetail.as_view()),
     path('post/<uuid:post_id>/complete', views.CompletePostDetail.as_view()),

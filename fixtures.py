@@ -35,6 +35,7 @@ SON = User.objects.create_superuser(
     realname="Nguyen Thanh Son"
 )
 
+
 HIEU_GROUP = Group.objects.create_group(
     name='HIEU_GROUP',
     creator = HIEU
@@ -46,7 +47,6 @@ SON_GROUP = Group.objects.create_group(
     name='SON_GROUP',
     creator = SON
 )
-
 
 HIEU_POST = Post.objects.create_post(
     content='Need someone to eat lunch at pgp?',
@@ -60,8 +60,8 @@ HIEU_POST2 = Post.objects.create_post(
     group=HIEU_GROUP
 )
 
-SON_COMMENT = Comment.objects.create_comment(
-    content = 'OKAY',
-    post = HIEU_POST,
-    creator= SON
+SON_COMMENT = Comment.objects.create_comment(son
+    content='OKAY',
+    post=HIEU_POST,
+    creator=SON
 )
