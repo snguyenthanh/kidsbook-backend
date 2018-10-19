@@ -5,16 +5,22 @@ python:
 install:
   - pip install -r requirements.txt
 
+sudo: required
+
 services:
   - postgresql
 addons:
-  postgresql: "10"
-  apt:
-    packages:
-    - postgresql-10
-    - postgresql-client-10
+  postgresql: "9.6"
 
 before_script:
+  - set -ex
+  - sudo service postgresql stop
+  - sudo apt-get remove -q 'postgresql-*'
+  - sudo apt-get update -q
+  - sudo apt-get install -q postgresql-10 postgresql-client-10
+  - sudo cp /etc/postgresql/{9.6,10}/main/pg_hba.conf
+  - sudo service postgresql restart
+
   - psql -U postgres -c "CREATE DATABASE app_db;"
   - psql -U postgres -c "CREATE USER app_user WITH PASSWORD 'password';"
   - psql -U postgres -c "ALTER ROLE app_user SET client_encoding TO 'utf8';"
