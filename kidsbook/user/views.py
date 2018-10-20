@@ -111,7 +111,6 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         serializerNew = self.serializer_class(current_user, data=request_data)
         if(serializerNew.is_valid()):
-            print("A HERE")
             serializerNew.save()
             # print(request.data['new_user_name'])
 

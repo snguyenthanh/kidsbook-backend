@@ -23,13 +23,8 @@ class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
         group_id = view.kwargs.get('group_id', None)
-        print("GROUP_ID")
-        print(group_id)
-        print(request.data)
         if group_id:
             #return get_user(request) in Group.objects.get(id=group_id).users.all()
-            print("GROUP_ID")
-            print(group_id)
             return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
         return False
 

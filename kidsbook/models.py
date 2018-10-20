@@ -49,8 +49,6 @@ class UserManager(BaseUserManager):
 
         #email_address = self.normalize_email(kargs['email_address'])
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
-        print("HERE")
-        print(kargs)
         user = self.model(**kargs)
 
         user.role = Role.objects.get(id=role)
@@ -210,7 +208,7 @@ class Post(models.Model):
 
     REQUIRED_FIELDS = ["content"]
 
-    # objects = PostManager()
+    objects = PostManager()
     class Meta:
         ordering = ('created_at',)
 

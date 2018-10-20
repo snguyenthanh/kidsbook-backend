@@ -25,13 +25,14 @@ class TestUser(APITestCase):
 
     def get_token(self):
         token_response = self.client.post(self.url + 'login/', data={'email_address': self.email})
-        token = token_response.data.get('token', b'')
+        token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
 
     def test_get_self_user_profile_with_token(self):
         token = self.get_token()
         response = self.client.get(self.url + 'profile/', HTTP_AUTHORIZATION=token)
+
         self.assertEqual(200, response.status_code)
 
     def test_get_self_user_profile_without_token(self):
@@ -47,8 +48,7 @@ class TestUser(APITestCase):
         password = "want_some_cookies?"
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
-        response = self.client.get("{}{}/".format(self.url, str(user.id)), HTTP_AUTHORIZATION=token)
-
+        response = self.client.get("{}{}/profile/".format(self.url, str(user.id)), HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
 
     def test_get_user_info_without_token(self):
@@ -58,5 +58,5 @@ class TestUser(APITestCase):
         password = "want_some_cookies?"
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
-        response = self.client.get("{}{}/".format(self.url, str(user.id)))
+        response = self.client.get("{}{}/profile/".format(self.url, str(user.id)))
         self.assertEqual(401, response.status_code)
