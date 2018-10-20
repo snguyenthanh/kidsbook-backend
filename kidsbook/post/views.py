@@ -157,19 +157,6 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
         except Exception:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-class CompletePostDetail(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = CompletePostSerializer
-    permission_classes = (IsSuperUser, HasAccessToPost)
-
-    def list(self, request, **kwargs):
-        try:
-            queryset = self.get_queryset().get(id=kwargs['pk'])
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = PostSerializer(queryset)
-        return Response(serializer.data)
-
 class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer

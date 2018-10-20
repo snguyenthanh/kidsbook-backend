@@ -35,15 +35,6 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'content', 'creator', 'group')
         depth = 1
 
-class CompletePostSerializer(serializers.ModelSerializer):
-
-    comments_post = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'likes', 'shares', 'comments_post')
-        depth = 1
-
 class PostLikeSerializer(serializers.ModelSerializer):
 
     class Meta:
