@@ -25,7 +25,7 @@ class TestGroup(APITestCase):
 
     def test_create_group(self):
         response = self.client.post(self.url, {"name": "testing group"})
-        self.assertEqual(201, response.status_code)
+        self.assertEqual(202, response.status_code)
 
     def test_create_existing_group(self):
         self.client.post(self.url, {"name": "testing group"})
