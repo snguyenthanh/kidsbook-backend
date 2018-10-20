@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from rest_framework import permissions, status
 from kidsbook.models import *
 from kidsbook.serializers import *
@@ -15,6 +16,18 @@ class IsTokenValid(permissions.BasePermission):
         except BlackListedToken.DoesNotExist:
             is_allowed_user = True
         return is_allowed_user
+=======
+<<<<<<< HEAD
+from rest_framework import permissions, status
+from kidsbook.models import *
+from kidsbook.serializers import *
+from rest_framework.response import Response
+=======
+from rest_framework import permissions
+from kidsbook.models import *
+from kidsbook.serializers import *
+>>>>>>> 3c884eadec3be45b70b804f47a61e2f2caa486af
+>>>>>>> son
 
 class IsOwner(permissions.BasePermission):
     """
@@ -36,7 +49,7 @@ class IsSuperUser(permissions.BasePermission):
 class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
-        group_id = view.kwargs.get('group_id', None)
+        group_id = view.kwargs.get('pk', None)
         if group_id:
             #return get_user(request) in Group.objects.get(id=group_id).users.all()
             try:
@@ -48,7 +61,7 @@ class IsInGroup(permissions.BasePermission):
 class HasAccessToPost(permissions.BasePermission):
     def has_permission(self, request, view):
         #pk = post_id
-        post_id = view.kwargs.get('post_id', None)
+        post_id = view.kwargs.get('pk', None)
         if post_id:
             #return get_user(request) in Post.objects.get(id=post_id).group.users.all()
             return Post.objects.get(id=post_id).group.users.filter(id=request.user.id).exists()
@@ -57,7 +70,7 @@ class HasAccessToPost(permissions.BasePermission):
 class HasAccessToComment(permissions.BasePermission):
     def has_permission(self, request, view):
         #pk = comment_id
-        comment_id = view.kwargs.get('comment_id', None)
+        comment_id = view.kwargs.get('pk', None)
         if comment_id:
             #return get_user(request) in Comment.objects.get(id=comment_id).post.group.users.all()
             return Comment.objects.get(id=comment_id).post.group.users.filter(id=request.user.id).exists()
@@ -65,7 +78,7 @@ class HasAccessToComment(permissions.BasePermission):
 
 class IsGroupCreator(permissions.BasePermission):
     def has_permission(self, request, view):
-        group_id = view.kwargs.get('group_id', None)
+        group_id = view.kwargs.get('pk', None)
         #sender_id = request.data.get('sender_id', None)
         sender_id = request.user.id
 

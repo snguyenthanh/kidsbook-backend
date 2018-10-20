@@ -20,9 +20,8 @@ class UserPublicSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
 
     def create(self, data):
-        print(self)
         try:
-            group = Group.objects.get(id=self.context['view'].kwargs.get("group_id"))
+            group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
         except Exception:
             raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
@@ -53,7 +52,7 @@ class PostLikeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like"]})
         return new_post
@@ -66,7 +65,7 @@ class CommentLikeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        comment = Comment.objects.get(id=self.context['view'].kwargs.get("comment_id"))
+        comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like"]})
         return new_comment
@@ -79,7 +78,7 @@ class PostFlagSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'status': data["status"], 'comment': None})
         return new_obj
@@ -92,7 +91,7 @@ class CommentFlagSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        comment = Comment.objects.get(id=self.context['view'].kwargs.get("comment_id"))
+        comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         post = comment.post
         current_user = self.context['request'].user
         new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, comment=comment, defaults={'status': data["status"]})
@@ -106,7 +105,7 @@ class PostShareSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         new_post, created = UserSharePost.objects.get_or_create(post=post, user=current_user)
         return new_post
@@ -119,7 +118,7 @@ class CommentSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 

@@ -15,7 +15,7 @@ class TestGroup(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.user = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
+        self.user = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.user)
         self.token = 'Bearer {0}'.format(token.decode('utf-8'))
         self.api_authentication(self.token)
@@ -43,7 +43,7 @@ class TestGroupMember(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.creator = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
+        self.creator = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.creator)
         self.creator_token = 'Bearer {0}'.format(token.decode('utf-8'))
 
@@ -65,6 +65,10 @@ class TestGroupMember(APITestCase):
     def test_add_new_group_member(self):
         response = self.client.post("{}user/{}/".format(self.url, str(self.member.id)), HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
+
+    def test_add_new_group_member_without_token(self):
+        response = self.client.post("{}user/{}/".format(self.url, str(self.member.id)))
+        self.assertEqual(401, response.status_code)
 
     def test_add_new_group_member_by_non_creator(self):
         self.client.post("{}user/{}/".format(self.url,str(self.member.id)), HTTP_AUTHORIZATION=self.creator_token)
@@ -109,7 +113,6 @@ class TestGroupMember(APITestCase):
 
         self.assertEqual(403, response.status_code)
 
-
     def test_delete_not_joined_group_member(self):
         username = "Another"
         email = "one@b.ites"
@@ -134,9 +137,26 @@ class TestGroupManage(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.creator = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
+        self.creator = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
         token = generate_token(self.creator)
         self.creator_token = 'Bearer {0}'.format(token.decode('utf-8'))
+
+    def test_create_group_by_non_superuser(self):
+        # Create a non-super user
+        username = "Hey"
+        email = "kid@do.sss"
+        password = "You want some cakes?"
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        token = generate_token(user)
+        token = 'Bearer {0}'.format(token.decode('utf-8'))
+
+        # Create a group
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=token)
+        self.assertEqual(403, response.status_code)
+
+    def test_create_group_without_token(self):
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group"})
+        self.assertEqual(401, response.status_code)
 
     def test_delete_group(self):
         response = self.client.post(self.url, {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
@@ -146,6 +166,15 @@ class TestGroupManage(APITestCase):
 
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
+
+    def test_delete_group_without_token(self):
+        response = self.client.post(self.url, {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
+
+        group_id = str(response.data.setdefault('data',{}).get('created_group_id', ''))
+        url = "{}{}/".format(self.url, group_id)
+
+        response = self.client.delete(url)
+        self.assertEqual(401, response.status_code)
 
     def test_delete_group_by_non_creator(self):
         # Create a group

@@ -36,16 +36,21 @@ def generate_token(user):
 class LogIn(APIView):
     permission_classes = (AllowAny, )
     def post(self, request):
-        # print("SECRET")
+        #print("SECRET")
         # print(settings.SECRET_KEY)
         print("LOG IN ")
         print(request.META.get('HTTP_AUTHORIZATION'))
         try:
-            email = request.data['email_address']
+            email = request.data.get('email_address', None)
+            password = request.data.get('password', None)
+            if not email or not password:
+                res = 'can not authenticate with the given credentials or the account has been deactivated'
+                return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
+              
             user = User.objects.get(email_address=email)
-            if(user.check_password(request.data['password']) == False):
-                raise ValueError('Wrong email/password')
             if user:
+                if(user.check_password(password) == False):
+                    return Response({'error': 'Wrong email/password'}, status=status.HTTP_403_FORBIDDEN)
                 try:
                     token = generate_token(user)
                     user_details = {}
