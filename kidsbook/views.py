@@ -87,6 +87,16 @@ class PostLike(generics.ListCreateAPIView):
         serializer = PostLikeSerializer(queryset, many=True)
         return Response(serializer.data)
 
+class CommentLike(generics.ListCreateAPIView):
+    queryset = UserLikeComment.objects.all()
+    serializer_class = CommentLikeSerializer
+    permission_classes = (HasAccessToComment,) #Is in group
+
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
+        serializer = CommentLikeSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 class PostFlag(generics.ListCreateAPIView):
     queryset = UserFlagPost.objects.all()
     serializer_class = PostFlagSerializer
@@ -95,6 +105,16 @@ class PostFlag(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
         serializer = PostFlagSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class CommentFlag(generics.ListCreateAPIView):
+    queryset = UserFlagComment.objects.all()
+    serializer_class = CommentFlagSerializer
+    permission_classes = (HasAccessToComment,) #Is in group
+
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
+        serializer = CommentFlagSerializer(queryset, many=True)
         return Response(serializer.data)
 
 class PostShare(generics.ListCreateAPIView):
