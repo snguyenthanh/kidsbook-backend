@@ -4,10 +4,17 @@ from kidsbook.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+# This is for private profile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'is_staff', 'description', "realname")
+        fields = ('id', 'username', 'email_address', 'is_active', 'is_superuser', 'description', "realname")
+
+# This class is for public profile
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'is_active', 'is_superuser', 'username', 'description')
 
 class PostSerializer(serializers.ModelSerializer):
 

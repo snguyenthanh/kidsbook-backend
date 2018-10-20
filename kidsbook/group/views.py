@@ -2,31 +2,16 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
-from rest_framework import status
+from rest_framework import status, generics
 from uuid import UUID
 
 #from kidsbook.group.serializers import GroupSerializer
-from kidsbook.serializers import UserSerializer, GroupSerializer
-from kidsbook.models import Group, GroupMember
+from kidsbook.serializers import *
+from kidsbook.models import *
+from kidsbook.permissions import *
 
 User = get_user_model()
 
-#################################################################################################################
-## PERMISSIONS ##
-
-class IsGroupCreator(BasePermission):
-    def has_permission(self, request, view):
-        group_id = view.kwargs.get('group_id', None)
-        #sender_id = request.data.get('sender_id', None)
-        sender_id = request.user.id
-
-        # If sender is not the Creator of group
-        if not sender_id or str(sender_id) != str(Group.objects.get(id=group_id).creator.id):
-            return False
-        return True
-
-
-#################################################################################################################
 ## GROUP ##
 
 def get_user_id_from_request_data(request_data: dict):
@@ -40,13 +25,14 @@ def get_groups(request):
     """Return all created groups."""
 
     try:
-        groups = Group.objects.all()
+        # groups = Group.objects.all()
+        groups = request.user.group_users.all()
     except Exception:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    
+
     serializer = GroupSerializer(groups, many=True)
-    return Response(serializer.data)
+    return Response({'data': serializer.data})
 
 def create_group(request):
     # Make a copy of data, as it is immutable
@@ -55,7 +41,7 @@ def create_group(request):
     try:
         creator = request.user
     except Exception:
-        return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = GroupSerializer(data=request_data)
 
@@ -66,14 +52,15 @@ def create_group(request):
             # Re-assign the `User` object
             request_data['creator'] = creator
             new_group = Group.objects.create_group(**request_data)
-            return Response({'result': 'Successful', 'created_group_id': new_group.id}, status=status.HTTP_201_CREATED)
+            response = {'created_group_id': new_group.id}
+            return Response({'data': response}, status=status.HTTP_201_CREATED)
         except Exception as exc:
-            return Response({'result': 'Unsuccessful', 'error': exc}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsSuperUser))
 def group(request):
     """Return all groups or create a new group."""
 
@@ -83,7 +70,7 @@ def group(request):
     }
     if request.method in function_mappings:
         return function_mappings[request.method](request)
-    return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 #################################################################################################################
@@ -119,12 +106,24 @@ def group_member(request, **kargs):
             # Both POST and DELETE requests require getting group_id and user_id
             function_mappings[request.method](new_member, target_group)
 
-            return Response({'result': 'Successful'}, status=status.HTTP_202_ACCEPTED)
+            return Response({}, status=status.HTTP_202_ACCEPTED)
     except Exception:
         pass
 
-    return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, IsInGroup))
+def get_all_members_in_group(request, **kargs):
+    # serializer_class = UserPublicSerializer
+    try:
+        users = Group.objects.get(id=kargs.get('group_id')).users
+        serializer = UserPublicSerializer(users, many=True)
+        return Response({'data': serializer.data})
+    except Exception:
+        pass
+
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 #################################################################################################################
 ## GROUP MANAGE ##
@@ -141,8 +140,8 @@ def delete_group(request, **kargs):
 
             # The relations in GroupMember table are also auto-removed
             target_group.delete()
-            return Response({'result': 'Successful'}, status=status.HTTP_202_ACCEPTED)
+            return Response({}, status=status.HTTP_202_ACCEPTED)
     except Exception:
         pass
 
-    return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)

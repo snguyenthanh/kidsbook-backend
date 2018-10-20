@@ -1,0 +1,38 @@
+language: python
+python:
+  - "3.6"
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+
+sudo: required
+
+services:
+  - postgresql
+addons:
+  postgresql: "9.6"
+
+before_script:
+  - set -ex
+  - sudo service postgresql stop
+  - sudo apt-get remove -q 'postgresql-*'
+  - sudo apt-get update -q
+  - sudo apt-get install -q postgresql-10 postgresql-client-10
+  - sudo cp /etc/postgresql/{9.6,10}/main/pg_hba.conf
+  - sudo service postgresql restart
+
+  - psql -U postgres -c "CREATE DATABASE app_db;"
+  - psql -U postgres -c "CREATE USER app_user WITH PASSWORD 'password';"
+  - psql -U postgres -c "ALTER ROLE app_user SET client_encoding TO 'utf8';"
+  - psql -U postgres -c "ALTER ROLE app_user SET default_transaction_isolation TO 'read committed';"
+  - psql -U postgres -c "ALTER ROLE app_user SET timezone TO 'UTC';"
+  - psql -U postgres -c "ALTER USER app_user CREATEDB;"
+  - psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE app_db TO app_user;"
+  - rm -rf kidsbook/migrations
+  - python manage.py makemigrations kidsbook
+  - python manage.py migrate
+
+
+# command to run tests
+script:
+  - bash test.sh

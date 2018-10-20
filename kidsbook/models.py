@@ -10,6 +10,7 @@ import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
+import bcrypt
 
 def format_value(value):
     if isinstance(value, list) and len(value) == 1:
@@ -28,8 +29,10 @@ class UserManager(BaseUserManager):
     def create_roles(self):
         role1 = Role(id=1, name='teacher')
         role2 = Role(id=2, name='student')
+        role3 = Role(id=3, name='Virtual student')
         role1.save()
         role2.save()
+        role3.save()
 
     #def _create_user(self, username, email_address, password, role, **extra_fields):
     def _create_user(self, **kargs):
@@ -39,6 +42,7 @@ class UserManager(BaseUserManager):
         self.create_roles()
         if 'username' not in kargs:
             raise ValueError('The given username must be set')
+            # kargs['username'] = 'anonymous'
 
         role = kargs.pop('role', 2)
         password = kargs.pop('password', '12345')
@@ -47,8 +51,14 @@ class UserManager(BaseUserManager):
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
         user = self.model(**kargs)
 
-        user.role = Role(id=role)
+        user.role = Role.objects.get(id=role)
         user.set_password(password)
+        # user.password = password
+
+        # if(kargs['teacher_id']):
+        #     teacher = User.objects.get(id=kargs['teacher_id'])
+        #     user.teacher = teacher
+
         #print("ABOUT TO SAVE")
         #print(self._db)
         try:
@@ -62,7 +72,14 @@ class UserManager(BaseUserManager):
     def create_user(self, **kargs):
         kargs.setdefault('is_staff', False)
         kargs.setdefault('is_superuser', False)
+        # kargs.setdefault('is_virtual_user', False)
         return self._create_user(role=2, **kargs)
+
+    def create_virtual_user(self, **kargs):
+        # kargs.setdefault('is_virtual_user', True)
+        kargs.setdefault('is_staff', False)
+        kargs.setdefault('is_superuser', False)
+        return self._create_user(role=3, **kargs)
 
     #def create_superuser(self, username, email_address, password, **extra_fields):
     def create_superuser(self, **kargs):
@@ -91,8 +108,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
+
+    teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
-    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
+    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE, default=0)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -107,20 +126,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
-    def check_password(self, raw_password):
-        print("REACH")
-        print(make_password(raw_password))
-        print(self.password)
-        if self.password == raw_password:
-            return True
-        else:
-            return False
+    # def check_password(self, raw_password):
+    #     print("REACH")
+    #     # print(make_password(raw_password))
+    #     print(raw_password)
+    #     print(self.password)
+    #     if self.password == raw_password:
+    #         return True
+    #     else:
+            # return False
 
 
-class FakeStudent(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
-    teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
+# class FakeStudent(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
+#     teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
 
 class GroupManager(models.Manager):
     #def create_group(self, name, creator):
@@ -162,6 +182,13 @@ class GroupMember(models.Model):
         unique_together = ('user', 'group')
 
 
+# class PostManager(models.Manager):
+#     #def create_post(self, title, content, creator):
+#     def create_post(self, **kargs):
+#         post = self.model(**kargs)
+#         post.save(using=self._db)
+#         return post
+
 class PostManager(models.Manager):
     def create_post(self, **kargs):
         post = self.model(**kargs)
@@ -173,7 +200,7 @@ class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
-
+    objects = PostManager()
     creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
@@ -191,24 +218,16 @@ class UserLikePost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     like_or_dislike = models.BooleanField()
 
-class UserLikeComment(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    commment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    class Meta:
-        unique_together = ["user", "comment"]
-
-class UserFlagPost(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    status = models.CharField(max_length=120, unique=True)
-
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+# class CommentManager(models.Manager):
+#     def create_comment(self, **kargs):
+#         comment = self.model(**kargs)
+#         comment.save(using=self._db)
+#         return comment
 
 class CommentManager(models.Manager):
     def create_comment(self, **kargs):
@@ -227,4 +246,19 @@ class Comment(models.Model):
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
+    # objects = CommentManager()
     objects = CommentManager()
+
+class UserLikeComment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ["user", "comment"]
+
+class UserFlagPost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    status = models.CharField(max_length=120, unique=True)
