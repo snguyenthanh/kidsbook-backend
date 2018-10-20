@@ -73,3 +73,4 @@ SON_COMMENT = Comment.objects.create_comment(
     post=HIEU_POST,
     creator=SON
 )
+print("FINISHED")
