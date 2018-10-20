@@ -51,21 +51,48 @@ class PostLikeSerializer(serializers.ModelSerializer):
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
-        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
+        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like"]})
         return new_post
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserLikeComment
+        fields = ('id', 'user', 'comment', 'like_or_dislike')
+        depth = 1
+
+    def create(self, data):
+        comment = Comment.objects.get(id=self.context['view'].kwargs.get("comment_id"))
+        current_user = self.context['request'].user
+        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like"]})
+        return new_comment
 
 class PostFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFlagPost
-        fields = ('id', 'user', 'post', 'flag_or_unflag')
+        fields = ('id', 'user', 'post', 'status', 'comment')
         depth = 1
 
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("post_id"))
         current_user = self.context['request'].user
-        new_post, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'flag_or_unflag': data["flag_or_unflag"]})
-        return new_post
+        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'status': data["status"], 'comment': None})
+        return new_obj
+
+class CommentFlagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserFlagPost
+        fields = ('id', 'user', 'post', 'status', 'comment')
+        depth = 1
+
+    def create(self, data):
+        comment = Comment.objects.get(id=self.context['view'].kwargs.get("comment_id"))
+        post = comment.post
+        current_user = self.context['request'].user
+        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, comment=comment, defaults={'status': data["status"]})
+        return new_obj
 
 class PostShareSerializer(serializers.ModelSerializer):
 
