@@ -77,17 +77,11 @@ class UserManager(BaseUserManager):
         return self._create_user(role=2, **kargs)
 
     def create_virtual_user(self, **kargs):
-        kargs.setdefault('is_virtual_user', True)
-        kargs.setdefault('is_staff', False)
-<<<<<<< HEAD
-
         if 'is_virtual_user' not in kargs:
             kargs['is_virtual_user'] = True
         if 'is_staff' not in kargs:
             kargs['is_staff'] = False
 
-=======
->>>>>>> parent of 3c884ea... Merge branch 'master' into son
         # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
 

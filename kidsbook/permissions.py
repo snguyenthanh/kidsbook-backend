@@ -25,11 +25,10 @@ class IsInGroup(permissions.BasePermission):
         # If there are no `pk`
         group_id = view.kwargs.get('pk', None)
         if group_id:
-            #return get_user(request) in Group.objects.get(id=group_id).users.all()
             try:
                 return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
             except Exception:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                pass
         return False
 
 class HasAccessToPost(permissions.BasePermission):

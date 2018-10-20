@@ -144,7 +144,7 @@ class GetInfoUser(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
     def list(self, request, **kargs):
         try:
-            user_id = kargs.get('user_id', None)
+            user_id = kargs.get('pk', None)
             if user_id:
                 user = User.objects.get(id=user_id)
                 if(user.is_superuser):
