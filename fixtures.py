@@ -37,7 +37,7 @@ SON = User.objects.create_superuser(
 
 SREYANS = User.objects.create_user(
     email_address='sreyans@gmail.com',
-    username='Assasin',
+    username='Assasina',
     password='a',
     description='Call me by Sreyans',
     realname='Sreyans Sipanis',
