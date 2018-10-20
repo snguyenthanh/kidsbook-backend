@@ -38,14 +38,13 @@ class LogIn(APIView):
     def post(self, request):
         # print("SECRET")
         # print(settings.SECRET_KEY)
+        print("LOG IN ")
+        print(request.META.get('HTTP_AUTHORIZATION'))
         try:
             email = request.data['email_address']
-            #password = request.data['password']
-            #user = authenticate(username='hieu2', password=password)
-            #print(user)
             user = User.objects.get(email_address=email)
-            #print("CHECK")
-            #print(user.check_password(password))
+            if(user.check_password(request.data['password']) == False):
+                raise ValueError('Wrong email/password')
             if user:
                 try:
                     token = generate_token(user)
@@ -57,17 +56,15 @@ class LogIn(APIView):
                     return Response({'data': user_details}, status=status.HTTP_200_OK)
 
                 except Exception as e:
-                    return Response({'error': e})
+                    return Response({'error': str(e)})
             else:
-                res = {
-                    'error': 'can not authenticate with the given credentials or the account has been deactivated'}
+                res = 'can not authenticate with the given credentials or the account has been deactivated'
                 return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-        except KeyError:
-            res = {'error': 'please provide a email and a password'}
-            return Response({'error': res})
+        except Exception as e:
+            return Response({'error': str(e)})
 
 class Register(APIView):
-    # permission_classes = (IsSuperUser, IsInGroup)
+    permission_classes = (IsSuperUser, IsInGroup)
     serializer_class = UserSerializer
     def post(self, request):
         user_role = request.data['type']
@@ -101,7 +98,7 @@ class Register(APIView):
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
 
     def put(self, request):
         current_user = request.user
@@ -116,7 +113,6 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         serializerNew = self.serializer_class(current_user, data=request_data)
         if(serializerNew.is_valid()):
-            print("A HERE")
             serializerNew.save()
             # print(request.data['new_user_name'])
 
@@ -126,14 +122,14 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
 class GetInfo(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
             serializer = self.serializer_class(current_user, many=False)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # class GetGroup(generics.ListAPIView):
 #     serializer_class = GroupSerializer
@@ -141,16 +137,25 @@ class GetInfo(generics.ListAPIView):
 #     def list(self, request):
 #         groups = Group.objects.
 
+class LogOut(generics.ListAPIView):
+    permission_class = (IsAuthenticated, IsTokenValid)
+    def post(self, request):
+        try:
+            token = request.META.get('HTTP_AUTHORIZATION')
+            BlackListedToken.objects.create(token=token, user=request.user)
+            return Response({})
+        except Exception as e:
+            return Response({'error': e})
 
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request, **kargs):
         try:
             user_id = kargs.get('user_id', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(user.is_superuser):
+                if(request.user.is_superuser):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer
@@ -164,7 +169,7 @@ class GetInfoUser(generics.ListAPIView):
 class GetPost(generics.ListAPIView):
     queryset = ''
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
@@ -172,6 +177,19 @@ class GetPost(generics.ListAPIView):
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e})
+            return Response({'error': str(e)})
+
+class GetVirtualUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUser, IsTokenValid)
+    def list(self, request):
+        try:
+            current_user = request.user
+            virtual_users = User.objects.filter(teacher=current_user)
+            serializer = self.serializer_class(virtual_users, many=True)
+            return Response({'data': serializer.data})
+        except Exception as e: 
+            return Response({'error': str(e)})
+
 
 # Create your views here.

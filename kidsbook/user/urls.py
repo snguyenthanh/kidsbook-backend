@@ -14,6 +14,8 @@ urlpatterns = [
     # path('loginAs/', views.LogInAs.as_view()),
     path('update/', views.Update.as_view()),
     path('register/', views.Register.as_view()),
+    path('virtual_users/', views.GetVirtualUser.as_view()),
+    path('logout/', views.LogOut.as_view())
     # path('batchCreate/', views.BatchCreate.as_view())
 ]
 

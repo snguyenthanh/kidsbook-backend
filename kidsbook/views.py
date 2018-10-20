@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required, user_passes_test
 # from django.contrib.auth.models import User
 from rest_framework import permissions
-from profanity import profanity
 
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
@@ -27,10 +26,13 @@ class GroupPostList(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['group_id']))
-            serializer = PostSerializer(queryset, many=True)
-            return Response(serializer.data)
         except Exception:
-            return Response('Group not found', status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = PostSerializer(queryset, many=True)
+        return Response({'data': serializer.data})
+
+    def post(self, request, *args, **kwargs):
+        return Response({'data': self.create(request, *args, **kwargs).data})
 
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()

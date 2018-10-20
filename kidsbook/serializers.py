@@ -1,4 +1,5 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response
 from kidsbook.models import *
 # from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
@@ -19,9 +20,16 @@ class UserPublicSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
 
     def create(self, data):
-        group = Group.objects.get(id=self.context['view'].kwargs.get("group"))
+        print(self)
+        try:
+            group = Group.objects.get(id=self.context['view'].kwargs.get("group_id"))
+        except Exception:
+            raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
-        return Post.objects.create(content=data["content"], group=group, creator=current_user)
+        try:
+            return Post.objects.create(content=data["content"], group=group, creator=current_user)
+        except Exception:
+            raise serializers.ValidationError({'error': 'Unknown error while creating post'})
 
     class Meta:
         model = Post

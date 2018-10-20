@@ -57,7 +57,7 @@ class TestGroupMember(APITestCase):
 
         # Group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
-        self.group_id = response.data.get('created_group_id', '')
+        self.group_id = response.data.setdefault('data', {}).get('created_group_id', '')
 
         self.url = "{}/group/{}/".format(url_prefix, self.group_id)
 
@@ -83,6 +83,7 @@ class TestGroupMember(APITestCase):
     def test_add_duplicated_group_member(self):
         url = self.url + 'user/' + str(self.member.id) + '/'
         self.client.post(url, HTTP_AUTHORIZATION=self.creator_token)
+
         response = self.client.post(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(400, response.status_code)
 
@@ -139,10 +140,8 @@ class TestGroupManage(APITestCase):
 
     def test_delete_group(self):
         response = self.client.post(self.url, {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
-        with open('output.txt', 'w') as out_f:
-            out_f.write(str(response.data))
 
-        group_id = str(response.data.get('created_group_id', ''))
+        group_id = str(response.data.setdefault('data',{}).get('created_group_id', ''))
         url = "{}{}/".format(self.url, group_id)
 
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
@@ -151,7 +150,7 @@ class TestGroupManage(APITestCase):
     def test_delete_group_by_non_creator(self):
         # Create a group
         group_response = self.client.post(self.url, {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
-        group_id = str(group_response.data.get('created_group_id', ''))
+        group_id = str(group_response.data.setdefault('data',{}).get('created_group_id', ''))
         url = self.url + group_id + '/'
 
         # Creat a non-creator

@@ -30,7 +30,7 @@ def get_groups(request):
     except Exception:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    
+
     serializer = GroupSerializer(groups, many=True)
     return Response({'data': serializer.data})
 
@@ -55,7 +55,7 @@ def create_group(request):
             response = {'created_group_id': new_group.id}
             return Response({'data': response}, status=status.HTTP_201_CREATED)
         except Exception as exc:
-            return Response({'error': exc}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -115,7 +115,6 @@ def group_member(request, **kargs):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def get_all_user(request, **kargs):
-    print("GET HERE")
     # serializer_class = UserPublicSerializer
     try:
         users = Group.objects.get(id=kargs.get('group_id')).users
@@ -123,7 +122,7 @@ def get_all_user(request, **kargs):
         return Response({'data': serializer.data})
     except Exception:
         pass
-    
+
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 #################################################################################################################
