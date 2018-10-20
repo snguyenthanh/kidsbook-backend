@@ -38,33 +38,31 @@ class LogIn(APIView):
     def post(self, request):
         #print("SECRET")
         # print(settings.SECRET_KEY)
-        print("LOG IN ")
-        print(request.META.get('HTTP_AUTHORIZATION'))
-        try:
-            email = request.data['email_address']
-            #password = request.data['password']
-            #user = authenticate(username='hieu2', password=password)
-            #print(user)
-            user = User.objects.get(email_address=email)
-            if user:
-                try:
-                    token = generate_token(user)
-                    user_details = {}
-                    user_details['name'] = user.username
-                    user_details['token'] = token
-                    user_logged_in.send(sender=user.__class__,
-                                        request=request, user=user)
-                    return Response({'data': user_details}, status=status.HTTP_200_OK)
+        #print("LOG IN ")
+        #print(request.META.get('HTTP_AUTHORIZATION'))
 
-                except Exception as e:
-                    return Response({'error': e})
-            else:
-                res = {
-                    'error': 'can not authenticate with the given credentials or the account has been deactivated'}
-                return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-        except KeyError:
+        email = request.data.get('email_address', None)
+        password = request.data.get('password', None)
+        if not email or not password:
             res = {'error': 'please provide a email and a password'}
-            return Response({'error': res})
+            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
+
+        user = User.objects.get(email_address=email)
+        if user:
+            try:
+                token = generate_token(user)
+                user_details = {}
+                user_details['name'] = user.username
+                user_details['token'] = token
+                user_logged_in.send(sender=user.__class__,
+                                    request=request, user=user)
+                return Response({'data': user_details}, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
+        return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
 
 class Register(APIView):
     permission_classes = (IsSuperUser, IsInGroup)
@@ -132,7 +130,7 @@ class GetInfo(generics.ListAPIView):
             serializer = self.serializer_class(current_user, many=False)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # class GetGroup(generics.ListAPIView):
 #     serializer_class = GroupSerializer
@@ -148,7 +146,7 @@ class LogOut(generics.ListAPIView):
             BlackListedToken.objects.create(token=token, user=request.user)
             return Response({})
         except Exception as e:
-            return Response({'error': e})
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
@@ -180,7 +178,7 @@ class GetPost(generics.ListAPIView):
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e})
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GetVirtualUser(generics.ListAPIView):
     serializer_class = UserSerializer
@@ -191,5 +189,5 @@ class GetVirtualUser(generics.ListAPIView):
             virtual_users = User.objects.filter(teacher=current_user)
             serializer = self.serializer_class(virtual_users, many=True)
             return Response({'data': serializer.data})
-        except Exception as e: 
-            return Response({'error': str(e)})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

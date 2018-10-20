@@ -78,8 +78,8 @@ class UserManager(BaseUserManager):
     def create_virtual_user(self, **kargs):
         if 'is_virtual_user' not in kargs:
             kargs['is_virtual_user'] = True
-        if 'is_staff' not in kargs:
-            kargs['is_staff'] = False
+        if 'is_superuser' not in kargs:
+            kargs['is_superuser'] = False
 
         # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
@@ -124,14 +124,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
-    def check_password(self, raw_password):
-        print("REACH")
-        print(make_password(raw_password))
-        print(self.password)
-        if self.password == raw_password:
-            return True
-        else:
-            return False
+    # def check_password(self, raw_password):
+    #     print("REACH")
+    #     print(make_password(raw_password))
+    #     print(self.password)
+    #     if self.password == raw_password:
+    #         return True
+    #     else:
+    #         return False
 
 class BlackListedToken(models.Model):
     token = models.CharField(max_length=500)
@@ -140,6 +140,7 @@ class BlackListedToken(models.Model):
 
     class Meta:
         unique_together = ("token", "user")
+
 # class FakeStudent(models.Model):
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 #     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)

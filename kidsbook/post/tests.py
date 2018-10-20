@@ -50,10 +50,6 @@ class TestPost(APITestCase):
     def test_get_all_post_in_group(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
-        with open('output.txt', 'w') as out_f:
-            out_f.write(str(url))
-            out_f.write('\n')
-            out_f.write(str(response.data))
 
         self.assertEqual(200, response.status_code)
 

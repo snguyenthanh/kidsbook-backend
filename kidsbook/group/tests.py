@@ -164,9 +164,6 @@ class TestGroupManage(APITestCase):
         group_id = str(response.data.setdefault('data',{}).get('created_group_id', ''))
         url = "{}{}/".format(self.url, group_id)
 
-        with open('output.txt', 'w') as out_f:
-            out_f.write(str(url))
-
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
 
