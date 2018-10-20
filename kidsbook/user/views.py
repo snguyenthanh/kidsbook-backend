@@ -116,7 +116,6 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         serializerNew = self.serializer_class(current_user, data=request_data)
         if(serializerNew.is_valid()):
-            print("A HERE")
             serializerNew.save()
             # print(request.data['new_user_name'])
 
@@ -144,7 +143,7 @@ class GetInfo(generics.ListAPIView):
 
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAuthenticated,)
     def list(self, request, **kargs):
         try:
             user_id = kargs.get('user_id', None)

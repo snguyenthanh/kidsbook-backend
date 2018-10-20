@@ -48,8 +48,6 @@ class UserManager(BaseUserManager):
 
         #email_address = self.normalize_email(kargs['email_address'])
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
-        print("HERE")
-        print(kargs)
         user = self.model(**kargs)
 
         user.role = Role(id=role)
