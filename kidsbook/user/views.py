@@ -38,6 +38,8 @@ class LogIn(APIView):
     def post(self, request):
         #print("SECRET")
         # print(settings.SECRET_KEY)
+        print("LOG IN ")
+        print(request.META.get('HTTP_AUTHORIZATION'))
         try:
             email = request.data['email_address']
             #password = request.data['password']
@@ -65,7 +67,7 @@ class LogIn(APIView):
             return Response({'error': res})
 
 class Register(APIView):
-    # permission_classes = (IsSuperUser, IsInGroup)
+    permission_classes = (IsSuperUser, IsInGroup)
     serializer_class = UserSerializer
     def post(self, request):
         user_role = request.data['type']
@@ -99,7 +101,7 @@ class Register(APIView):
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
 
     def put(self, request):
         current_user = request.user
@@ -123,7 +125,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
 class GetInfo(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
@@ -138,10 +140,19 @@ class GetInfo(generics.ListAPIView):
 #     def list(self, request):
 #         groups = Group.objects.
 
+class LogOut(generics.ListAPIView):
+    permission_class = (IsAuthenticated, IsTokenValid)
+    def post(self, request):
+        try:
+            token = request.META.get('HTTP_AUTHORIZATION')
+            BlackListedToken.objects.create(token=token, user=request.user)
+            return Response({})
+        except Exception as e:
+            return Response({'error': e})
 
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request, **kargs):
         try:
             user_id = kargs.get('pk', None)
@@ -161,7 +172,7 @@ class GetInfoUser(generics.ListAPIView):
 class GetPost(generics.ListAPIView):
     queryset = ''
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
@@ -171,4 +182,14 @@ class GetPost(generics.ListAPIView):
         except Exception as e:
             return Response({'error': e})
 
-# Create your views here.
+class GetVirtualUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUser, IsTokenValid)
+    def list(self, request):
+        try:
+            current_user = request.user
+            virtual_users = User.objects.filter(teacher=current_user)
+            serializer = self.serializer_class(virtual_users, many=True)
+            return Response({'data': serializer.data})
+        except Exception as e: 
+            return Response({'error': str(e)})
