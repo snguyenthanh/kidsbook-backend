@@ -1,13 +1,7 @@
-<<<<<<< HEAD
 from rest_framework import permissions, status
 from kidsbook.models import *
 from kidsbook.serializers import *
 from rest_framework.response import Response
-=======
-from rest_framework import permissions
-from kidsbook.models import *
-from kidsbook.serializers import *
->>>>>>> 3c884eadec3be45b70b804f47a61e2f2caa486af
 
 class IsOwner(permissions.BasePermission):
     """
