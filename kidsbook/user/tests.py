@@ -49,8 +49,6 @@ class TestUser(APITestCase):
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
         response = self.client.get("{}{}/profile/".format(self.url, str(user.id)), HTTP_AUTHORIZATION=token)
-        ('output.txt', 'w') as out_f:
-            out_f.write(str(response.data))
         self.assertEqual(200, response.status_code)
 
     def test_get_user_info_without_token(self):
