@@ -54,10 +54,9 @@ class LogIn(APIView):
                     return Response({'data': user_details}, status=status.HTTP_200_OK)
 
                 except Exception as e:
-                    return Response({'error': e})
+                    return Response({'error': str(e)})
             else:
-                res = {
-                    'error': 'can not authenticate with the given credentials or the account has been deactivated'}
+                res = 'can not authenticate with the given credentials or the account has been deactivated'
                 return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             return Response({'error': str(e)})
@@ -129,7 +128,7 @@ class GetInfo(generics.ListAPIView):
             serializer = self.serializer_class(current_user, many=False)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # class GetGroup(generics.ListAPIView):
 #     serializer_class = GroupSerializer
@@ -168,7 +167,7 @@ class GetPost(generics.ListAPIView):
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': e})
+            return Response({'error': str(e)})
 
 class GetVirtualUser(generics.ListAPIView):
     serializer_class = UserSerializer
@@ -180,5 +179,5 @@ class GetVirtualUser(generics.ListAPIView):
             serializer = self.serializer_class(virtual_users, many=True)
             return Response({'data': serializer.data})
         except Exception as e: 
-            return Response({'error': e})
+            return Response({'error': str(e)})
 # Create your views here.
