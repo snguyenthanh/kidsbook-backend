@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from rest_framework import permissions, status
 from kidsbook.models import *
 from kidsbook.serializers import *
@@ -16,18 +15,6 @@ class IsTokenValid(permissions.BasePermission):
         except BlackListedToken.DoesNotExist:
             is_allowed_user = True
         return is_allowed_user
-=======
-<<<<<<< HEAD
-from rest_framework import permissions, status
-from kidsbook.models import *
-from kidsbook.serializers import *
-from rest_framework.response import Response
-=======
-from rest_framework import permissions
-from kidsbook.models import *
-from kidsbook.serializers import *
->>>>>>> 3c884eadec3be45b70b804f47a61e2f2caa486af
->>>>>>> son
 
 class IsOwner(permissions.BasePermission):
     """
@@ -50,6 +37,7 @@ class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
         group_id = view.kwargs.get('pk', None)
+        print(group_id)
         if group_id:
             #return get_user(request) in Group.objects.get(id=group_id).users.all()
             try:

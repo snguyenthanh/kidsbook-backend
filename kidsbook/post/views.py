@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required, user_passes_test
 # from django.contrib.auth.models import User
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
 
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
@@ -26,8 +26,6 @@ class GroupPostList(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
-            serializer = PostSerializer(queryset, many=True)
-            return Response(serializer.data)
         except Exception:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = PostSerializer(queryset, many=True)
@@ -91,10 +89,14 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostSerializer
     permission_classes = (IsSuperUser, HasAccessToPost)
 
-    def list(self, request, **kwargs):
-        queryset = self.get_queryset().get(id=kwargs['pk'])
-        serializer = PostSerializer(queryset)
-        return Response(serializer.data)
+    def get(self, request, *args, **kwargs):
+        return Response({'data': self.retrieve(request, *args, **kwargs).data})
+
+    def put(self, request, *args, **kwargs):
+        return Response({'data': self.update(request, *args, **kwargs).data})
+
+    def delete(self, request, *args, **kwargs):
+        return Response({'data': self.destroy(request, *args, **kwargs).data})
 
 class CompletePostDetail(generics.ListCreateAPIView):
     queryset = Post.objects.all()
