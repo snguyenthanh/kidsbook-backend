@@ -7,6 +7,6 @@ pytz==2018.5
 six==1.11.0
 PyJWT==1.6.4
 ujson==1.35
-djangorestframework-jwt=1.11.0
-django-cors-headers=2.4.0
-psycopg2=2.7.5
+djangorestframework-jwt==1.11.0
+django-cors-headers==2.4.0
+psycopg2==2.7.5
