@@ -10,6 +10,5 @@ urlpatterns = [
     path('post/<uuid:pk>/flag/', views.PostFlag.as_view()),
     path('comment/<uuid:pk>/', views.CommentDetail.as_view()),
     path('comment/<uuid:pk>/likes/', views.CommentLike.as_view()),
-    path('comment/<uuid:pk>/flag/', views.CommentFlag.as_view()),
-    path('post/<uuid:pk>/complete/', views.CompletePostDetail.as_view()),
+    path('comment/<uuid:pk>/flag/', views.CommentFlag.as_view())
 ]
