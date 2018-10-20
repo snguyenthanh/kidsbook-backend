@@ -1,6 +1,7 @@
-from rest_framework import permissions
+from rest_framework import permissions, status
 from kidsbook.models import *
 from kidsbook.serializers import *
+from rest_framework.response import Response
 
 class IsOwner(permissions.BasePermission):
     """
@@ -23,14 +24,12 @@ class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
         group_id = view.kwargs.get('group_id', None)
-        print("GROUP_ID")
-        print(group_id)
-        print(request.data)
         if group_id:
             #return get_user(request) in Group.objects.get(id=group_id).users.all()
-            print("GROUP_ID")
-            print(group_id)
-            return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
+            try:
+                return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
+            except Exception:
+                return Response(status=status.HTTP_404_NOT_FOUND)
         return False
 
 class HasAccessToPost(permissions.BasePermission):
