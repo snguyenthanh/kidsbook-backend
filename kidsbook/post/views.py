@@ -16,6 +16,8 @@ from django.contrib.auth import (
 )
 
 from django.contrib.auth import get_user_model, get_user
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 User = get_user_model()
 
 class GroupPostList(generics.ListCreateAPIView):

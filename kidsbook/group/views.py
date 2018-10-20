@@ -97,7 +97,7 @@ def group_member(request, **kargs):
     }
 
     try:
-        group_id = kargs.get('group_id', None)
+        group_id = kargs.get('pk', None)
         user_id = kargs.get('user_id', None)
         if group_id and user_id:
             new_member = User.objects.get(id=user_id)
@@ -132,9 +132,9 @@ def get_all_members_in_group(request, **kargs):
 @permission_classes((IsAuthenticated, IsGroupCreator))
 def delete_group(request, **kargs):
     """Delete a group."""
-
     try:
-        group_id = kargs.get('group_id', None)
+        group_id = kargs.get('pk', None)
+
         if group_id:
             target_group = Group.objects.get(id=group_id)
 
