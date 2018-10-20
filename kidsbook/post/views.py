@@ -100,7 +100,7 @@ class CompletePostDetail(generics.ListAPIView):
         serializer = PostSerializer(queryset)
         return Response(serializer.data)
 
-class PostCommentList(generics.ListCreateAPIView):
+class PostCommentList(generics.ListAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticated, HasAccessToPost)
@@ -110,7 +110,7 @@ class PostCommentList(generics.ListCreateAPIView):
         serializer = CommentSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
+class CommentDetail(generics.ListAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsSuperUser, HasAccessToComment)

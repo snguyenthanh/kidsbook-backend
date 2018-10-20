@@ -40,6 +40,7 @@ class TestPost(APITestCase):
             group=Group.objects.get(id=self.group_id)
         )
 
+        # Create a comment
         self.comment = Comment.objects.create_comment(
             content='OKAY',
             post=self.post,
@@ -80,8 +81,6 @@ class TestPost(APITestCase):
         self.assertEqual(401, response.status_code)
 
 
-    ######
-
     def test_get_post_detail_complete_by_id(self):
         url = "{}/post/{}/complete/".format(url_prefix, self.post.id)
 
@@ -95,5 +94,36 @@ class TestPost(APITestCase):
 
     def test_get_post_detail_complete_by_id_without_token(self):
         url = "{}/post/{}/complete/".format(url_prefix, self.post.id)
+        response = self.client.get(url)
+        self.assertEqual(401, response.status_code)
+
+    def test_get_all_comments_of_post(self):
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_all_comments_of_post_by_non_member(self):
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.user_token)
+        self.assertEqual(403, response.status_code)
+
+    def test_get_all_comments_of_post_without_token(self):
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.get(url)
+        self.assertEqual(401, response.status_code)
+
+    def test_get_comment_by_id(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_comment_by_id_by_non_member(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.user_token)
+        self.assertEqual(403, response.status_code)
+
+    def test_get_comment_by_id_without_token(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         response = self.client.get(url)
         self.assertEqual(401, response.status_code)
