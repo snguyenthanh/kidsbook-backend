@@ -144,13 +144,13 @@ class GetInfo(generics.ListAPIView):
 
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAuthenticated,)
     def list(self, request, **kargs):
         try:
             user_id = kargs.get('user_id', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(user.is_superuser):
+                if(request.user.is_superuser):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer
@@ -174,4 +174,15 @@ class GetPost(generics.ListAPIView):
         except Exception as e:
             return Response({'error': e})
 
+class GetVirtualUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUser,)
+    def list(self, request):
+        try:
+            current_user = request.user
+            virtual_users = User.objects.filter(teacher=current_user)
+            serializer = self.serializer_class(virtual_users, many=True)
+            return Response({'data': serializer.data})
+        except Exception as e: 
+            return Response({'error': e})
 # Create your views here.

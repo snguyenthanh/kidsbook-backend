@@ -52,7 +52,7 @@ class UserManager(BaseUserManager):
         print(kargs)
         user = self.model(**kargs)
 
-        user.role = Role(id=role)
+        user.role = Role.objects.get(id=role)
         user.set_password(password)
 
         # if(kargs['teacher_id']):
@@ -76,9 +76,9 @@ class UserManager(BaseUserManager):
         return self._create_user(role=2, **kargs)
 
     def create_virtual_user(self, **kargs):
-        kargs.setdefault('is_virtual_user', True)
+        # kargs.setdefault('is_virtual_user', True)
         kargs.setdefault('is_staff', False)
-        # kargs.setdefault('is_superuser', False)
+        kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
 
     #def create_superuser(self, username, email_address, password, **extra_fields):
