@@ -1,4 +1,4 @@
-sudo -u postgres psql
+sudo -u ssipani psql
 
 CREATE DATABASE app_db;
 CREATE USER app_user WITH PASSWORD 'password';

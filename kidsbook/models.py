@@ -111,7 +111,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
-    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
+    # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE, default=0)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -181,6 +181,13 @@ class GroupMember(models.Model):
         unique_together = ('user', 'group')
 
 
+# class PostManager(models.Manager):
+#     #def create_post(self, title, content, creator):
+#     def create_post(self, **kargs):
+#         post = self.model(**kargs)
+#         post.save(using=self._db)
+#         return post
+
 class PostManager(models.Manager):
     def create_post(self, **kargs):
         post = self.model(**kargs)
@@ -200,7 +207,7 @@ class Post(models.Model):
 
     REQUIRED_FIELDS = ["content"]
 
-    objects = PostManager()
+    # objects = PostManager()
     class Meta:
         ordering = ('created_at',)
 
@@ -210,17 +217,16 @@ class UserLikePost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     like_or_dislike = models.BooleanField()
 
-class UserFlagPost(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    flag_or_unflag = models.BooleanField()
-
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
+# class CommentManager(models.Manager):
+#     def create_comment(self, **kargs):
+#         comment = self.model(**kargs)
+#         comment.save(using=self._db)
+#         return comment
 
 class CommentManager(models.Manager):
     def create_comment(self, **kargs):
@@ -239,4 +245,20 @@ class Comment(models.Model):
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
+    # objects = CommentManager()
     objects = CommentManager()
+
+class UserLikeComment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ["user", "comment"]
+
+class UserFlagPost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    status = models.CharField(max_length=120, unique=True)
+>>>>>>> Stashed changes

@@ -1,5 +1,6 @@
 source run_fixtures.sh
 
+
 if [ $# -ge 1 ]; then
     python3 manage.py runserver $1  # run Django development server on specify port
 else
