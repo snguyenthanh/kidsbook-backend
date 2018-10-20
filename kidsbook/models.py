@@ -261,4 +261,3 @@ class UserFlagPost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
     status = models.CharField(max_length=120, unique=True)
->>>>>>> Stashed changes

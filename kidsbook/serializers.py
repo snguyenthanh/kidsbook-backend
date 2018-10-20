@@ -25,9 +25,6 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-<<<<<<< HEAD
-        fields = ('id', 'created_at','content', 'creator')
-=======
         fields = ('id', 'created_at', 'content', 'creator', 'group')
         depth = 1
 
@@ -45,7 +42,6 @@ class PostLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLikePost
         fields = ('id', 'user', 'post', 'like_or_dislike')
->>>>>>> c6782bb1b45431c1f1df85603187d861a83c0d31
         depth = 1
 
     def create(self, data):
