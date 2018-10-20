@@ -2,6 +2,19 @@ from rest_framework import permissions
 from kidsbook.models import *
 from kidsbook.serializers import *
 
+class IsTokenValid(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user_id = request.user.id            
+        is_allowed_user = True
+        try:
+            token = request.META.get('HTTP_AUTHORIZATION')
+            is_blackListed = BlackListedToken.objects.get(user=user_id, token=token)
+            if is_blackListed:
+                is_allowed_user = False
+        except BlackListedToken.DoesNotExist:
+            is_allowed_user = True
+        return is_allowed_user
+
 class IsOwner(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to edit it.

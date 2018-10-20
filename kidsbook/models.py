@@ -17,7 +17,6 @@ def format_value(value):
         return value[0]
     return value
 
-
 class Role(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -136,7 +135,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     #     else:
             # return False
 
+class BlackListedToken(models.Model):
+    token = models.CharField(max_length=500)
+    user = models.ForeignKey(User, related_name="token_user", on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ("token", "user")
 # class FakeStudent(models.Model):
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 #     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
