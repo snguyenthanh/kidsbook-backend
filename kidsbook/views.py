@@ -41,7 +41,7 @@ class IsSuperUser(permissions.BasePermission):
 class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
-        group_id = view.kwargs.get('group_id', None)
+        group_id = view.kwargs.get('pk', None)
         if group_id:
             #return get_user(request) in Group.objects.get(id=group_id).users.all()
             return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
@@ -50,7 +50,7 @@ class IsInGroup(permissions.BasePermission):
 class HasAccessToPost(permissions.BasePermission):
     def has_permission(self, request, view):
         #pk = post_id
-        post_id = view.kwargs.get('post_id', None)
+        post_id = view.kwargs.get('pk', None)
         if post_id:
             #return get_user(request) in Post.objects.get(id=post_id).group.users.all()
             return Post.objects.get(id=post_id).group.users.filter(id=request.user.id).exists()
@@ -59,7 +59,7 @@ class HasAccessToPost(permissions.BasePermission):
 class HasAccessToComment(permissions.BasePermission):
     def has_permission(self, request, view):
         #pk = comment_id
-        comment_id = view.kwargs.get('comment_id', None)
+        comment_id = view.kwargs.get('pk', None)
         if comment_id:
             #return get_user(request) in Comment.objects.get(id=comment_id).post.group.users.all()
             return Comment.objects.get(id=comment_id).post.group.users.filter(id=request.user.id).exists()
@@ -73,7 +73,7 @@ class GroupPostList(generics.ListCreateAPIView):
     permission_classes = (IsInGroup,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['group_id']))
+        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
         serializer = PostSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -83,7 +83,7 @@ class PostLike(generics.ListCreateAPIView):
     permission_classes = (HasAccessToPost,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
         serializer = PostLikeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -93,7 +93,7 @@ class CommentLike(generics.ListCreateAPIView):
     permission_classes = (HasAccessToComment,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
+        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk']))
         serializer = CommentLikeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -103,7 +103,7 @@ class PostFlag(generics.ListCreateAPIView):
     permission_classes = (HasAccessToPost,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
         serializer = PostFlagSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -113,7 +113,7 @@ class CommentFlag(generics.ListCreateAPIView):
     permission_classes = (HasAccessToComment,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
+        queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk']))
         serializer = CommentFlagSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -123,7 +123,7 @@ class PostShare(generics.ListCreateAPIView):
     permission_classes = (HasAccessToPost,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
         serializer = PostShareSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -143,7 +143,7 @@ class PostCommentList(generics.ListCreateAPIView):
     permission_classes = (HasAccessToPost,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['post_id']))
+        queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['pk']))
         serializer = CommentSerializer(queryset, many=True)
         return Response(serializer.data)
 
