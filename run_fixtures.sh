@@ -1,5 +1,5 @@
 FIXTURES="fixtures.py"
-
+rm db.sqlite3
 rm -r kidsbook/migrations
 echo "Deleting existing database."
 #psql -d app_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;"
