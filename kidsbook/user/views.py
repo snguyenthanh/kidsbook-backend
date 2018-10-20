@@ -40,12 +40,9 @@ class LogIn(APIView):
         # print(settings.SECRET_KEY)
         try:
             email = request.data['email_address']
-            #password = request.data['password']
-            #user = authenticate(username='hieu2', password=password)
-            #print(user)
             user = User.objects.get(email_address=email)
-            #print("CHECK")
-            #print(user.check_password(password))
+            if(user.check_password(request.data['password']) == False):
+                raise ValueError('Wrong email/password')
             if user:
                 try:
                     token = generate_token(user)
@@ -62,9 +59,8 @@ class LogIn(APIView):
                 res = {
                     'error': 'can not authenticate with the given credentials or the account has been deactivated'}
                 return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-        except KeyError:
-            res = {'error': 'please provide a email and a password'}
-            return Response({'error': res})
+        except Exception as e:
+            return Response({'error': str(e)})
 
 class Register(APIView):
     # permission_classes = (IsSuperUser, IsInGroup)
