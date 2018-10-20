@@ -28,8 +28,10 @@ class UserManager(BaseUserManager):
     def create_roles(self):
         role1 = Role(id=1, name='teacher')
         role2 = Role(id=2, name='student')
+        role3 = Role(id=3, name='Virtual student')
         role1.save()
         role2.save()
+        role3.save()
 
     #def _create_user(self, username, email_address, password, role, **extra_fields):
     def _create_user(self, **kargs):
@@ -39,16 +41,24 @@ class UserManager(BaseUserManager):
         self.create_roles()
         if 'username' not in kargs:
             raise ValueError('The given username must be set')
+            # kargs['username'] = 'anonymous'
 
         role = kargs.pop('role', 2)
         password = kargs.pop('password', '12345')
 
         #email_address = self.normalize_email(kargs['email_address'])
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
+        print("HERE")
+        print(kargs)
         user = self.model(**kargs)
 
         user.role = Role(id=role)
         user.set_password(password)
+
+        # if(kargs['teacher_id']):
+        #     teacher = User.objects.get(id=kargs['teacher_id'])
+        #     user.teacher = teacher
+
         #print("ABOUT TO SAVE")
         #print(self._db)
         try:
@@ -62,7 +72,14 @@ class UserManager(BaseUserManager):
     def create_user(self, **kargs):
         kargs.setdefault('is_staff', False)
         kargs.setdefault('is_superuser', False)
+        # kargs.setdefault('is_virtual_user', False)
         return self._create_user(role=2, **kargs)
+
+    def create_virtual_user(self, **kargs):
+        kargs.setdefault('is_virtual_user', True)
+        kargs.setdefault('is_staff', False)
+        # kargs.setdefault('is_superuser', False)
+        return self._create_user(role=3, **kargs)
 
     #def create_superuser(self, username, email_address, password, **extra_fields):
     def create_superuser(self, **kargs):
@@ -91,6 +108,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
+
+    teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
     # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE)
 
@@ -117,10 +136,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             return False
 
 
-class FakeStudent(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
-    teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
+# class FakeStudent(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
+#     teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
 
 class GroupManager(models.Manager):
     #def create_group(self, name, creator):
