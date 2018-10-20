@@ -207,7 +207,7 @@ class Post(models.Model):
 
     REQUIRED_FIELDS = ["content"]
 
-    # objects = PostManager()
+    objects = PostManager()
     class Meta:
         ordering = ('created_at',)
 
