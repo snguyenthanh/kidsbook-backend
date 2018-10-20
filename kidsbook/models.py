@@ -10,7 +10,6 @@ import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
-import bcrypt
 
 def format_value(value):
     if isinstance(value, list) and len(value) == 1:
@@ -51,9 +50,8 @@ class UserManager(BaseUserManager):
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
         user = self.model(**kargs)
 
-        user.role = Role.objects.get(id=role)
+        user.role = Role(id=role)
         user.set_password(password)
-        # user.password = password
 
         # if(kargs['teacher_id']):
         #     teacher = User.objects.get(id=kargs['teacher_id'])
@@ -76,9 +74,9 @@ class UserManager(BaseUserManager):
         return self._create_user(role=2, **kargs)
 
     def create_virtual_user(self, **kargs):
-        # kargs.setdefault('is_virtual_user', True)
+        kargs.setdefault('is_virtual_user', True)
         kargs.setdefault('is_staff', False)
-        kargs.setdefault('is_superuser', False)
+        # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
 
     #def create_superuser(self, username, email_address, password, **extra_fields):
@@ -126,15 +124,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
-    # def check_password(self, raw_password):
-    #     print("REACH")
-    #     # print(make_password(raw_password))
-    #     print(raw_password)
-    #     print(self.password)
-    #     if self.password == raw_password:
-    #         return True
-    #     else:
-            # return False
+    def check_password(self, raw_password):
+        print("REACH")
+        print(make_password(raw_password))
+        print(self.password)
+        if self.password == raw_password:
+            return True
+        else:
+            return False
 
 
 # class FakeStudent(models.Model):

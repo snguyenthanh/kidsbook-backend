@@ -39,16 +39,12 @@ class LogIn(APIView):
         #print("SECRET")
         # print(settings.SECRET_KEY)
         try:
-            email = request.data.get('email_address', None)
-            password = request.data.get('password', None)
-            if not email or not password:
-                res = 'can not authenticate with the given credentials or the account has been deactivated'
-                return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-              
+            email = request.data['email_address']
+            #password = request.data['password']
+            #user = authenticate(username='hieu2', password=password)
+            #print(user)
             user = User.objects.get(email_address=email)
             if user:
-                if(user.check_password(password) == False):
-                    return Response({'error': 'Wrong email/password'}, status=status.HTTP_403_FORBIDDEN)
                 try:
                     token = generate_token(user)
                     user_details = {}
@@ -59,12 +55,14 @@ class LogIn(APIView):
                     return Response({'data': user_details}, status=status.HTTP_200_OK)
 
                 except Exception as e:
-                    return Response({'error': str(e)})
+                    return Response({'error': e})
             else:
-                res = 'can not authenticate with the given credentials or the account has been deactivated'
+                res = {
+                    'error': 'can not authenticate with the given credentials or the account has been deactivated'}
                 return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
-            return Response({'error': str(e)})
+        except KeyError:
+            res = {'error': 'please provide a email and a password'}
+            return Response({'error': res})
 
 class Register(APIView):
     # permission_classes = (IsSuperUser, IsInGroup)
@@ -132,7 +130,7 @@ class GetInfo(generics.ListAPIView):
             serializer = self.serializer_class(current_user, many=False)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
 
 # class GetGroup(generics.ListAPIView):
 #     serializer_class = GroupSerializer
@@ -149,7 +147,7 @@ class GetInfoUser(generics.ListAPIView):
             user_id = kargs.get('user_id', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(request.user.is_superuser):
+                if(user.is_superuser):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer
@@ -171,17 +169,6 @@ class GetPost(generics.ListAPIView):
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
-            return Response({'error': str(e)})
+            return Response({'error': e})
 
-class GetVirtualUser(generics.ListAPIView):
-    serializer_class = UserSerializer
-    permission_classes = (IsSuperUser,)
-    def list(self, request):
-        try:
-            current_user = request.user
-            virtual_users = User.objects.filter(teacher=current_user)
-            serializer = self.serializer_class(virtual_users, many=True)
-            return Response({'data': serializer.data})
-        except Exception as e: 
-            return Response({'error': str(e)})
 # Create your views here.

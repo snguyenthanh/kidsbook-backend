@@ -55,7 +55,7 @@ def create_group(request):
             response = {'created_group_id': new_group.id}
             return Response({'data': response}, status=status.HTTP_201_CREATED)
         except Exception as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': exc}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
