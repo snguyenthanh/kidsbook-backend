@@ -5,9 +5,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required, user_passes_test
-# from django.contrib.auth.models import User
-from rest_framework import permissions
-from profanity import profanity
+from rest_framework.permissions import IsAuthenticated
 
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
@@ -19,10 +17,10 @@ from django.contrib.auth import (
 from django.contrib.auth import get_user_model, get_user
 User = get_user_model()
 
-class GroupPostList(generics.ListCreateAPIView):
+class GroupPostList(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsInGroup,) #Is in group
+    permission_classes = (IsAuthenticated, IsInGroup)
 
     def list(self, request, **kwargs):
         try:
@@ -32,70 +30,80 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception:
             return Response('Group not found', status=status.HTTP_404_NOT_FOUND)
 
-class PostLike(generics.ListCreateAPIView):
+class PostLike(generics.ListAPIView):
     queryset = UserLikePost.objects.all()
     serializer_class = PostLikeSerializer
-    permission_classes = (HasAccessToPost,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToPost,)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
         serializer = PostLikeSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class CommentLike(generics.ListCreateAPIView):
+class CommentLike(generics.ListAPIView):
     queryset = UserLikeComment.objects.all()
     serializer_class = CommentLikeSerializer
-    permission_classes = (HasAccessToComment,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToComment)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
         serializer = CommentLikeSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class PostFlag(generics.ListCreateAPIView):
+class PostFlag(generics.ListAPIView):
     queryset = UserFlagPost.objects.all()
     serializer_class = PostFlagSerializer
-    permission_classes = (HasAccessToPost,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToPost)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
         serializer = PostFlagSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class CommentFlag(generics.ListCreateAPIView):
+class CommentFlag(generics.ListAPIView):
     queryset = UserFlagPost.objects.all()
     serializer_class = CommentFlagSerializer
-    permission_classes = (HasAccessToComment,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToComment)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['comment_id']))
         serializer = CommentFlagSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class PostShare(generics.ListCreateAPIView):
+class PostShare(generics.ListAPIView):
     queryset = UserSharePost.objects.all()
     serializer_class = PostShareSerializer
-    permission_classes = (HasAccessToPost,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToPost,)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
         serializer = PostShareSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class PostDetail(generics.RetrieveUpdateDestroyAPIView):
+class PostDetail(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = (IsSuperUser, HasAccessToPost)
 
-class CompletePostDetail(generics.RetrieveAPIView):
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().get(id=kwargs['post_id'])
+        serializer = PostSerializer(queryset)
+        return Response(serializer.data)
+
+class CompletePostDetail(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = CompletePostSerializer
     permission_classes = (IsSuperUser, HasAccessToPost)
 
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().get(id=kwargs['post_id'])
+        serializer = PostSerializer(queryset)
+        return Response(serializer.data)
+
 class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (HasAccessToPost,) #Is in group
+    permission_classes = (IsAuthenticated, HasAccessToPost)
 
     def list(self, request, **kwargs):
         queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['post_id']))

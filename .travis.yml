@@ -35,6 +35,4 @@ before_script:
 
 # command to run tests
 script:
-  - python manage.py test kidsbook/group/
-  - python manage.py test kidsbook/user/
-  - python manage.py test kidsbook/batch/
+  - bash test.sh

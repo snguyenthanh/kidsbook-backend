@@ -60,7 +60,7 @@ def create_group(request):
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsSuperUser))
 def group(request):
     """Return all groups or create a new group."""
 
@@ -113,8 +113,8 @@ def group_member(request, **kargs):
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
-def get_all_user(request, **kargs):
+@permission_classes((IsAuthenticated, IsInGroup))
+def get_all_members_in_group(request, **kargs):
     # serializer_class = UserPublicSerializer
     try:
         users = Group.objects.get(id=kargs.get('group_id')).users

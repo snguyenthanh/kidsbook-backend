@@ -13,7 +13,7 @@ from typing import List
 #from kidsbook.group.serializers import GroupSerializer
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
-from kidsbook.views import IsSuperUser
+from kidsbook.permissions import IsSuperUser
 User = get_user_model()
 
 def read_file_obj_to_list(file_obj) -> List[str]:

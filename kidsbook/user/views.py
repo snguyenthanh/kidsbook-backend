@@ -36,7 +36,7 @@ def generate_token(user):
 class LogIn(APIView):
     permission_classes = (AllowAny, )
     def post(self, request):
-        # print("SECRET")
+        #print("SECRET")
         # print(settings.SECRET_KEY)
         try:
             email = request.data['email_address']
@@ -44,8 +44,6 @@ class LogIn(APIView):
             #user = authenticate(username='hieu2', password=password)
             #print(user)
             user = User.objects.get(email_address=email)
-            #print("CHECK")
-            #print(user.check_password(password))
             if user:
                 try:
                     token = generate_token(user)

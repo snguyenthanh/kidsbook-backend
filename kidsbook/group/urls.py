@@ -9,7 +9,7 @@ urlpatterns = [
     path('<uuid:group_id>/user/<uuid:user_id>/', views.group_member),
 
     # View all members public profile of this group
-    path('<uuid:group_id>/user/', views.get_all_user),
+    path('<uuid:group_id>/user/', views.get_all_members_in_group),
 
     path('<uuid:group_id>/', views.delete_group),
 
