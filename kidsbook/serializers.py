@@ -52,9 +52,11 @@ class PostLikeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
+        print(data)
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
-        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like"]})
+        print(post)
+        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
         return new_post
 
 class CommentLikeSerializer(serializers.ModelSerializer):
@@ -67,7 +69,7 @@ class CommentLikeSerializer(serializers.ModelSerializer):
     def create(self, data):
         comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
-        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like"]})
+        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
         return new_comment
 
 class PostFlagSerializer(serializers.ModelSerializer):
