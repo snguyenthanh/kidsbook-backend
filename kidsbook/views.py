@@ -25,9 +25,12 @@ class GroupPostList(generics.ListCreateAPIView):
     permission_classes = (IsInGroup,) #Is in group
 
     def list(self, request, **kwargs):
-        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['group_id']))
-        serializer = PostSerializer(queryset, many=True)
-        return Response(serializer.data)
+        try:
+            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['group_id']))
+            serializer = PostSerializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception:
+            return Response('Group not found', status=status.HTTP_404_NOT_FOUND)
 
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()
@@ -60,7 +63,7 @@ class PostFlag(generics.ListCreateAPIView):
         return Response(serializer.data)
 
 class CommentFlag(generics.ListCreateAPIView):
-    queryset = UserFlagComment.objects.all()
+    queryset = UserFlagPost.objects.all()
     serializer_class = CommentFlagSerializer
     permission_classes = (HasAccessToComment,) #Is in group
 

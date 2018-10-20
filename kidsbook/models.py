@@ -217,20 +217,6 @@ class UserLikePost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     like_or_dislike = models.BooleanField()
 
-class UserLikeComment(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    commment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    class Meta:
-        unique_together = ["user", "comment"]
-
-class UserFlagPost(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    status = models.CharField(max_length=120, unique=True)
-
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -260,3 +246,19 @@ class Comment(models.Model):
 
     # use_in_migrations = True
     # objects = CommentManager()
+    objects = CommentManager()
+
+class UserLikeComment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ["user", "comment"]
+
+class UserFlagPost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    status = models.CharField(max_length=120, unique=True)
+>>>>>>> Stashed changes
