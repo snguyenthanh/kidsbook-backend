@@ -35,6 +35,13 @@ SON = User.objects.create_superuser(
     realname="Nguyen Thanh Son"
 )
 
+SREYANS = User.objects.create_user(
+    email_address='sreyans@gmail.com',
+    username='Assasin',
+    password='a',
+    description='Call me by Sreyans',
+    realname='Sreyans Sipanis',
+)
 
 HIEU_GROUP = Group.objects.create_group(
     name='HIEU_GROUP',
