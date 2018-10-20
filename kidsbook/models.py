@@ -51,8 +51,7 @@ class UserManager(BaseUserManager):
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
         user = self.model(**kargs)
 
-        #user.role = Role(id=role)
-        user.role = Role.objects.get(id=role)
+        user.role = Role(id=role)
         user.set_password(password)
 
         # if(kargs['teacher_id']):
@@ -80,12 +79,15 @@ class UserManager(BaseUserManager):
     def create_virtual_user(self, **kargs):
         kargs.setdefault('is_virtual_user', True)
         kargs.setdefault('is_staff', False)
+<<<<<<< HEAD
 
         if 'is_virtual_user' not in kargs:
             kargs['is_virtual_user'] = True
         if 'is_staff' not in kargs:
             kargs['is_staff'] = False
 
+=======
+>>>>>>> parent of 3c884ea... Merge branch 'master' into son
         # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
 
