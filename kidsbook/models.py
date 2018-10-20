@@ -1,16 +1,16 @@
 from __future__ import unicode_literals
 
+import uuid
+import bcrypt
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
-import uuid
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
-import bcrypt
 
 def format_value(value):
     if isinstance(value, list) and len(value) == 1:
@@ -50,9 +50,8 @@ class UserManager(BaseUserManager):
         kargs['email_address'] = self.normalize_email(kargs['email_address'])
         user = self.model(**kargs)
 
-        user.role = Role.objects.get(id=role)
+        user.role = Role(id=role)
         user.set_password(password)
-        # user.password = password
 
         # if(kargs['teacher_id']):
         #     teacher = User.objects.get(id=kargs['teacher_id'])
@@ -67,30 +66,30 @@ class UserManager(BaseUserManager):
             print(e)
         return user
 
-    #def create_user(self, username, email_address=None, password=None, **extra_fields):
     def create_user(self, **kargs):
-        kargs.setdefault('is_staff', False)
-        kargs.setdefault('is_superuser', False)
+        if 'is_staff' not in kargs:
+            kargs['is_staff'] = False
+        if 'is_superuser' not in kargs:
+            kargs['is_superuser'] = False
+
         # kargs.setdefault('is_virtual_user', False)
         return self._create_user(role=2, **kargs)
 
     def create_virtual_user(self, **kargs):
-        # kargs.setdefault('is_virtual_user', True)
-        kargs.setdefault('is_staff', False)
-        kargs.setdefault('is_superuser', False)
+        if 'is_virtual_user' not in kargs:
+            kargs['is_virtual_user'] = True
+        if 'is_superuser' not in kargs:
+            kargs['is_superuser'] = False
+
+        # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
 
-    #def create_superuser(self, username, email_address, password, **extra_fields):
+
     def create_superuser(self, **kargs):
         if 'is_staff' not in kargs:
             kargs['is_staff'] = True
         if 'is_superuser' not in kargs:
             kargs['is_superuser'] = True
-
-        if kargs.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if kargs.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(role=1, **kargs)
 
@@ -127,13 +126,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # def check_password(self, raw_password):
     #     print("REACH")
-    #     # print(make_password(raw_password))
-    #     print(raw_password)
+    #     print(make_password(raw_password))
     #     print(self.password)
     #     if self.password == raw_password:
     #         return True
     #     else:
-            # return False
+    #         return False
 
 class BlackListedToken(models.Model):
     token = models.CharField(max_length=500)
@@ -142,6 +140,7 @@ class BlackListedToken(models.Model):
 
     class Meta:
         unique_together = ("token", "user")
+
 # class FakeStudent(models.Model):
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 #     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)

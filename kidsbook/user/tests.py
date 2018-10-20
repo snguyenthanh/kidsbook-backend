@@ -20,11 +20,11 @@ class TestUser(APITestCase):
 
     def test_login(self):
         url = self.url + 'login/'
-        response = self.client.post(url, data={'email_address': self.email})
+        response = self.client.post(url, data={'email_address': self.email, 'password': self.password})
         self.assertEqual(200, response.status_code)
 
     def get_token(self):
-        token_response = self.client.post(self.url + 'login/', data={'email_address': self.email})
+        token_response = self.client.post(self.url + 'login/', data={'email_address': self.email, 'password': self.password})
         token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
@@ -32,7 +32,6 @@ class TestUser(APITestCase):
     def test_get_self_user_profile_with_token(self):
         token = self.get_token()
         response = self.client.get(self.url + 'profile/', HTTP_AUTHORIZATION=token)
-
         self.assertEqual(200, response.status_code)
 
     def test_get_self_user_profile_without_token(self):

@@ -6,7 +6,7 @@ urlpatterns = [
     # Get User's Info
     # path('all/', views.GetAllUser.as_view()),
     path('profile/', views.GetInfo.as_view()),
-    path('<uuid:user_id>/profile/', views.GetInfoUser.as_view()),
+    path('<uuid:pk>/profile/', views.GetInfoUser.as_view()),
     # path('<uuid:user_id>/group/', views.GetGroups.as_view()),
 
     path('posts/', views.GetPost.as_view()),
@@ -16,7 +16,6 @@ urlpatterns = [
     path('register/', views.Register.as_view()),
     path('virtual_users/', views.GetVirtualUser.as_view()),
     path('logout/', views.LogOut.as_view())
-    # path('batchCreate/', views.BatchCreate.as_view())
 ]
 
 # urlpatterns = format_suffix_patterns(urlpatterns)

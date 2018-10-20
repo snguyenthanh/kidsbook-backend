@@ -5,15 +5,16 @@ from rest_framework.response import Response
 
 class IsTokenValid(permissions.BasePermission):
     def has_permission(self, request, view):
-        user_id = request.user.id            
+        user_id = request.user.id
         is_allowed_user = True
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
             is_blackListed = BlackListedToken.objects.get(user=user_id, token=token)
             if is_blackListed:
                 is_allowed_user = False
-        except BlackListedToken.DoesNotExist:
+        except Exception:
             is_allowed_user = True
+            
         return is_allowed_user
 
 class IsOwner(permissions.BasePermission):
@@ -38,11 +39,10 @@ class IsInGroup(permissions.BasePermission):
         # If there are no `pk`
         group_id = view.kwargs.get('pk', None)
         if group_id:
-            #return get_user(request) in Group.objects.get(id=group_id).users.all()
             try:
                 return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
             except Exception:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                pass
         return False
 
 class HasAccessToPost(permissions.BasePermission):
