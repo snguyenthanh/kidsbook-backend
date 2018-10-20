@@ -5,10 +5,16 @@ from django.conf.urls import include
 
 urlpatterns = [
     path('user/', include('kidsbook.user.urls')),
-    path('post/', views.PostList.as_view()),
-    path('posts/<uuid:pk>/', views.PostDetail.as_view()),
-    path('comments/', views.CommentList.as_view()),
-    path('comments/<uuid:pk>/', views.CommentDetail.as_view()),
+    path('group/', include('kidsbook.group.urls')),
+    path('batch/', include('kidsbook.batch.urls')),
+    path('group/<uuid:group_id>/posts/', views.GroupPostList.as_view()),
+    path('post/<uuid:post_id>/', views.PostDetail.as_view()),
+    path('post/<uuid:post_id>/complete', views.CompletePostDetail.as_view()),
+    path('post/<uuid:post_id>/likes', views.PostLike.as_view()),
+    path('post/<uuid:post_id>/shares', views.PostShare.as_view()),
+    path('post/<uuid:post_id>/comments', views.PostCommentList.as_view()),
+    path('post/<uuid:post_id>/flag', views.PostFlag.as_view()),
+    path('comment/<uuid:comment_id>/', views.CommentDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

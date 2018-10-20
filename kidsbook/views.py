@@ -1,6 +1,7 @@
 from kidsbook.models import *
 from kidsbook.serializers import *
-from rest_framework import generics
+from kidsbook.permissions import *
+from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -18,53 +19,72 @@ from django.contrib.auth import (
 from django.contrib.auth import get_user_model, get_user
 User = get_user_model()
 
-class IsOwner(permissions.BasePermission):
-    """
-    Custom permission to only allow owners of an object to edit it.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Write permissions are only allowed to the owner of the snippet.
-        return obj.owner == request.user
-
-class IsSuperUser(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_superuser;
-
-class PostList(generics.ListCreateAPIView):
+class GroupPostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsInGroup,) #Is in group
 
-    def perform_create(self, serializer):
-        print("Here1")
-        serializer.save(creator=get_user(self.request))
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['group_id']))
+        serializer = PostSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class PostLike(generics.ListCreateAPIView):
+    queryset = UserLikePost.objects.all()
+    serializer_class = PostLikeSerializer
+    permission_classes = (HasAccessToPost,) #Is in group
+
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        serializer = PostLikeSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class PostFlag(generics.ListCreateAPIView):
+    queryset = UserFlagPost.objects.all()
+    serializer_class = PostFlagSerializer
+    permission_classes = (HasAccessToPost,) #Is in group
+
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        serializer = PostFlagSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class PostShare(generics.ListCreateAPIView):
+    queryset = UserSharePost.objects.all()
+    serializer_class = PostShareSerializer
+    permission_classes = (HasAccessToPost,) #Is in group
+
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['post_id']))
+        serializer = PostShareSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsSuperUser, HasAccessToPost)
 
-class CommentList(generics.ListCreateAPIView):
+class CompletePostDetail(generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = CompletePostSerializer
+    permission_classes = (IsSuperUser, HasAccessToPost)
+
+class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (HasAccessToPost,) #Is in group
 
-    def perform_create(self, serializer):
-        serializer.save(creator=get_user(self.request))
+    def list(self, request, **kwargs):
+        queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['post_id']))
+        serializer = CommentSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsSuperUser, HasAccessToComment)
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    #permission_classes = (IsSuperUser,)
+    permission_classes = (IsSuperUser,)
