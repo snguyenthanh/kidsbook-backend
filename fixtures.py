@@ -51,7 +51,7 @@ HIEU_GROUP = Group.objects.create_group(
 
 HIEU_GROUP.add_member(SON)
 
-"""YEE_CHIN = User.objects.create_virtual_user(
+YEE_CHIN = User.objects.create_virtual_user(
     email_address='yeechin@gmail.com',
     username='AssasinYeeChin',
     password='a',
@@ -59,7 +59,7 @@ HIEU_GROUP.add_member(SON)
     realname='Sreyans Sipanis',
     teacher=HIEU
 )
-HIEU_GROUP.add_member(YEE_CHIN)"""
+HIEU_GROUP.add_member(YEE_CHIN)
 
 SON_GROUP = Group.objects.create_group(
     name='SON_GROUP',

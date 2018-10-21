@@ -2,6 +2,7 @@ from rest_framework import permissions, status
 from kidsbook.models import *
 from kidsbook.serializers import *
 from rest_framework.response import Response
+from django.contrib.auth import get_user
 
 class IsTokenValid(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -41,6 +42,8 @@ class IsInGroup(permissions.BasePermission):
         print(group_id)
         if group_id:
             try:
+                print("HERE")
+                print(Group.objects.get(id=group_id))
                 return Group.objects.get(id=group_id).users.filter(id=get_user(request).id).exists()
             except Exception:
                 pass

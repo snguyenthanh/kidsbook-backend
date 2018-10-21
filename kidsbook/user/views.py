@@ -18,7 +18,7 @@ from django.contrib.auth import (
     authenticate, login, logout
 )
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import get_user_model, get_user, authenticate
+from django.contrib.auth import get_user_model, authenticate
 import jwt, json, ujson
 from rest_framework_jwt.utils import jwt_payload_handler
 from django.contrib.auth.signals import user_logged_in
@@ -156,7 +156,7 @@ class GetInfoUser(generics.ListAPIView):
             user_id = kargs.get('pk', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(user.is_superuser):
+                if(request.user.is_superuser):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer

@@ -25,8 +25,8 @@ def get_groups(request):
     """Return all created groups."""
 
     try:
-        # groups = Group.objects.all()
-        groups = request.user.group_users.all()
+        groups = Group.objects.all()
+        # groups = request.user.group_users.all()
     except Exception:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
