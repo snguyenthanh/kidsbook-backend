@@ -61,6 +61,13 @@ class TestGroupMember(APITestCase):
 
         self.url = "{}/group/{}/".format(url_prefix, self.group_id)
 
+    def test_view_all_members_as_member(self):
+        response = self.client.get("{}user/".format(self.url), HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_view_all_members_as_creator(self):
+        response = self.client.get("{}user/".format(self.url), HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
 
     def test_add_new_group_member(self):
         response = self.client.post("{}user/{}/".format(self.url, str(self.member.id)), HTTP_AUTHORIZATION=self.creator_token)
