@@ -54,7 +54,7 @@ class HasAccessToPost(permissions.BasePermission):
         post_id = view.kwargs.get('pk', None)
         if post_id:
             #return request.user in Post.objects.get(id=post_id).group.users.all()
-            return Post.objects.get(id=post_id).group.users.filturer(id=request.user.id).exists()
+            return Post.objects.get(id=post_id).group.users.filter(id=request.user.id).exists()
         return False
 
 class HasAccessToComment(permissions.BasePermission):
