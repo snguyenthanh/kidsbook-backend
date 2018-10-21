@@ -4,6 +4,8 @@ from kidsbook.models import *
 # from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 User = get_user_model()
+import opengraph
+import json
 
 # This is for private profile
 class UserSerializer(serializers.ModelSerializer):
@@ -20,20 +22,26 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
 
+    # image = Base64ImageField(
+    #     max_length=None, use_url=True,
+    # )
+
     def create(self, data):
         try:
             group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
         except Exception:
             raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
-        try:
-            return Post.objects.create(content=data["content"], group=group, creator=current_user)
-        except Exception:
-            raise serializers.ValidationError({'error': 'Unknown error while creating post'})
+        # try:
+        # print(opengraph.OpenGraph(url=data["link"]).__str__())
+        return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "", 
+            link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
+        # except Exception:
+            # raise serializers.ValidationError({'error': 'Unknown error while creating post'})
 
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group')
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):
