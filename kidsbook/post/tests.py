@@ -51,7 +51,7 @@ class TestPost(APITestCase):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
 
-        self.assertEqual(200, response.status_code)
+        self.assertTrue(200 <= response.status_code <= 299)
 
     def test_get_all_post_in_group_by_non_member(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
