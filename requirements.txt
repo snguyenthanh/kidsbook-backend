@@ -11,5 +11,5 @@ djangorestframework-jwt==1.11.0
 django-cors-headers==2.4.0
 psycopg2==2.7.5
 Pillow
+opengraph
 python-opengraph
-urllib2
