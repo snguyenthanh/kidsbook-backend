@@ -49,7 +49,7 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
 
 
 #################################################################################################################
-## import CREATE ##
+## BATCH CREATE ##
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated, IsSuperUser))
