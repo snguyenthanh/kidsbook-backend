@@ -10,3 +10,6 @@ ujson==1.35
 djangorestframework-jwt==1.11.0
 django-cors-headers==2.4.0
 psycopg2==2.7.5
+Pillow
+python-opengraph
+urllib2
