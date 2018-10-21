@@ -66,7 +66,7 @@ class LogInAsVirtual(APIView):
         email = request.data.get('email_address', None)
 
         # Check if eligible
-        if not email or not User.object.filter(email_address=email).exists():
+        if not email or not User.objects.filter(email_address=email).exists():
             return Response({'error': 'The email is invalid.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         user = User.objects.get(email_address=email)
