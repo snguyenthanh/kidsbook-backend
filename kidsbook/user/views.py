@@ -65,8 +65,9 @@ class LogIn(APIView):
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
 class Register(APIView):
-    permission_classes = (IsSuperUser, IsInGroup)
+    permission_classes = (IsSuperUser, IsTokenValid, IsInGroup)
     serializer_class = UserSerializer
+
     def post(self, request):
         user_role = request.data['type']
         group = Group.objects.get(id=request.data['group_id'])
@@ -115,28 +116,26 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
         serializerNew = self.serializer_class(current_user, data=request_data)
         if(serializerNew.is_valid()):
             serializerNew.save()
-            # print(request.data['new_user_name'])
 
         return Response({'data': serializerNew.data})
-        # User.objects.update_user(current_user)
-        # serializer = UserSerializer(current_user,)
 
-class GetInfo(generics.ListAPIView):
+class GetGroups(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
-    def list(self, request):
-        try:
-            current_user = request.user
-            serializer = self.serializer_class(current_user, many=False)
-            return Response({'data': serializer.data})
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# class GetGroup(generics.ListAPIView):
-#     serializer_class = GroupSerializer
-#     permission_classes = (IsSuperUser,)
-#     def list(self, request):
-#         groups = Group.objects.
+    def list(self, request, **kwargs):
+        user_id = kwargs['pk']
+
+        if not User.objects.filter(id=user_id).exists():
+            return Response({'error': 'The user doesnt exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        group_members = GroupMember.objects.filter(user=user_id)
+        group_infos = [
+            Group.objects.get(id=group_member.group_id) for group_member in iter(group_members)
+        ]
+
+        serializer = GroupSerializer(group_infos, many=True)
+        return Response({'data': serializer.data})
 
 class LogOut(generics.ListAPIView):
     permission_class = (IsAuthenticated, IsTokenValid)
@@ -180,7 +179,7 @@ class GetPost(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class GetVirtualUser(generics.ListAPIView):
+class GetVirtualUsers(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsSuperUser, IsTokenValid)
     def list(self, request):

@@ -23,23 +23,26 @@ class TestUser(APITestCase):
         response = self.client.post(url, data={'email_address': self.email, 'password': self.password})
         self.assertEqual(200, response.status_code)
 
-    def get_token(self):
-        token_response = self.client.post(self.url + 'login/', data={'email_address': self.email, 'password': self.password})
+    def get_token(self, user):
+        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': user.password})
         token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
 
+
     def test_get_self_user_profile_with_token(self):
-        token = self.get_token()
-        response = self.client.get(self.url + 'profile/', HTTP_AUTHORIZATION=token)
+        token = self.get_token(self.user)
+        user_id = self.user.id
+        response = self.client.get("{}{}/".format(self.url, user_id), HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
 
     def test_get_self_user_profile_without_token(self):
-        response = self.client.get(self.url + 'profile/')
+        user_id = self.user.id
+        response = self.client.get("{}{}/".format(self.url, user_id))
         self.assertEqual(401, response.status_code)
 
     def test_get_user_info(self):
-        token = self.get_token()
+        token = self.get_token(self.user)
 
         # Create an user
         username = "hey"
@@ -47,7 +50,7 @@ class TestUser(APITestCase):
         password = "want_some_cookies?"
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
-        response = self.client.get("{}{}/profile/".format(self.url, str(user.id)), HTTP_AUTHORIZATION=token)
+        response = self.client.get("{}{}/".format(self.url, user.id), HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
 
     def test_get_user_info_without_token(self):
@@ -57,11 +60,11 @@ class TestUser(APITestCase):
         password = "want_some_cookies?"
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
-        response = self.client.get("{}{}/profile/".format(self.url, str(user.id)))
+        response = self.client.get("{}{}/".format(self.url, user.id))
         self.assertEqual(401, response.status_code)
 
     def test_get_virtual_users(self):
-        token = self.get_token()
+        token = self.get_token(self.user)
 
         # Create virtual user
         username = "hey3"
@@ -73,8 +76,8 @@ class TestUser(APITestCase):
         self.assertEqual(200, response.status_code)
 
     def test_register_but_in_group(self):
-        token = self.get_token()
-        
+        token = self.get_token(self.user)
+
         group = Group.objects.create_group(
             name='test_GROUP',
             creator = self.user
@@ -93,7 +96,7 @@ class TestUser(APITestCase):
         self.assertEqual(200, response.status_code)
 
     def test_register_but_not_in_group(self):
-        token = self.get_token()
+        token = self.get_token(self.user)
 
          # Create virtual user
         username = "hey3"
@@ -105,7 +108,7 @@ class TestUser(APITestCase):
             name='test_GROUP',
             creator = user
         )
-        
+
         payload = {
             'type': 'SUPERUSER',
             'group_id': group.id,
@@ -119,6 +122,37 @@ class TestUser(APITestCase):
         self.assertEqual(403, response.status_code)
 
 
-        
+    def test_get_groups_of_user(self):
+        token = self.get_token(self.user)
+        # Create many groups
+        group_ids = []
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group1"}, HTTP_AUTHORIZATION=token)
+        group_ids.append(
+            response.data.setdefault('data', {}).get('created_group_id', '')
+        )
 
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group2"}, HTTP_AUTHORIZATION=token)
+        group_ids.append(
+            response.data.setdefault('data', {}).get('created_group_id', '')
+        )
 
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group3"}, HTTP_AUTHORIZATION=token)
+        group_ids.append(
+            response.data.setdefault('data', {}).get('created_group_id', '')
+        )
+
+        # Create a member
+        username = "Du"
+        email = "Du@has.t"
+        password = "du_hast_mich"
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        normal_token = self.get_token(user)
+
+        # Add the member to all groups
+        for group_id in iter(group_ids):
+            Group.objects.get(id=group_id).add_member(user)
+
+        response = self.client.get("{}{}/groups/".format(self.url, user.id), HTTP_AUTHORIZATION=normal_token)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(3, len(response.data.get('data', [])))
