@@ -4,40 +4,8 @@ from kidsbook.models import *
 # from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 User = get_user_model()
-# from django.core.files.base import ContentFile
-# import base64
-# import six
-# import uuid
-# import imghdr
-
-# class Base64ImageField(serializers.ImageField):
-
-#     def to_internal_value(self, data):
-#         # Check if this is a base64 string
-#         if isinstance(data, six.string_types):
-#             # Check if the base64 string is in the "data:" format
-#             if 'data:' in data and ';base64,' in data:
-#                 # Break out the header from the base64 content
-#                 header, data = data.split(';base64,')
-#             # Try to decode the file. Return validation error if it fails.
-#             try:
-#                 decoded_file = base64.b64decode(data)
-#             except TypeError:
-#                 self.fail('invalid_image')
-
-#             # Generate file name:
-#             file_name = str(uuid.uuid4())[:12] # 12 characters are more than enough.
-#             # Get the file name extension:
-#             file_extension = self.get_file_extension(file_name, decoded_file)
-#             complete_file_name = "%s.%s" % (file_name, file_extension, )
-#             data = ContentFile(decoded_file, name=complete_file_name)
-#         return super(Base64ImageField, self).to_internal_value(data)
-
-#     def get_file_extension(self, file_name, decoded_file):
-#         extension = imghdr.what(file_name, decoded_file)
-#         extension = "jpg" if extension == "jpeg" else extension
-#         return extension
-
+import opengraph
+import json
 
 # This is for private profile
 class UserSerializer(serializers.ModelSerializer):
@@ -64,14 +32,16 @@ class PostSerializer(serializers.ModelSerializer):
         except Exception:
             raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
-        try:
-            return Post.objects.create(link=data["link"], picture=data["picture"], content=data["content"], group=group, creator=current_user)
-        except Exception:
-            raise serializers.ValidationError({'error': 'Unknown error while creating post'})
+        # try:
+        # print(opengraph.OpenGraph(url=data["link"]).__str__())
+        return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "", 
+            link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
+        # except Exception:
+            # raise serializers.ValidationError({'error': 'Unknown error while creating post'})
 
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link')
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):

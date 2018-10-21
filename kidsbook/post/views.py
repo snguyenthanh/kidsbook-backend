@@ -17,8 +17,6 @@ from django.contrib.auth import (
 
 from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
-import opengraph
-import json
 
 User = get_user_model()
 
@@ -33,18 +31,13 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostSerializer(queryset, many=True)
-        for post in serializer.data:
-            if post["link"]:
-                post["ogp"] = json.dumps(opengraph.OpenGraph(url=post["link"]).__str__())
-            else:
-                post["ogp"] = {}
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
-        try:
+        # try:
             return Response({'data': self.create(request, *args, **kwargs).data})
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        # except Exception:
+            # return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()

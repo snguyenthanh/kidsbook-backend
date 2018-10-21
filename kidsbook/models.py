@@ -11,6 +11,7 @@ from django.contrib.auth.models import (
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
+from django.contrib.postgres.fields import JSONField
 
 def format_value(value):
     if isinstance(value, list) and len(value) == 1:
@@ -209,8 +210,9 @@ class Post(models.Model):
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
-    picture = models.ImageField(default="default.png")
-    link = models.URLField()
+    picture = models.ImageField(default="default.png", null=True)
+    link = models.URLField(null=True)
+    ogp = models.TextField(null=True)
 
     REQUIRED_FIELDS = ["content"]
 
