@@ -60,7 +60,7 @@ def create_group(request):
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'POST'])
-@permission_classes((IsAuthenticated, IsSuperUser))
+@permission_classes((IsAuthenticated, IsTokenValid, IsSuperUser))
 def group(request):
     """Return all groups or create a new group."""
 
@@ -87,7 +87,7 @@ def delete_member_from_group(user, group):
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
 
 @api_view(['POST', 'DELETE'])
-@permission_classes((IsAuthenticated, IsGroupCreator))
+@permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
 def group_member(request, **kargs):
     """Add new member or remove a member in a group."""
 
@@ -113,7 +113,7 @@ def group_member(request, **kargs):
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes((IsAuthenticated, IsInGroup))
+@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
 def get_all_members_in_group(request, **kargs):
     # serializer_class = UserPublicSerializer
     try:
@@ -125,11 +125,12 @@ def get_all_members_in_group(request, **kargs):
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 #################################################################################################################
 ## GROUP MANAGE ##
 
 @api_view(['DELETE'])
-@permission_classes((IsAuthenticated, IsGroupCreator))
+@permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
 def delete_group(request, **kargs):
     """Delete a group."""
     try:
