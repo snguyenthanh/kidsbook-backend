@@ -6,7 +6,7 @@ from django.contrib.auth import get_user
 
 class IsTokenValid(permissions.BasePermission):
     def has_permission(self, request, view):
-        user_id = get_user(request).id
+        user_id = request.user.id
         is_allowed_user = True
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
@@ -29,22 +29,21 @@ class IsOwner(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to the owner of the snippet.
-        return obj.owner == get_user(request)
+        return obj.owner == request.user
 
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
-        return get_user(request).is_superuser
+        return request.user.is_superuser
 
 class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`
-        group_id = view.kwargs.get('pk', None)
-        print(group_id)
+        group_id = view.kwargs.get('pk', None) or request.data['group_id']
+        # group_id = view.kwargs.get('group_id', None)
         if group_id:
             try:
-                print("HERE")
-                print(Group.objects.get(id=group_id))
-                return Group.objects.get(id=group_id).users.filter(id=get_user(request).id).exists()
+                return request.user.group_users.all().filter(id=group_id).exists()
+                # return Group.objects.get(id=group_id).users.filter(id=request.user.id).exists()
             except Exception:
                 pass
         return False
@@ -54,8 +53,8 @@ class HasAccessToPost(permissions.BasePermission):
         #pk = post_id
         post_id = view.kwargs.get('pk', None)
         if post_id:
-            #return get_user(request) in Post.objects.get(id=post_id).group.users.all()
-            return Post.objects.get(id=post_id).group.users.filter(id=get_user(request).id).exists()
+            #return request.user in Post.objects.get(id=post_id).group.users.all()
+            return Post.objects.get(id=post_id).group.users.filturer(id=request.user.id).exists()
         return False
 
 class HasAccessToComment(permissions.BasePermission):
@@ -63,15 +62,15 @@ class HasAccessToComment(permissions.BasePermission):
         #pk = comment_id
         comment_id = view.kwargs.get('pk', None)
         if comment_id:
-            #return get_user(request) in Comment.objects.get(id=comment_id).post.group.users.all()
-            return Comment.objects.get(id=comment_id).post.group.users.filter(id=get_user(request).id).exists()
+            #return request.user in Comment.objects.get(id=comment_id).post.group.users.all()
+            return Comment.objects.get(id=comment_id).post.group.users.filter(id=request.user.id).exists()
         return False
 
 class IsGroupCreator(permissions.BasePermission):
     def has_permission(self, request, view):
         group_id = view.kwargs.get('pk', None)
         #sender_id = request.data.get('sender_id', None)
-        sender_id = get_user(request).id
+        sender_id = request.user.id
 
         # If sender is not the Creator of group
         if not sender_id or str(sender_id) != str(Group.objects.get(id=group_id).creator.id):
