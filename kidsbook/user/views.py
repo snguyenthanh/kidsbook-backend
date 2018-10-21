@@ -62,7 +62,7 @@ class LogIn(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
-        return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
 class Register(APIView):
     permission_classes = (IsSuperUser, IsInGroup)
@@ -117,7 +117,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             serializerNew.save()
             # print(request.data['new_user_name'])
 
-        return Response(serializerNew.data)
+        return Response({'data': serializerNew.data})
         # User.objects.update_user(current_user)
         # serializer = UserSerializer(current_user,)
 

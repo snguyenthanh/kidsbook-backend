@@ -15,7 +15,7 @@ class TestUser(APITestCase):
         self.username = "john"
         self.email = "john@snow.com"
         self.password = "you_know_nothing"
-        self.user = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
+        self.user = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
 
 
     def test_login(self):
@@ -59,3 +59,66 @@ class TestUser(APITestCase):
 
         response = self.client.get("{}{}/profile/".format(self.url, str(user.id)))
         self.assertEqual(401, response.status_code)
+
+    def test_get_virtual_users(self):
+        token = self.get_token()
+
+        # Create virtual user
+        username = "hey3"
+        email = "kid3@s.sss"
+        password = "want_some_cookies?"
+        user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=self.user)
+
+        response = self.client.get(self.url + 'virtual_users/', HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+
+    def test_register_but_in_group(self):
+        token = self.get_token()
+        
+        group = Group.objects.create_group(
+            name='test_GROUP',
+            creator = self.user
+        )
+
+        payload = {
+            'type': 'SUPERUSER',
+            'group_id': group.id,
+            'email_address': 'kids4@gmial.cpm',
+            'realname': 'HIAFALJ',
+            'username': 'asasbn',
+            'password': 'a'
+        }
+
+        response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+
+    def test_register_but_not_in_group(self):
+        token = self.get_token()
+
+         # Create virtual user
+        username = "hey3"
+        email = "kid3@s.sss"
+        password = "want_some_cookies?"
+        user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=self.user)
+
+        group = Group.objects.create_group(
+            name='test_GROUP',
+            creator = user
+        )
+        
+        payload = {
+            'type': 'SUPERUSER',
+            'group_id': group.id,
+            'email_address': 'kids4@gmial.cpm',
+            'realname': 'HIAFALJ',
+            'username': 'asasbn',
+            'password': 'a'
+        }
+
+        response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
+        self.assertEqual(403, response.status_code)
+
+
+        
+
+
