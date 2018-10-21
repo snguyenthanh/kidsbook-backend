@@ -76,8 +76,8 @@ class UserManager(BaseUserManager):
         return self._create_user(role=2, **kargs)
 
     def create_virtual_user(self, **kargs):
-        if 'is_virtual_user' not in kargs:
-            kargs['is_virtual_user'] = True
+        if 'is_staff' not in kargs:
+            kargs['is_staff'] = True
         if 'is_superuser' not in kargs:
             kargs['is_superuser'] = False
 
