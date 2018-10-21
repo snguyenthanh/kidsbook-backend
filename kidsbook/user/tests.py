@@ -74,7 +74,7 @@ class TestUser(APITestCase):
 
     def test_register_but_in_group(self):
         token = self.get_token()
-        
+
         group = Group.objects.create_group(
             name='test_GROUP',
             creator = self.user
@@ -105,7 +105,7 @@ class TestUser(APITestCase):
             name='test_GROUP',
             creator = user
         )
-        
+
         payload = {
             'type': 'SUPERUSER',
             'group_id': group.id,
@@ -129,7 +129,7 @@ class TestUser(APITestCase):
         payload = {
             'email_address': 'kid3@s.sss'
         }
-        response = self.client.post(self.url + 'loginAs/', payload, HTTP_AUTHORIZATION=token)
+        response = self.client.post(self.url + 'login_as_virtual/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
 
     def test_loginAs_incorrect_teacher(self):
@@ -149,8 +149,5 @@ class TestUser(APITestCase):
         payload = {
             'email_address': 'kid3@s.sss'
         }
-        response = self.client.post(self.url + 'loginAs/', payload, HTTP_AUTHORIZATION=token)
-        self.assertEqual(400, response.status_code)
-        
-
-
+        response = self.client.post(self.url + 'login_as_virtual/', payload, HTTP_AUTHORIZATION=token)
+        self.assertEqual(405, response.status_code)
