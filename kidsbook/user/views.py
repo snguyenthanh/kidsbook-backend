@@ -59,20 +59,21 @@ class LogIn(APIView):
         res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
-class LogInAs(APIView):
-    permission_classes = (IsSuperUser, )
+class LogInAsVirtual(APIView):
+    permission_classes = (IsSuperUser, IsTokenValid)
 
     def post(self, request):
+        email = request.data.get('email_address', None)
+
+        # Check if eligible
+        if not email or not User.object.filter(email_address=email).exists():
+            return Response({'error': 'The email is invalid.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        user = User.objects.get(email_address=email)
+        if not user.teacher or user.teacher.id != request.user.id:
+            return Response({'error': "The user doesn't have permission to access this user."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         try:
-            email = request.data.get('email_address', None)
-            user = User.objects.get(email_address = email)
-            if(user.teacher):
-                if(user.teacher.id == request.user.id):
-                    a = 1
-                else:
-                    raise Exception("You are not in charge of this user")
-            else:
-                raise Exception("Not login as a virtual user")
             token = generate_token(user)
             user_details = {}
             user_details['name'] = user.username
@@ -84,8 +85,10 @@ class LogInAs(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class Register(APIView):
-    permission_classes = (IsSuperUser, IsInGroup)
+    permission_classes = (IsSuperUser, IsInGroup, IsTokenValid)
     serializer_class = UserSerializer
     def post(self, request):
         user_role = request.data['type']
