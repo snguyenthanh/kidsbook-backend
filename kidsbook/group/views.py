@@ -117,7 +117,7 @@ def group_member(request, **kargs):
 def get_all_members_in_group(request, **kargs):
     # serializer_class = UserPublicSerializer
     try:
-        users = Group.objects.get(id=kargs.get('group_id')).users
+        users = Group.objects.get(id=kargs.get('pk')).users
         serializer = UserPublicSerializer(users, many=True)
         return Response({'data': serializer.data})
     except Exception:
