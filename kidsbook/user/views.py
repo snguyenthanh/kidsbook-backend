@@ -36,11 +36,6 @@ def generate_token(user):
 class LogIn(APIView):
     permission_classes = (AllowAny, )
     def post(self, request):
-        #print("SECRET")
-        # print(settings.SECRET_KEY)
-        #print("LOG IN ")
-        #print(request.META.get('HTTP_AUTHORIZATION'))
-
         email = request.data.get('email_address', None)
         password = request.data.get('password', None)
         if not email or not password:
@@ -64,8 +59,36 @@ class LogIn(APIView):
         res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
+class LogInAsVirtual(APIView):
+    permission_classes = (IsSuperUser, IsTokenValid)
+
+    def post(self, request):
+        email = request.data.get('email_address', None)
+
+        # Check if eligible
+        if not email or not User.objects.filter(email_address=email).exists():
+            return Response({'error': 'The email is invalid.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        user = User.objects.get(email_address=email)
+        if not user.teacher or user.teacher.id != request.user.id:
+            return Response({'error': "The user doesn't have permission to access this user."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        try:
+            token = generate_token(user)
+            user_details = {}
+            user_details['name'] = user.username
+            user_details['token'] = token
+            user_logged_in.send(sender=user.__class__,
+                                    request=request, user=user)
+            return Response({'data': user_details}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class Register(APIView):
-    permission_classes = (IsSuperUser, IsInGroup)
+    permission_classes = (IsSuperUser, IsInGroup, IsTokenValid)
     serializer_class = UserSerializer
     def post(self, request):
         user_role = request.data['type']
