@@ -62,7 +62,7 @@ class LogIn(APIView):
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
 class LogInAsVirtual(APIView):
-    permission_classes = (IsSuperUser, IsTokenValid)
+    permission_classes = (IsAuthenticated, IsSuperUser, IsTokenValid)
 
     def post(self, request):
         email = request.data.get('email_address', None)
@@ -196,7 +196,7 @@ class LogOut(generics.ListAPIView):
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
             BlackListedToken.objects.create(token=token, user=request.user)
-            return Response({})
+            return Response({}, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -234,11 +234,11 @@ class GetPost(generics.ListAPIView):
 
 class GetVirtualUsers(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUser, IsTokenValid)
+    permission_classes = (IsAuthenticated, IsSuperUser, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
-            virtual_users = User.objects.filter(teacher=current_user)
+            virtual_users = User.objects.filter(teacher=current_user, role=3)
             serializer = self.serializer_class(virtual_users, many=True)
             return Response({'data': serializer.data})
         except Exception as e:

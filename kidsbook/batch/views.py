@@ -1,16 +1,12 @@
-import os
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.parsers import FileUploadParser
-from rest_framework import status
-from pprint import pprint
 from csv import reader
 from typing import List
 
-#from kidsbook.group.serializers import GroupSerializer
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
 from kidsbook.permissions import IsSuperUser
@@ -53,7 +49,7 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
 
 
 #################################################################################################################
-## BATCH CREATE ##
+## import CREATE ##
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated, IsSuperUser))
@@ -84,4 +80,4 @@ def batch_create(request, **kargs):
             'data': failed_users
         }, status=status.HTTP_409_CONFLICT)
 
-    return Response({'result': 'Successful'}, status=status.HTTP_202_ACCEPTED)
+    return Response({}, status=status.HTTP_202_ACCEPTED)

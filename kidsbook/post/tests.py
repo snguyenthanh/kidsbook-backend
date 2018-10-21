@@ -29,7 +29,7 @@ class TestPost(APITestCase):
 
         # Create a Group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
-        self.group_id = response.data.setdefault('data', {}).get('created_group_id', '')
+        self.group_id = response.data.setdefault('data', {}).get('id', '')
 
         #self.url = "{}/group/{}/".format(url_prefix, self.group_id)
 

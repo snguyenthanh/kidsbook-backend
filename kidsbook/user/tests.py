@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
-from kidsbook.models import Group
+from kidsbook.models import Group, Post
 from kidsbook.serializers import UserSerializer
 from kidsbook.user.views import generate_token
 
@@ -74,6 +74,26 @@ class TestUser(APITestCase):
 
         response = self.client.get(self.url + 'virtual_users/', HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
+
+    def test_get_only_virtual_users(self):
+        token = self.get_token(self.user)
+
+        # Create virtual user
+        username = "hey3"
+        email = "kid3@s.sss"
+        password = "want_some_cookies?"
+        User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=self.user)
+
+        username = "jkz"
+        email = "mka@s.sss"
+        password = "want_some_cookies?"
+        User.objects.create_user(username=username, email_address=email, password=password, teacher=self.user)
+
+        response = self.client.get(self.url + 'virtual_users/', HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
 
     def test_register_superuser(self):
         token = self.get_token(self.user)
@@ -185,17 +205,17 @@ class TestUser(APITestCase):
         group_ids = []
         response = self.client.post(url_prefix + '/group/', {"name": "testing group1"}, HTTP_AUTHORIZATION=token)
         group_ids.append(
-            response.data.setdefault('data', {}).get('created_group_id', '')
+            response.data.setdefault('data', {}).get('id', '')
         )
 
         response = self.client.post(url_prefix + '/group/', {"name": "testing group2"}, HTTP_AUTHORIZATION=token)
         group_ids.append(
-            response.data.setdefault('data', {}).get('created_group_id', '')
+            response.data.setdefault('data', {}).get('id', '')
         )
 
         response = self.client.post(url_prefix + '/group/', {"name": "testing group3"}, HTTP_AUTHORIZATION=token)
         group_ids.append(
-            response.data.setdefault('data', {}).get('created_group_id', '')
+            response.data.setdefault('data', {}).get('id', '')
         )
 
         # Create a member
@@ -328,3 +348,46 @@ class TestUserUpdate(APITestCase):
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
+
+def TestUserPost(self):
+    def setUp(self):
+        self.url = url_prefix + '/user/'
+        self.username = "john"
+        self.email = "john@snow.com"
+        self.password = "you_know_nothing"
+        self.creator = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
+
+        # Create a member
+        username = "kido"
+        email = "knis@snow.com"
+        password = "you_know_nothing"
+        self.user = User.objects.create_superuser(username=username, email_address=email, password=password)
+
+        # Create a group
+        self.group = Group.objects.create_group({
+            'name': 'testing group'
+        })
+        self.group.add_member(self.user)
+
+        self.post = Post.objects.create_post(
+            content='Need someone to eat lunch at pgp?',
+            creator=self.user,
+            group=self.group
+        )
+
+
+    def get_token(self, user):
+        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': user.password})
+        token = token_response.data.setdefault('data', {}).get('token', b'')
+        token = 'Bearer {0}'.format(token.decode('utf-8'))
+        return token
+
+    def test_get_all_posts_of_user(self):
+        token = self.get_token(self.user)
+
+        response = self.client.get("{}/posts/".format(self.url, self.user.id), HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_all_posts_of_user_without_token(self):
+        response = self.client.get("{}/posts/".format(self.url, self.user.id))
+        self.assertEqual(401, response.status_code)
