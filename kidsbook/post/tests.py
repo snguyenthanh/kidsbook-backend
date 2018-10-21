@@ -1,4 +1,5 @@
 import json
+import os
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from kidsbook.models import Post, Group, Comment
@@ -49,8 +50,14 @@ class TestPost(APITestCase):
 
     def test_get_all_post_in_group(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
-        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            response = self.client.post(url, {"content": "Content", "link": "http://ogp.me", 
+                "picture": pic}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
 
+    def create_post_in_group(self):
+        url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_post_in_group_by_non_member(self):
