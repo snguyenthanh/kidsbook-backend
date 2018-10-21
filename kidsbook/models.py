@@ -11,7 +11,6 @@ from django.contrib.auth.models import (
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
-from django.contrib.postgres.fields import JSONField
 
 def format_value(value):
     if isinstance(value, list) and len(value) == 1:
