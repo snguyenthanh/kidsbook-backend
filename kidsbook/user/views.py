@@ -36,11 +36,6 @@ def generate_token(user):
 class LogIn(APIView):
     permission_classes = (AllowAny, )
     def post(self, request):
-        #print("SECRET")
-        # print(settings.SECRET_KEY)
-        #print("LOG IN ")
-        #print(request.META.get('HTTP_AUTHORIZATION'))
-
         email = request.data.get('email_address', None)
         password = request.data.get('password', None)
         if not email or not password:
@@ -64,6 +59,31 @@ class LogIn(APIView):
         res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
+class LogInAs(APIView):
+    permission_classes = (IsSuperUser, )
+
+    def post(self, request):
+        try:
+            email = request.data.get('email_address', None)
+            user = User.objects.get(email_address = email)
+            if(user.teacher):
+                if(user.teacher.id == request.user.id):
+                    a = 1
+                else:
+                    raise Exception("You are not in charge of this user")
+            else:
+                raise Exception("Not login as a virtual user")
+            token = generate_token(user)
+            user_details = {}
+            user_details['name'] = user.username
+            user_details['token'] = token
+            user_logged_in.send(sender=user.__class__,
+                                    request=request, user=user)
+            return Response({'data': user_details}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
 class Register(APIView):
     permission_classes = (IsSuperUser, IsInGroup)
     serializer_class = UserSerializer
