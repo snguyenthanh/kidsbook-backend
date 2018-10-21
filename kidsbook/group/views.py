@@ -53,7 +53,7 @@ def create_group(request):
             request_data['creator'] = creator
             new_group = Group.objects.create_group(**request_data)
             response = {'created_group_id': new_group.id}
-            return Response({'data': response}, status=status.HTTP_201_CREATED)
+            return Response({'data': response}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
