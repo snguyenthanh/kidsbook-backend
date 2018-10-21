@@ -34,10 +34,10 @@ class GroupPostList(generics.ListCreateAPIView):
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
-        # try:
+        try:
             return Response({'data': self.create(request, *args, **kwargs).data})
-        # except Exception:
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()
