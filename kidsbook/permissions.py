@@ -15,7 +15,6 @@ class IsTokenValid(permissions.BasePermission):
                 is_allowed_user = False
         except Exception:
             is_allowed_user = True
-            
         return is_allowed_user
 
 class IsOwner(permissions.BasePermission):

@@ -121,6 +121,36 @@ class TestUser(APITestCase):
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(403, response.status_code)
 
+    def test_loginAs_correct_teacher(self):
+        token = self.get_token(self.user)
+        username = "hey3"
+        email = "kid3@s.sss"
+        password = "want_some_cookies?"
+        user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=self.user)
+
+        payload = {
+            'email_address': 'kid3@s.sss'
+        }
+        response = self.client.post(self.url + 'login_as_virtual/', payload, HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+
+    def test_loginAs_incorrect_teacher(self):
+        username = "heyasgafsg3"
+        email = "kidasfgfs3@s.sss"
+        password = "want_some_cookies?"
+        teacher = User.objects.create_superuser(username=username, email_address=email, password=password)
+
+        username = "hey3"
+        email = "kid3@s.sss"
+        password = "want_some_cookies?"
+        user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=teacher)
+        token = self.get_token(user)
+        
+        payload = {
+            'email_address': 'kid3@s.sss'
+        }
+        response = self.client.post(self.url + 'login_as_virtual/', payload, HTTP_AUTHORIZATION=token)
+        self.assertEqual(405, response.status_code)
 
     def test_get_groups_of_user(self):
         token = self.get_token(self.user)
