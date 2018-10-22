@@ -141,14 +141,14 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': 'User not found.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         # Check for permission
-        keywords_require_superuser = ('email_address', 'username', 'realname')
+        keywords_require_superuser = ('email_address', 'realname')
         if any(kw in kargs for kw in iter(keywords_require_superuser)) and not request.user.is_superuser:
             return Response({'error': 'Only superuser and above of this user can edit email, username and real name.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        if request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
+        if User.objects.get(id=target_user_id).teacher and request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
             return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        allowed_keywords = ['gender', 'description', 'date_of_birth', 'avatar_url']
+        allowed_keywords = ['gender', 'description', 'date_of_birth', 'avatar_url', 'username']
         # If differnt user_id, the requester must be the creator
         if request.user.id != target_user_id:
             allowed_keywords = set(allowed_keywords + list(keywords_require_superuser))
