@@ -72,8 +72,12 @@ class TestPost(APITestCase):
 
     def test_get_post_detail_by_id(self):
         url = "{}/post/{}/".format(url_prefix, self.post.id)
-
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_put_post_detail_by_id(self):
+        url = "{}/post/{}/".format(url_prefix, self.post.id)
+        response = self.client.put(url,{"content": "Changed content"}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_get_post_detail_by_id_by_non_member(self):
@@ -86,10 +90,14 @@ class TestPost(APITestCase):
         response = self.client.get(url)
         self.assertEqual(401, response.status_code)
 
-
     def test_get_all_comments_of_post(self):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_create_comment_of_post(self):
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.post(url, {"content": "Comment"}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_comments_of_post_by_non_member(self):
@@ -97,15 +105,69 @@ class TestPost(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=self.user_token)
         self.assertEqual(403, response.status_code)
 
+    def test_get_all_likes_of_post(self):
+        url = "{}/post/{}/likes/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_like_post(self):
+        url = "{}/post/{}/likes/".format(url_prefix, self.post.id)
+        response = self.client.post(url, {"like_or_dislike": True}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_all_shares_of_post(self):
+        url = "{}/post/{}/shares/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_share_post(self):
+        url = "{}/post/{}/shares/".format(url_prefix, self.post.id)
+        response = self.client.post(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_all_flags_of_post(self):
+        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_flag_post(self):
+        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        response = self.client.post(url, {"status": "UNDER APPROVAL"}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
     def test_get_all_comments_of_post_without_token(self):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url)
         self.assertEqual(401, response.status_code)
 
+    def test_get_all_likes_of_comment(self):
+        url = "{}/comment/{}/likes/".format(url_prefix, self.comment.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_like_comment(self):
+        url = "{}/comment/{}/likes/".format(url_prefix, self.comment.id)
+        response = self.client.post(url, {"like_or_dislike": True}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_all_flags_of_comment(self):
+        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_flag_comment(self):
+        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        response = self.client.post(url, {"status": "UNDER APPROVAL"}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
     def test_get_comment_by_id(self):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
-
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_put_comment_by_id(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.put(url, {"content": "Changed content"}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_get_comment_by_id_by_non_member(self):
@@ -117,3 +179,13 @@ class TestPost(APITestCase):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         response = self.client.get(url)
         self.assertEqual(401, response.status_code)
+
+    def test_delete_comment_by_id(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_delete_post_detail_by_id(self):
+        url = "{}/post/{}/".format(url_prefix, self.post.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
