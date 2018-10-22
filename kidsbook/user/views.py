@@ -44,19 +44,22 @@ class LogIn(APIView):
             res = {'error': 'please provide a email and a password'}
             return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
 
+        isAuthenticate = authenticate(email_address=email, password=password)
+        if(isAuthenticate is None):
+            res = {'error': ' Wrong email/password'}
+            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)        
         user = User.objects.get(email_address=email)
-        if user:
-            try:
-                token = generate_token(user)
-                user_details = {}
-                user_details['name'] = user.username
-                user_details['token'] = token
-                user_logged_in.send(sender=user.__class__,
-                                    request=request, user=user)
-                return Response({'data': user_details}, status=status.HTTP_200_OK)
+        try:
+            token = generate_token(user)
+            user_details = {}
+            user_details['name'] = user.username
+            user_details['token'] = token
+            user_logged_in.send(sender=user.__class__,
+                                request=request, user=user)
+            return Response({'data': user_details}, status=status.HTTP_200_OK)
 
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         res = {'error': 'can not authenticate with the given credentials or the account has been deactivated'}
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)

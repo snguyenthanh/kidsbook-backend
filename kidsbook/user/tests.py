@@ -17,6 +17,10 @@ class TestUser(APITestCase):
         self.password = "you_know_nothing"
         self.user = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
 
+    def test_login_with_wrong_password(self):
+        url = self.url + 'login/'
+        response = self.client.post(url, data={'email_address': self.email, 'password': 'hieu_dep_trai'})
+        self.assertEqual(403, response.status_code)
 
     def test_login(self):
         url = self.url + 'login/'
@@ -24,7 +28,7 @@ class TestUser(APITestCase):
         self.assertEqual(200, response.status_code)
 
     def get_token(self, user):
-        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': user.password})
+        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': self.password})
         token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
@@ -47,7 +51,7 @@ class TestUser(APITestCase):
         # Create an user
         username = "hey"
         email = "kid@s.sss"
-        password = "want_some_cookies?"
+        password = self.password
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
         response = self.client.get("{}{}/".format(self.url, user.id), HTTP_AUTHORIZATION=token)
@@ -103,7 +107,7 @@ class TestUser(APITestCase):
                 'email_address': 'kids4@gmial.cpm',
                 'realname': 'HIAFALJ',
                 'username': 'asasbn',
-                'password': 'a'
+                'password': self.password
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(202, response.status_code)
@@ -116,7 +120,7 @@ class TestUser(APITestCase):
                 'email_address': 'kids4@gmial.cpm',
                 'realname': 'HIAFALJ',
                 'username': 'asasbn',
-                'password': 'a',
+                'password': self.password,
                 'teacher': self.user.id
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
@@ -130,7 +134,7 @@ class TestUser(APITestCase):
                 'email_address': 'kids4@gmial.cpm',
                 'realname': 'HIAFALJ',
                 'username': 'asasbn',
-                'password': 'a'
+                'password': self.password
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
@@ -138,7 +142,7 @@ class TestUser(APITestCase):
     def test_register_user_by_non_superuser(self):
         username = "hey3"
         email = "kid3@s.sss"
-        password = "want_some_cookies?"
+        password = self.password
         user = User.objects.create_user(username=username, email_address=email, password=password, teacher=self.user)
         token = self.get_token(user)
 
@@ -147,7 +151,7 @@ class TestUser(APITestCase):
                 'email_address': 'kids4@gmial.cpm',
                 'realname': 'HIAFALJ',
                 'username': 'asasbn',
-                'password': 'a',
+                'password': self.password,
                 'teacher': user.id
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
@@ -161,7 +165,7 @@ class TestUser(APITestCase):
                 'email_address': 'kids4@gmial.cpm',
                 'realname': 'HIAFALJ',
                 'username': 'asasbn',
-                'password': 'a',
+                'password': self.password,
                 'teacher': self.user.id
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
@@ -171,7 +175,7 @@ class TestUser(APITestCase):
         token = self.get_token(self.user)
         username = "hey3"
         email = "kid3@s.sss"
-        password = "want_some_cookies?"
+        password = self.password
         user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=self.user)
 
         payload = {
@@ -185,12 +189,12 @@ class TestUser(APITestCase):
 
         username = "heyasgafsg3"
         email = "kidasfgfs3@s.sss"
-        password = "want_some_cookies?"
+        password = self.password
         teacher = User.objects.create_superuser(username=username, email_address=email, password=password)
 
         username = "hey3"
         email = "kid3@s.sss"
-        password = "want_some_cookies?"
+        password = self.password
         user = User.objects.create_virtual_user(username=username, email_address=email, password=password, teacher=teacher)
 
         payload = {
@@ -221,7 +225,7 @@ class TestUser(APITestCase):
         # Create a member
         username = "Du"
         email = "Du@has.t"
-        password = "du_hast_mich"
+        password = self.password
         user = User.objects.create_user(username=username, email_address=email, password=password)
         normal_token = self.get_token(user)
 
@@ -241,13 +245,13 @@ class TestUserUpdate(APITestCase):
 
         username = "john"
         email = "john@snow.com"
-        password = "you_know_nothing"
-        self.creator = User.objects.create_superuser(username=username, email_address=email, password=password)
+        self.password = "you_know_nothing"
+        self.creator = User.objects.create_superuser(username=username, email_address=email, password=self.password)
 
         # A user to modify
         username = "Doggo"
         email = "Mc@Dog.Face"
-        password = "the_goodest_boi"
+        password = self.password
         description = 'Chihuahua'
         gender = True
         self.modify_user = User.objects.create_user(username=username,
@@ -259,7 +263,7 @@ class TestUserUpdate(APITestCase):
         self.update_url = "{}update/{}/".format(self.url, self.modify_user.id)
 
     def get_token(self, user):
-        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': user.password})
+        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': self.password})
         token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
@@ -287,7 +291,7 @@ class TestUserUpdate(APITestCase):
 
         data = {
             'username': 'Not_doggo',
-            'password': 'yea',
+            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -303,12 +307,12 @@ class TestUserUpdate(APITestCase):
         # Create a random user
         username = "chris"
         email = "chris@snow.com"
-        password = "you_know_nothing"
+        password = self.password
         user = User.objects.create_user(username=username, email_address=email, password=password)
 
         data = {
             'username': username,
-            'password': 'yea',
+            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -321,13 +325,13 @@ class TestUserUpdate(APITestCase):
         # Create a random user
         username = "chris"
         email = "chris@snow.com"
-        password = "you_know_nothing"
+        password = self.password
         user = User.objects.create_user(username=username, email_address=email, password=password)
         token = self.get_token(user)
 
         data = {
             'username': 'Not_doggo',
-            'password': 'yea',
+            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -337,13 +341,13 @@ class TestUserUpdate(APITestCase):
         # Create a random user
         username = "chris"
         email = "chris@snow.com"
-        password = "you_know_nothing"
+        password = self.password
         user = User.objects.create_superuser(username=username, email_address=email, password=password)
         token = self.get_token(user)
 
         data = {
             'username': 'Not_doggo',
-            'password': 'yea',
+            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -354,13 +358,13 @@ def TestUserPost(self):
         self.url = url_prefix + '/user/'
         self.username = "john"
         self.email = "john@snow.com"
-        self.password = "you_know_nothing"
+        self.password = self.password
         self.creator = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
 
         # Create a member
         username = "kido"
         email = "knis@snow.com"
-        password = "you_know_nothing"
+        password = self.password
         self.user = User.objects.create_superuser(username=username, email_address=email, password=password)
 
         # Create a group
@@ -377,7 +381,7 @@ def TestUserPost(self):
 
 
     def get_token(self, user):
-        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': user.password})
+        token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': self.password})
         token = token_response.data.setdefault('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
