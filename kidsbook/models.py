@@ -125,10 +125,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     # def check_password(self, raw_password):
-    #     print("REACH")
-    #     print(make_password(raw_password))
     #     print(self.password)
-    #     if self.password == raw_password:
+    #     print(make_password(raw_password))
+    #     if self.password == make_password(raw_password):
     #         return True
     #     else:
     #         return False
