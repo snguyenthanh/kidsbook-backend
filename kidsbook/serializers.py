@@ -34,7 +34,7 @@ class PostSerializer(serializers.ModelSerializer):
         current_user = self.context['request'].user
         # try:
         # print(opengraph.OpenGraph(url=data["link"]).__str__())
-        return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "", 
+        return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
             link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
         # except Exception:
             # raise serializers.ValidationError({'error': 'Unknown error while creating post'})
@@ -52,10 +52,8 @@ class PostLikeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def create(self, data):
-        print(data)
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
-        print(post)
         new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
         return new_post
 
