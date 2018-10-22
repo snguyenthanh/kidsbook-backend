@@ -1,4 +1,3 @@
-import json
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from kidsbook.models import Group
@@ -6,7 +5,6 @@ from kidsbook.serializers import GroupSerializer
 from kidsbook.user.views import generate_token
 
 User = get_user_model()
-
 url_prefix = '/api/v1'
 
 class TestGroup(APITestCase):
@@ -183,14 +181,14 @@ class TestGroupMember(APITestCase):
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(400, response.status_code)
 
-#     def test_view_all_members_as_member(self):
-#         self.test_add_new_group_member()
-#         response = self.client.get("{}users/".format(self.url), HTTP_AUTHORIZATION=self.member_token)
-#         self.assertEqual(200, response.status_code)
+    def test_view_all_members_as_member(self):
+        self.test_add_new_group_member()
+        response = self.client.get("{}users/".format(self.url), HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
 
-#     def test_view_all_members_as_creator(self):
-#         response = self.client.get("{}users/".format(self.url), HTTP_AUTHORIZATION=self.creator_token)
-#         self.assertEqual(200, response.status_code)
+    def test_view_all_members_as_creator(self):
+        response = self.client.get("{}users/".format(self.url), HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
 
     def test_view_all_members_without_token(self):
         response = self.client.get("{}users/".format(self.url))

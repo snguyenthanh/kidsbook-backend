@@ -52,32 +52,39 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
 `POST` | /user/update/<user_id/ | * | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
 
-## 2. Post
+## 2. Users
+
+Method | Endpoint | Arguments | Description | Permissions | Return
+--- | --- | --- | --- | --- | --- |
+`GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
+
+## 3. Post
+`*` in column `Arguments` refers the fields of [the return model](./kidsbook/models.py).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /group/<group_id>/posts/ | | Get all posts in the group. | IsAuthenticated, IsInGroup | Post: *list*
-`POST` | /group/<group_id>/posts/ | | (**NOT TESTED**) | IsAuthenticated, IsInGroup | Post: *dict*
+`POST` | /group/<group_id>/posts/ | * | Create a post in the group. | IsAuthenticated, IsInGroup | Post: *dict*
 `GET` | /post/<post_id>/ | | Get post's details by ID. | IsAuthenticated, HasAccessToPost | Post: *dict*
-`POST` | /post/<post_id>/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | Post: *dict*
-`DELETE` | /post/<post_id>/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | Post: *dict*
-`GET` | /post/<post_id>/likes/ | | (**NOT TESTED**) Get the likes/dislikes of the post. | IsAuthenticated, HasAccessToPost | UserLikePost: *list*
-`POST` | /post/<post_id>/likes | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | UserLikePost: *dict*
-`GET` | /post/<post_id>/shares/ | | (**NOT TESTED**) Get the shares of the post. | IsAuthenticated, HasAccessToPost | UserSharePost: *list*
-`POST` | /post/<post_id>/shares | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | UserSharePost: *dict*
-`GET` | /post/<post_id>/comments/ | | Get the comments of the post. | IsAuthenticated, HasAccessToPost | Comment: *list*
-`POST` | /post/<post_id>/comments | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | Comment: *dict*
-`GET` | /post/<post_id>/flag/ | | (**NOT TESTED**) Get the flags of the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *list*
-`POST` | /post/<post_id>/flag/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToPost | UserFlagPost: *dict*
+`POST` | /post/<post_id>/ | * | Update the post. | IsAuthenticated, HasAccessToPost | Post: *dict*
+`DELETE` | /post/<post_id>/ | * | Delete the post. | IsAuthenticated, HasAccessToPost | {}
+`GET` | /post/<post_id>/likes/ | | Get all likes/dislikes of the post. | IsAuthenticated, HasAccessToPost | UserLikePost: *list*
+`POST` | /post/<post_id>/likes/ | like_or_dislike: *bool* | Like/dislike the post. | IsAuthenticated, HasAccessToPost | UserLikePost: *dict*
+`GET` | /post/<post_id>/shares/ | | Get all shares of the post. | IsAuthenticated, HasAccessToPost | UserSharePost: *list*
+`POST` | /post/<post_id>/shares/ | | User `shares` the post.  | IsAuthenticated, HasAccessToPost | UserSharePost: *dict*
+`GET` | /post/<post_id>/comments/ | | Get all comments of the post. | IsAuthenticated, HasAccessToPost | Comment: *list*
+`POST` | /post/<post_id>/comments/ | content:*str* | Create a comment for the post. | IsAuthenticated, HasAccessToPost | Comment: *dict*
+`GET` | /post/<post_id>/flags/ | | Get all flags of the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *list*
+`POST` | /post/<post_id>/flags/ | status:*str* | Create a flag for the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *dict*
 `GET` | /comment/<comment_id>/ | | Get comment's details by ID. | IsAuthenticated, HasAccessToComment | Comment: *dict*
-`POST` | /comment/<comment_id>/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToComment | Comment: *dict*
-`DELETE` | /comment/<comment_id>/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToComment | Comment: *dict*
-`GET` | /comment/<comment_id>/likes/ | | (**NOT TESTED**) Get the likes of the comment. | IsAuthenticated, HasAccessToComment | UserLikeComment: *list*
-`POST` | /comment/<comment_id>/likes/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToComment | UserLikeComment: *dict*
-`GET` | /comment/<comment_id>/flag/ | | (**NOT TESTED**) Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
-`POST` | /comment/<comment_id>/flag/ | | (**NOT TESTED**) | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
+`POST` | /comment/<comment_id>/ | content:*str* | Update the comment. | IsAuthenticated, HasAccessToComment | Comment: *dict*
+`DELETE` | /comment/<comment_id>/ | | Delete the comment. | IsAuthenticated, HasAccessToComment | {}
+`GET` | /comment/<comment_id>/likes/ | | Get the likes/dislikes of the comment. | IsAuthenticated, HasAccessToComment | UserLikeComment: *list*
+`POST` | /comment/<comment_id>/likes/ | like_or_dislike:*bool* | User likes/dislikes a comment. | IsAuthenticated, HasAccessToComment | UserLikeComment: *dict*
+`GET` | /comment/<comment_id>/flags/ | | Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
+`POST` | /comment/<comment_id>/flags/ | status:*str* | Create a flag for the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
 
-## 3. Group
+## 4. Group
 `*` in column `Arguments` refers the fields of [Group model](./kidsbook/models.py#L165-L173).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
@@ -90,10 +97,10 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `DELETE` | /group/<group_id>/user/<user_id>/ | | Remove the user to the group. | IsAuthenticated, IsGroupCreator | {}
 `DELETE` | /group/<group_id>/delete/ | | Remove the group. | IsAuthenticated, IsGroupCreator| {}
 
-## 4. Batch
+## 5. Batch
 A keyword argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
-A header row is required for the `.csv` files.
+A header row is required for the `.csv` files. Empty `is_superuser` and `gender` will default to 0.
 
 An example `.csv` file:
 ```
