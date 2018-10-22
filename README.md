@@ -45,8 +45,8 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /user/<user_id>/ | | Get the user's information. | IsAuthenticated | User: *dict*
 `GET` | /user/<user_id>/groups/ | | Get all the groups the user is in. | IsAuthenticated | User: *list*
 `GET` | /user/posts/ | | Get all posts created by the current user. | IsAuthenticated | User: *list*
-`POST` | /user/login/ | email_address, password | Return an authentication token for the user. | AllowAny | {data: {name: '', token: ''}}
-`POST` | /user/login_as_virtual/ | email_address | Return an authentication for the `virtual` user. | IsAuthenticated, IsSuperUser | {data: {name: '', token: ''}}
+`POST` | /user/login/ | email_address:*str*, password:*str* | Return an authentication token for the user. | AllowAny | {data: {name: '', token: ''}}
+`POST` | /user/login_as_virtual/ | email_address:*str* | Return an authentication for the `virtual` user. | IsAuthenticated, IsSuperUser | {data: {name: '', token: ''}}
 `POST` | /user/register/ | * | Create an user using the given arguments. | IsAuthenticated, IsSuperUser | User: *dict*
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
@@ -105,7 +105,7 @@ A header row is required for the `.csv` files. Empty `is_superuser` and `gender`
 An example `.csv` file:
 ```
 username,email_address,password,realname,gender,is_superuser
-chris,chris@email.com,password_for_kris,Christiana Messi,0,
+chris,chris@email.com,password_for_kris,Christiana Messi,0,0
 james,james@email.com,password_for_kris,Christiana Messi,1,1
 ama,ama@email.com,ama_pwd,Ama Johnson,1,0
 ```
