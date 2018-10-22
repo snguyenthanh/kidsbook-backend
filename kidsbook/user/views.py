@@ -47,7 +47,7 @@ class LogIn(APIView):
         isAuthenticate = authenticate(email_address=email, password=password)
         if(isAuthenticate is None):
             res = {'error': ' Wrong email/password'}
-            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)        
+            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
         user = User.objects.get(email_address=email)
         try:
             token = generate_token(user)
@@ -229,7 +229,7 @@ class GetPost(generics.ListAPIView):
     def list(self, request):
         try:
             current_user = request.user
-            posts = Post.objects.filter(creator=current_user)
+            posts = Post.objects.filter(creator=current_user).order_by('-created_at')
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:

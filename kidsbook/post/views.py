@@ -27,7 +27,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
-            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
+            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).order_by('-created_at')
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostSerializer(queryset, many=True)

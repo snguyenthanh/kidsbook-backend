@@ -1,4 +1,3 @@
-import json
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from kidsbook.models import Group
@@ -6,7 +5,6 @@ from kidsbook.serializers import GroupSerializer
 from kidsbook.user.views import generate_token
 
 User = get_user_model()
-
 url_prefix = '/api/v1'
 
 class TestGroup(APITestCase):

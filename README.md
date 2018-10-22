@@ -52,7 +52,13 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
 `POST` | /user/update/<user_id/ | * | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
 
-## 2. Post
+## 2. Users
+
+Method | Endpoint | Arguments | Description | Permissions | Return
+--- | --- | --- | --- | --- | --- |
+`GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
+
+## 3. Post
 `*` in column `Arguments` refers the fields of [the return model](./kidsbook/models.py).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
@@ -78,7 +84,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /comment/<comment_id>/flags/ | | Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
 `POST` | /comment/<comment_id>/flags/ | status:*str* | Create a flag for the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
 
-## 3. Group
+## 4. Group
 `*` in column `Arguments` refers the fields of [Group model](./kidsbook/models.py#L165-L173).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
@@ -91,7 +97,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `DELETE` | /group/<group_id>/user/<user_id>/ | | Remove the user to the group. | IsAuthenticated, IsGroupCreator | {}
 `DELETE` | /group/<group_id>/delete/ | | Remove the group. | IsAuthenticated, IsGroupCreator| {}
 
-## 4. Batch
+## 5. Batch
 A keyword argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
 A header row is required for the `.csv` files. Empty `is_superuser` and `gender` will default to 0.
