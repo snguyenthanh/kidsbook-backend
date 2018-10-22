@@ -35,7 +35,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -137,25 +137,25 @@ class PostShare(generics.ListCreateAPIView):
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsSuperUser, HasAccessToPost)
+    permission_classes = (IsAuthenticated, HasAccessToPost)
 
     def get(self, request, *args, **kwargs):
         try:
             return Response({'data': self.retrieve(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-    def put(self, request, *args, **kwargs):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, *args, **kwargs):
         try:
             return Response({'data': self.update(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         try:
             return Response({'data': self.destroy(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
@@ -179,25 +179,25 @@ class PostCommentList(generics.ListCreateAPIView):
 class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsSuperUser, HasAccessToComment)
+    permission_classes = (IsAuthenticated, HasAccessToComment)
 
     def get(self, request, *args, **kwargs):
         try:
             return Response({'data': self.retrieve(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-    def put(self, request, *args, **kwargs):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, *args, **kwargs):
         try:
             return Response({'data': self.update(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         try:
             return Response({'data': self.destroy(request, *args, **kwargs).data})
         except Exception:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()

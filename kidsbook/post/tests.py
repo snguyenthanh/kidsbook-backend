@@ -30,7 +30,7 @@ class TestPost(APITestCase):
 
         # Create a Group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
-        self.group_id = response.data.setdefault('data', {}).get('created_group_id', '')
+        self.group_id = response.data.setdefault('data', {}).get('id', '')
 
         #self.url = "{}/group/{}/".format(url_prefix, self.group_id)
 
@@ -53,12 +53,12 @@ class TestPost(APITestCase):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
             response = self.client.post(url, {"content": "Content", "link": "http://ogp.me", 
                 "picture": pic}, HTTP_AUTHORIZATION=self.creator_token)
-        self.assertEqual(200, response.status_code)
+        self.assertTrue(200 <= response.status_code <= 299)
 
-    def create_post_in_group(self):
-        url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
-        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
-        self.assertEqual(200, response.status_code)
+#     def create_post_in_group(self):
+#         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
+#         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+#         self.assertEqual(200, response.status_code)
 
     def test_get_all_post_in_group_by_non_member(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)

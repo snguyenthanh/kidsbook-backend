@@ -110,6 +110,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
     # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE, default=0)
+    role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -121,7 +122,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = 'email_address'
 
     REQUIRED_FIELDS = ["username", "password", "is_active", "realname"]
-    role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
     objects = UserManager()
 
     # def check_password(self, raw_password):
