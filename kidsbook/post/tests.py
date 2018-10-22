@@ -126,12 +126,12 @@ class TestPost(APITestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_all_flags_of_post(self):
-        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        url = "{}/post/{}/flag/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_flag_post(self):
-        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        url = "{}/post/{}/flag/".format(url_prefix, self.post.id)
         response = self.client.post(url, {"status": "UNDER APPROVAL"}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
@@ -151,12 +151,12 @@ class TestPost(APITestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_all_flags_of_comment(self):
-        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        url = "{}/comment/{}/flag/".format(url_prefix, self.comment.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
     def test_flag_comment(self):
-        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        url = "{}/comment/{}/flag/".format(url_prefix, self.comment.id)
         response = self.client.post(url, {"status": "UNDER APPROVAL"}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
