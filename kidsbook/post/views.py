@@ -54,7 +54,7 @@ class PostLike(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,10 +72,10 @@ class CommentLike(generics.ListCreateAPIView):
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
-        # try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
-        # except Exception:
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PostFlag(generics.ListCreateAPIView):
     queryset = UserFlagPost.objects.all()
@@ -91,10 +91,10 @@ class PostFlag(generics.ListCreateAPIView):
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
-        # try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
-        # except Exception:
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class CommentFlag(generics.ListCreateAPIView):
     queryset = UserFlagPost.objects.all()
@@ -111,7 +111,7 @@ class CommentFlag(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -130,7 +130,7 @@ class PostShare(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -147,13 +147,13 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.update(request, *args, **kwargs).data})
+            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.destroy(request, *args, **kwargs).data})
+            return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -172,7 +172,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data})
+            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -189,13 +189,13 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.update(request, *args, **kwargs).data})
+            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.destroy(request, *args, **kwargs).data})
+            return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
