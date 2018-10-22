@@ -98,7 +98,7 @@ class Register(APIView):
 
     def post(self, request):
         # Make a copy of data, as it is immutable
-        request_data = request.data.dict().copy()
+        request_data = request.data.copy()
 
         user_role = request_data.pop('type', 'USER')
         teacher = request_data.pop('teacher', None)
