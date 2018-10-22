@@ -28,7 +28,7 @@ def get_groups(request):
         groups = Group.objects.all()
         # groups = request.user.group_users.all()
     except Exception:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
     serializer = GroupSerializer(groups, many=True)
@@ -52,15 +52,15 @@ def create_group(request):
             # Re-assign the `User` object
             request_data['creator'] = creator
             new_group = Group.objects.create_group(**request_data)
-            response = {'created_group_id': new_group.id}
-            return Response({'data': response}, status=status.HTTP_202_ACCEPTED)
+            serializer = GroupSerializer(new_group)
+            return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'POST'])
-@permission_classes((IsAuthenticated, IsSuperUser))
+@permission_classes((IsAuthenticated, IsTokenValid, IsSuperUser))
 def group(request):
     """Return all groups or create a new group."""
 
@@ -87,7 +87,7 @@ def delete_member_from_group(user, group):
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
 
 @api_view(['POST', 'DELETE'])
-@permission_classes((IsAuthenticated, IsGroupCreator))
+@permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
 def group_member(request, **kargs):
     """Add new member or remove a member in a group."""
 
@@ -113,12 +113,23 @@ def group_member(request, **kargs):
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes((IsAuthenticated, IsInGroup))
+@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
 def get_all_members_in_group(request, **kargs):
-    # serializer_class = UserPublicSerializer
     try:
         users = Group.objects.get(id=kargs.get('pk')).users
         serializer = UserPublicSerializer(users, many=True)
+        return Response({'data': serializer.data})
+    except Exception:
+        pass
+
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
+def get_group_detail(request, **kargs):
+    try:
+        group = Group.objects.get(id=kargs.get('pk'))
+        serializer = GroupSerializer(group)
         return Response({'data': serializer.data})
     except Exception:
         pass
@@ -129,7 +140,7 @@ def get_all_members_in_group(request, **kargs):
 ## GROUP MANAGE ##
 
 @api_view(['DELETE'])
-@permission_classes((IsAuthenticated, IsGroupCreator))
+@permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
 def delete_group(request, **kargs):
     """Delete a group."""
     try:

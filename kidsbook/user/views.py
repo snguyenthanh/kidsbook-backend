@@ -1,13 +1,9 @@
 from django.shortcuts import render
-from kidsbook.models import *
-from kidsbook.serializers import *
-from kidsbook.permissions import *
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required, user_passes_test
-# from django.contrib.auth.models import User
 from rest_framework import permissions
 from profanity import profanity
 
@@ -24,6 +20,12 @@ from rest_framework_jwt.utils import jwt_payload_handler
 from django.contrib.auth.signals import user_logged_in
 from rest_framework import permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from kidsbook.models import *
+from kidsbook.serializers import *
+from kidsbook.permissions import *
+
+
 # import settings
 permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -60,7 +62,7 @@ class LogIn(APIView):
         return Response({'error': res}, status=status.HTTP_400_BAD_REQUEST)
 
 class LogInAsVirtual(APIView):
-    permission_classes = (IsSuperUser, IsTokenValid)
+    permission_classes = (IsAuthenticated, IsSuperUser, IsTokenValid)
 
     def post(self, request):
         email = request.data.get('email_address', None)
@@ -88,78 +90,105 @@ class LogInAsVirtual(APIView):
 
 
 class Register(APIView):
-    permission_classes = (IsSuperUser, IsInGroup, IsTokenValid)
+    permission_classes = (IsAuthenticated, IsSuperUser, IsTokenValid)
     serializer_class = UserSerializer
+
     def post(self, request):
-        user_role = request.data['type']
-        group = Group.objects.get(id=request.data['group_id'])
-        if(user_role == 'ADMIN' or user_role == 'SUPERUSER'):
-            user = User.objects.create_superuser(
-                email_address=request.data['email_address'],
-                realname=request.data['realname'],
-                username=request.data['username'],
-                password=request.data['password']
-            )
-        elif(user_role == 'USER'):
-            user = User.objects.create_user(
-                email_address=request.data['email_address'],
-                realname=request.data['realname'],
-                username=request.data['username'],
-                password=request.data['password'],
-            )
-        elif(user_role == 'VIRTUAL_USER'):
-            user = User.objects.create_virtual_user(
-                email_address=request.data['email_address'],
-                realname=request.data['realname'],
-                password=request.data['password'],
-                username=request.data['username'],
-                teacher=request.user,
-            )
-        group.add_member(user)
-        serializer = self.serializer_class(user, many=False)
-        return Response({'data': serializer.data})
+        # Make a copy of data, as it is immutable
+        request_data = request.data.dict().copy()
+
+        user_role = request_data.pop('type', 'USER')
+        teacher = request_data.pop('teacher', None)
+
+        mapping_create = {
+            'ADMIN': User.objects.create_superuser,
+            'SUPERUSER': User.objects.create_superuser,
+            'USER': User.objects.create_user,
+            'VIRTUAL_USER': User.objects.create_virtual_user
+        }
+
+        if user_role in ('USER', 'VIRTUAL_USER') and not teacher:
+            return Response({'error': "A creator's ID is required."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        if teacher:
+            try:
+                teacher = User.objects.get(id=teacher)
+                if teacher.is_superuser:
+                    request_data['teacher'] = teacher
+                else:
+                    return Response({'error': "The teacher is not a superuser"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            except Exception:
+                return Response({'error': "Invalid teacher's ID."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        user = mapping_create[user_role](**request_data)
+
+        # group = Group.objects.get(id=request.data['group_id'])
+        # group.add_member(user)
+        serializer = self.serializer_class(user)
+        return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
 
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
 
-    def put(self, request):
-        current_user = request.user
-        serializerOld = self.serializer_class(current_user, many=False)
+    def post(self, request, **kargs):
+        target_user_id = kargs['pk']
+        if not User.objects.filter(id=target_user_id).exists():
+            return Response({'error': 'User not found.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        request_data = serializerOld.data.copy()
+        # Check for permission
+        keywords_require_superuser = ('email_address', 'username', 'realname')
+        if any(kw in kargs for kw in iter(keywords_require_superuser)) and not request.user.is_superuser:
+            return Response({'error': 'Only superuser and above of this user can edit email, username and real name.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        if(request.user.is_superuser):
-            request_data['displayname'] = request.data['new_displayname']
+        if request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
+            return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        request_data['username'] = request.data['new_username']
+        allowed_keywords = ['gender', 'description', 'date_of_birth', 'avatar_url']
+        # If differnt user_id, the requester must be the creator
+        if request.user.id != target_user_id:
+            allowed_keywords = set(allowed_keywords + list(keywords_require_superuser))
 
-        serializerNew = self.serializer_class(current_user, data=request_data)
-        if(serializerNew.is_valid()):
-            serializerNew.save()
-            # print(request.data['new_user_name'])
+        # Update the user
+        target_user = User.objects.get(id=target_user_id)
+        update_data = {
+            key: val
+            for key, val in iter(request.data.items())
+            if key in allowed_keywords
+        }
 
-        return Response({'data': serializerNew.data})
-        # User.objects.update_user(current_user)
-        # serializer = UserSerializer(current_user,)
+        for attr, value in update_data.items():
+            setattr(target_user, attr, value)
 
-class GetInfo(generics.ListAPIView):
+        if 'password' in request.data:
+            target_user.set_password(request.data['password'])
+
+        try:
+            target_user.save()
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        serializers = UserSerializer(target_user)
+        return Response({'data': serializers.data}, status=status.HTTP_202_ACCEPTED)
+
+class GetGroups(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
-    def list(self, request):
-        try:
-            current_user = request.user
-            serializer = self.serializer_class(current_user, many=False)
-            return Response({'data': serializer.data})
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# class GetGroup(generics.ListAPIView):
-#     serializer_class = GroupSerializer
-#     permission_classes = (IsSuperUser,)
-#     def list(self, request):
-#         groups = Group.objects.
+    def list(self, request, **kwargs):
+        user_id = kwargs['pk']
+
+        if not User.objects.filter(id=user_id).exists():
+            return Response({'error': 'The user doesnt exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        group_members = GroupMember.objects.filter(user=user_id)
+        group_infos = [
+            Group.objects.get(id=group_member.group_id) for group_member in iter(group_members)
+        ]
+
+        serializer = GroupSerializer(group_infos, many=True)
+        return Response({'data': serializer.data})
 
 class LogOut(generics.ListAPIView):
     permission_class = (IsAuthenticated, IsTokenValid)
@@ -167,7 +196,7 @@ class LogOut(generics.ListAPIView):
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
             BlackListedToken.objects.create(token=token, user=request.user)
-            return Response({})
+            return Response({}, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -203,13 +232,13 @@ class GetPost(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class GetVirtualUser(generics.ListAPIView):
+class GetVirtualUsers(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUser, IsTokenValid)
+    permission_classes = (IsAuthenticated, IsSuperUser, IsTokenValid)
     def list(self, request):
         try:
             current_user = request.user
-            virtual_users = User.objects.filter(teacher=current_user)
+            virtual_users = User.objects.filter(teacher=current_user, role=3)
             serializer = self.serializer_class(virtual_users, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
