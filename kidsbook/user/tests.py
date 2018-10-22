@@ -18,6 +18,11 @@ class TestUser(APITestCase):
         self.user = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
 
 
+    def test_login_wrong_password(self):
+        url = self.url + 'login/'
+        response = self.client.post(url, data={'email_address': self.email, 'password': 'hieu_dep_trai'})
+        self.assertEqual(403, response.status_code)
+
     def test_login(self):
         url = self.url + 'login/'
         response = self.client.post(url, data={'email_address': self.email, 'password': self.password})

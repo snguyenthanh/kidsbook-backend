@@ -41,7 +41,10 @@ class LogIn(APIView):
         if not email or not password:
             res = {'error': 'please provide a email and a password'}
             return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
-
+        isAuthenticate = authenticate(email_address=email, password=password)
+        if(isAuthenticate is None):
+            res = {'error': ' Wrong email/password'}
+            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
         user = User.objects.get(email_address=email)
         if user:
             try:
