@@ -10,12 +10,9 @@ from profanity import profanity
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
 )
-from django.contrib.auth import (
-    authenticate, login, logout
-)
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model, authenticate
-import jwt, json, ujson
+import jwt, json
 from rest_framework_jwt.utils import jwt_payload_handler
 from django.contrib.auth.signals import user_logged_in
 from rest_framework import permissions, status
@@ -42,17 +39,19 @@ class LogIn(APIView):
         password = request.data.get('password', None)
         if not email or not password:
             res = {'error': 'please provide a email and a password'}
-            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': res}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         isAuthenticate = authenticate(email_address=email, password=password)
-        if(isAuthenticate is None):
+
+        if not isAuthenticate:
             res = {'error': ' Wrong email/password'}
-            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)        
+            return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)
         user = User.objects.get(email_address=email)
+
         try:
             token = generate_token(user)
             user_details = {}
-            user_details['name'] = user.username
+            user_details['id'] = str(user.id)
             user_details['token'] = token
             user_logged_in.send(sender=user.__class__,
                                 request=request, user=user)
@@ -233,7 +232,7 @@ class GetPost(generics.ListAPIView):
     def list(self, request):
         try:
             current_user = request.user
-            posts = Post.objects.filter(creator=current_user)
+            posts = Post.objects.filter(creator=current_user).order_by('-created_at')
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:

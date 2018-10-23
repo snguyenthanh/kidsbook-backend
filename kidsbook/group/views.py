@@ -36,7 +36,7 @@ def get_groups(request):
 
 def create_group(request):
     # Make a copy of data, as it is immutable
-    request_data = request.data.copy()
+    request_data = request.data.dict().copy()
 
     try:
         creator = request.user
@@ -116,8 +116,13 @@ def group_member(request, **kargs):
 @permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
 def get_all_members_in_group(request, **kargs):
     try:
-        users = Group.objects.get(id=kargs.get('pk')).users
-        serializer = UserPublicSerializer(users, many=True)
+        users = Group.objects.get(id=kargs.get('pk', '')).users
+
+        # Define different Serializer depends on the requester
+        if request.user.is_superuser:
+            serializer = UserSerializer(users, many=True)
+        else:
+            serializer = UserPublicSerializer(users, many=True)
         return Response({'data': serializer.data})
     except Exception:
         pass

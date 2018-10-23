@@ -29,7 +29,7 @@ class TestUser(APITestCase):
 
     def get_token(self, user):
         token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': self.password})
-        token = token_response.data.setdefault('data', {}).get('token', b'')
+        token = token_response.data.get('data', {}).get('token', b'')
         token = 'Bearer {0}'.format(token.decode('utf-8'))
         return token
 
