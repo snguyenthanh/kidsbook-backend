@@ -106,6 +106,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar_url = models.CharField(max_length=65530, null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
+    profile_photo = models.ImageField(default="default.png", null=True)
 
     teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)

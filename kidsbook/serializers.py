@@ -11,7 +11,7 @@ import json
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'is_superuser', 'description', "realname", 'group_users')
+        fields = ('id', 'username', 'email_address', 'is_active', 'is_superuser', 'description', "realname", 'group_users', 'profile_photo')
         depth = 1
 
 # This class is for public profile
