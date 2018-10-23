@@ -21,7 +21,7 @@ class TestBatch(APITestCase):
             'file': (
                 'test_dataset.csv',
                 """username,email_address,password,realname,gender,is_superuser
-                chris,chris@email.com,password_for_kris,Christiana Messi,0,
+                chris,chris@email.com,password_for_kris,Christiana Messi,0,0
                 james,james@email.com,password_for_kris,Christiana Messi,1,1
                 ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
             )
@@ -29,6 +29,9 @@ class TestBatch(APITestCase):
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(202, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', {}).get('created_users', [])) == 3
+        )
 
     def test_batch_create_without_token(self):
         data = {
@@ -47,3 +50,23 @@ class TestBatch(APITestCase):
     def test_batch_create_without_file(self):
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', HTTP_AUTHORIZATION=self.token)
         self.assertEqual(400, response.status_code)
+
+    def test_batch_create_with_failed_users(self):
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender,is_superuser
+                chris,,password_for_kris,Christiana Messi,0,
+                james,james@email.com,password_for_kris,Christiana Messi,1,1
+                ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
+            )
+        }
+
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(409, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', {}).get('created_users', [])) == 2
+        )
+        self.assertTrue(
+            len(response.data.get('data', {}).get('failed_users', [])) == 1
+        )
