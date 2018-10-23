@@ -51,7 +51,7 @@ class LogIn(APIView):
         try:
             token = generate_token(user)
             user_details = {}
-            user_details['name'] = user.username
+            user_details['id'] = user.id
             user_details['token'] = token
             user_logged_in.send(sender=user.__class__,
                                 request=request, user=user)
