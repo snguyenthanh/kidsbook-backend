@@ -112,6 +112,11 @@ class TestUser(APITestCase):
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(202, response.status_code)
 
+        created_user_id = response.data.get('data', {}).get('id', '')
+        self.assertTrue(
+            User.objects.filter(id=created_user_id).exists()
+        )
+
     def test_register_user(self):
         token = self.get_token(self.user)
 
@@ -125,7 +130,11 @@ class TestUser(APITestCase):
         }
         response = self.client.post(self.url + 'register/', payload, HTTP_AUTHORIZATION=token)
         self.assertEqual(202, response.status_code)
-
+        created_user_id = response.data.get('data', {}).get('id', '')
+        self.assertTrue(
+            User.objects.filter(id=created_user_id).exists()
+        )
+        
     def test_register_user_without_teacher(self):
         token = self.get_token(self.user)
 
