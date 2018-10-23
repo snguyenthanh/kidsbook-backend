@@ -21,14 +21,23 @@ def read_file_obj_to_list(file_obj) -> List[str]:
         if 'username' in row and 'password' in row and 'email_address' in row:
             header_index = index
             break
-    data = data[header_index:-2]
 
     # Convert bytes to str in `utf-8`
     data = [row.decode('utf-8') for row in iter(data)]
 
+    # To get the last index, count if it has the same number of commas as the header
+    number_of_commas = data[header_index].count(',')
+    last_index = header_index
+    for index in iter(range(len(data)-1, -1, -1)):
+        if data[index].count(',') == number_of_commas:
+            last_index = index
+            break
+
+    data = data[header_index:last_index+1]
     # Read the strings using csv.reader
     csv_reader = list(reader(data))
     headers, data = csv_reader[0], csv_reader[1:]
+
     return list(csv_reader)[1:], csv_reader[0]
 
 def create_user_from_list(arr: List[str], mappings: dict):# Careful with the indices of the input list
@@ -41,11 +50,15 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
     user['gender'] = int(user.get('gender', 0)) > 0
     user['is_superuser'] = int(user.get('gender', 0)) > 0
 
+    user = {k: v for k, v in user.items() if str(v) != ''}
+
     # Create the user/superuser
     if user.get('is_superuser', False):
-        User.objects.create_superuser(**user)
+        created_user = User.objects.create_superuser(**user)
     else:
-        User.objects.create_user(**user)
+        created_user = User.objects.create_user(**user)
+
+    return str(created_user.id)
 
 
 #################################################################################################################
@@ -54,7 +67,7 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
 @api_view(['POST'])
 @permission_classes((IsAuthenticated, IsSuperUser))
 @parser_classes((FileUploadParser,))
-def batch_create(request, **kargs):
+def batch_create(request, filename, format=None):
     file_obj = request.data.get('file', None)
 
     if not file_obj:
@@ -67,9 +80,12 @@ def batch_create(request, **kargs):
     }
 
     failed_users = []
+    created_users = []
     for user in iter(user_list):
         try:
-            create_user_from_list(user, mapping_fields)
+            created_users.append(
+                create_user_from_list(user, mapping_fields)
+            )
         except Exception:
             failed_users.append(user)
 
@@ -77,7 +93,10 @@ def batch_create(request, **kargs):
         return Response({
             'result': 'Unsuccessful',
             'error': 'Unable to read {} users'.format(len(failed_users)),
-            'data': failed_users
-        }, status=status.HTTP_409_CONFLICT)
+            'data': {
+                'failed_users': failed_users,
+                'created_users': created_users
+            }
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({}, status=status.HTTP_202_ACCEPTED)
+    return Response({'data': {'created_users': created_users}}, status=status.HTTP_202_ACCEPTED)
