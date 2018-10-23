@@ -165,6 +165,10 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             setattr(target_user, attr, value)
 
         if 'password' in request.data:
+            isAuthenticate = authenticate(email_address=request.data['email'], password=request.data['oldPassword'])
+            if(isAuthenticate is None):
+                res = {'error': ' Your old password is incorrect '}
+                return Response({'error': res}, status=status.HTTP_403_FORBIDDEN)  
             target_user.set_password(request.data['password'])
 
         try:
