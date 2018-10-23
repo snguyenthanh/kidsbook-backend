@@ -1,8 +1,6 @@
 # Backend API Documentation
 [![Build Status](https://travis-ci.org/Ang-YC/kidsbook-backend.svg?branch=master)](https://travis-ci.org/Ang-YC/kidsbook-backend)
 
-Please update this document when there are any updates.
-
 # Notes
 
 ## 1. URLs
@@ -45,7 +43,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /user/<user_id>/ | | Get the user's information. | IsAuthenticated | User: *dict*
 `GET` | /user/<user_id>/groups/ | | Get all the groups the user is in. | IsAuthenticated | User: *list*
 `GET` | /user/posts/ | | Get all posts created by the current user. | IsAuthenticated | User: *list*
-`POST` | /user/login/ | email_address:*str*, password:*str* | Return an authentication token for the user. | AllowAny | {data: {name: '', token: ''}}
+`POST` | /user/login/ | email_address:*str*, password:*str* | Return an authentication token for the user. | AllowAny | {data: {id: '', token: ''}}
 `POST` | /user/login_as_virtual/ | email_address:*str* | Return an authentication for the `virtual` user. | IsAuthenticated, IsSuperUser | {data: {name: '', token: ''}}
 `POST` | /user/register/ | * | Create an user using the given arguments. | IsAuthenticated, IsSuperUser | User: *dict*
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
@@ -98,7 +96,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `DELETE` | /group/<group_id>/delete/ | | Remove the group. | IsAuthenticated, IsGroupCreator| {}
 
 ## 5. Batch
-A keyword argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
+An URL argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
 A header row is required for the `.csv` files. Empty `is_superuser` and `gender` will default to 0.
 
@@ -112,4 +110,4 @@ ama,ama@email.com,ama_pwd,Ama Johnson,1,0
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
-`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. | IsAuthenticated, IsSuperUser | {}
+`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. The UUIDs of created users are returned. | IsAuthenticated, IsSuperUser | {data: {created_users: [], failed_users: []}}
