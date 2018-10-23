@@ -250,12 +250,12 @@ class TestUserUpdate(APITestCase):
 
         # A user to modify
         username = "Doggo"
-        email = "Mc@Dog.Face"
+        self.email = "Mc"
         password = self.password
         description = 'Chihuahua'
         gender = True
         self.modify_user = User.objects.create_user(username=username,
-                                            email_address=email,
+                                            email_address=self.email,
                                             password=password,
                                             description=description,
                                             gender=gender,
@@ -285,14 +285,40 @@ class TestUserUpdate(APITestCase):
                 return False
         return True
 
+    def test_update_password_correct_oldPassword(self):
+        token = self.get_token(self.modify_user)
+        previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        data = {
+            'password': 'hieu_dep_trai',
+            'oldPassword': self.password,
+            'email': self.email,
+        }
+
+        response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
+        self.assertEqual(202, response.status_code)
+
+    def test_update_password_incorrect_oldPassword(self):
+        token = self.get_token(self.modify_user)
+        previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        data = {
+            'password': 'hieu_dep_trai',
+            'oldPassword': 'wrong_password',
+            'email': self.email,
+        }
+
+        response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
+        self.assertEqual(405, response.status_code)
+
     def test_update_by_creator(self):
         token = self.get_token(self.creator)
         previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
 
         data = {
             'username': 'Not_doggo',
-            'password': self.password,
-            'description': 'Corki'
+            'description': 'Corki',
+            'email': self.email,
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
 
@@ -312,7 +338,6 @@ class TestUserUpdate(APITestCase):
 
         data = {
             'username': username,
-            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -331,7 +356,6 @@ class TestUserUpdate(APITestCase):
 
         data = {
             'username': 'Not_doggo',
-            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
@@ -347,7 +371,6 @@ class TestUserUpdate(APITestCase):
 
         data = {
             'username': 'Not_doggo',
-            'password': self.password,
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
