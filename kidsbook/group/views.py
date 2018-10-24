@@ -129,9 +129,11 @@ def get_all_members_in_group(request, **kargs):
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
-def get_group_detail(request, **kargs):
+
+#################################################################################################################
+## GROUP DETAILS ##
+
+def get_group_detail(request, kargs):
     try:
         group = Group.objects.get(id=kargs.get('pk'))
         serializer = GroupSerializer(group)
@@ -140,6 +142,39 @@ def get_group_detail(request, **kargs):
         pass
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+
+def update_group_detail(request, kargs):
+    try:
+        group = Group.objects.get(id=kargs.get('pk'))
+
+        group_fields = set(Group.__dict__.keys())
+        if request.user.id != group.creator.id:
+            return Response({'error': "Only the creator can modify group's details."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        for attr, value in iter(request.data.dict().items()):
+            if attr in group_fields:
+                setattr(group, attr, value)
+        group.save()
+    except Exception as exc:
+        Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = GroupSerializer(group)
+    return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
+def group_detail(request, **kargs):
+    function_mappings = {
+        'GET': get_group_detail,
+        'POST': update_group_detail
+    }
+
+    if request.method in function_mappings:
+        return function_mappings[request.method](request, kargs)
+
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 #################################################################################################################
 ## GROUP MANAGE ##

@@ -20,6 +20,19 @@ class TestGroup(APITestCase):
         token = generate_token(user)
         return 'Bearer {0}'.format(token.decode('utf-8'))
 
+    def changes_reflect_in_response(self, request_changes, previous_state, current_state):
+        difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
+
+        for key, prev_val in iter(previous_state.items()):
+            # If the un-modified value changes
+            if key not in request_changes and current_state.get(key, '') != prev_val:
+                return False
+
+            # If the un-modified value doesnt match
+            if key in request_changes and request_changes[key] != current_state.get(key, ''):
+                return False
+        return True
+
     def test_create_group(self):
         response = self.client.post(self.url, {"name": "testing group"}, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(202, response.status_code)
@@ -66,7 +79,6 @@ class TestGroup(APITestCase):
         group_info = {"name": "testing group", 'creator': self.user}
         group = Group.objects.create_group(**group_info)
         response = self.client.get(self.url + str(group.id) + '/', HTTP_AUTHORIZATION=self.token)
-
         self.assertEqual(200, response.status_code)
 
     def test_get_group_detail_by_non_member(self):
@@ -88,6 +100,65 @@ class TestGroup(APITestCase):
         group = Group.objects.create_group(**group_info)
 
         response = self.client.get(self.url + str(group.id) + '/')
+        self.assertEqual(401, response.status_code)
+
+    def test_update_group_detail(self):
+        # Create a group
+        group_info = {"name": "testing group", 'creator': self.user}
+        group = Group.objects.create_group(**group_info)
+        url = self.url + str(group.id) + '/'
+        changes = {
+            'name': 'new name',
+            'description': 'new descript'
+        }
+
+        prev_state = self.client.get(url, HTTP_AUTHORIZATION=self.token).data.get('data', {})
+        response = self.client.post(url, data=changes, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(202, response.status_code)
+        cur_state = self.client.get(url, HTTP_AUTHORIZATION=self.token).data.get('data', {})
+        self.assertTrue(
+            self.changes_reflect_in_response(changes, prev_state, cur_state)
+        )
+
+    def test_update_group_detail_by_non_creator(self):
+        # Create a random user
+        username = "Another"
+        email = "one@b.ites"
+        password = "the_dust"
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        token = self.get_token(user)
+
+        # Create a group
+        group_info = {"name": "testing group", 'creator': self.user}
+        group = Group.objects.create_group(**group_info)
+        url = self.url + str(group.id) + '/'
+        changes = {
+            'name': 'new name',
+            'description': 'new descript'
+        }
+
+        response = self.client.post(url, data=changes, HTTP_AUTHORIZATION=token)
+        self.assertEqual(403, response.status_code)
+
+    def test_update_group_detail_without_token(self):
+        # Create a random user
+        username = "Another"
+        email = "one@b.ites"
+        password = "the_dust"
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        token = self.get_token(user)
+
+        # Create a group
+        group_info = {"name": "testing group", 'creator': self.user}
+        group = Group.objects.create_group(**group_info)
+        url = self.url + str(group.id) + '/'
+        changes = {
+            'name': 'new name',
+            'description': 'new descript'
+        }
+
+        response = self.client.post(url, data=changes)
         self.assertEqual(401, response.status_code)
 
 

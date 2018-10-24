@@ -63,7 +63,7 @@ class TestBatch(APITestCase):
         }
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
-        self.assertEqual(409, response.status_code)
+        self.assertEqual(400, response.status_code)
         self.assertTrue(
             len(response.data.get('data', {}).get('created_users', [])) == 2
         )

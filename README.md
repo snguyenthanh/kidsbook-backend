@@ -90,6 +90,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /group/ | | Get all groups. | IsAuthenticated, IsSuperUser | Group: *list*
 `POST` | /group/ | * | Create a group. | IsAuthenticated, IsSuperUser | Group: *dict*
 `GET` | /group/<group_id>/ | | Get the group's details. | IsAuthenticated, IsInGroup | Group: *dict*
+`POST` | /group/<group_id>/ | * | Update the group's details. | IsAuthenticated, IsInGroup, IsGroupCreator | Group: *dict*
 `GET` | /group/<group_id>/users/ | | Get all members in the group. | IsAuthenticated, IsInGroup | User:*list*
 `POST` | /group/<group_id>/user/<user_id>/ | | Add the user to the group. | IsAuthenticated, IsGroupCreator | {}
 `DELETE` | /group/<group_id>/user/<user_id>/ | | Remove the user to the group. | IsAuthenticated, IsGroupCreator | {}
