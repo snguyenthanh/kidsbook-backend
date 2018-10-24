@@ -22,7 +22,7 @@ Successful responses will have a key `data` containing the requested info.
 Status Code | Method | Description
 --- | --- | --- |
 200 | `GET` | For ALL successful `GET` requests.
-202 | `POST` | For ALL successful `POST` requests.
+202 | `POST`, `DELETE` | For ALL successful `POST`, `DELETE` requests.
 301 | `GET`, `POST`, `DELETE` | Missing a suffix slash `/`.
 400 | `GET`, `POST`, `DELETE` | Caused by an internal error. The error message is returned in `response.data.data`.
 401 | `GET`, `POST`, `DELETE` | Caused by missing an authentication token.
