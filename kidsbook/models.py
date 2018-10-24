@@ -103,7 +103,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.BooleanField(default=False)
     description = models.TextField(default="")
     date_of_birth = models.DateField(null=True)
-    avatar_url = models.CharField(max_length=65530, null=True)
+    #avatar_url = models.CharField(max_length=65530, null=True)
+    profile_photo = models.ImageField(null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
 

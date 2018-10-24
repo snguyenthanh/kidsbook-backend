@@ -149,6 +149,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         # Get all keywords that are not in `keywords_require_superuser`
         allowed_keywords = [ field for field in iter(User.__dict__.keys()) if field not in keywords_require_superuser]
+
         # If different user_id, the requester must be the creator
         if request.user.id != target_user_id:
             allowed_keywords = set(allowed_keywords + list(keywords_require_superuser))
