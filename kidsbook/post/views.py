@@ -39,6 +39,19 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+class GroupFlaggedPostList(generics.ListAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = (IsAuthenticated, IsInGroup)
+
+    def list(self, request, **kwargs):
+        # try:
+        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags=[]).order_by('-created_at')
+        # except Exception:
+            # return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = PostSerializer(queryset, many=True)
+        return Response({'data': serializer.data})
+
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()
     serializer_class = PostLikeSerializer
@@ -46,7 +59,7 @@ class PostLike(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
-            queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
+            queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostLikeSerializer(queryset, many=True)
