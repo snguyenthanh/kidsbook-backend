@@ -214,7 +214,8 @@ class GetInfoUser(generics.ListAPIView):
             user_id = kargs.get('pk', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(request.user.is_superuser):
+                is_correct_virtual = user.teacher and user.teacher.id == request.user.id
+                if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer
