@@ -59,7 +59,7 @@ class PostLike(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
-            queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
+            queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostLikeSerializer(queryset, many=True)
