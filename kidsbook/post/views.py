@@ -35,7 +35,7 @@ class GroupPostList(generics.ListCreateAPIView):
         for post in serializer.data:
             queryset = UserLikePost.objects.all().filter(post=Post.objects.get(id=post['id']))
             likes = PostLikeSerializer(queryset, many=True)
-            post['likes_list'] = likes
+            post['likes_list'] = likes.data
 
         return Response({'data': serializer.data})
 
