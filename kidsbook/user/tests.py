@@ -1,4 +1,4 @@
-import json
+import os
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from kidsbook.models import Group, Post
@@ -134,7 +134,7 @@ class TestUser(APITestCase):
         self.assertTrue(
             User.objects.filter(id=created_user_id).exists()
         )
-        
+
     def test_register_user_without_teacher(self):
         token = self.get_token(self.user)
 
@@ -290,7 +290,7 @@ class TestUserUpdate(APITestCase):
                 return False
 
             # If the un-modified value doesnt match
-            if key in request_changes and request_changes[key] != current_state.get(key, ''):
+            if key in request_changes and isinstance(request_changes[key], str) and request_changes[key] != current_state.get(key, ''):
                 return False
         return True
 
@@ -324,15 +324,16 @@ class TestUserUpdate(APITestCase):
         token = self.get_token(self.creator)
         previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
 
-        data = {
-            'username': 'Not_doggo',
-            'description': 'Corki',
-            'email': self.email,
-        }
-        response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            request_changes = {
+                'username': 'Not_doggo',
+                'password': self.password,
+                'description': 'Corki',
+                "profile_photo": pic}
+            response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
 
         self.assertTrue(
-            self.changes_reflect_in_response(data, previous_state_of_user, response.data.get('data', {}))
+            self.changes_reflect_in_response(request_changes, previous_state_of_user, response.data.get('data', {}))
         )
 
     def test_update_username_to_existing(self):

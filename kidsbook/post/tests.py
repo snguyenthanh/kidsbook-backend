@@ -57,7 +57,7 @@ class TestPost(APITestCase):
                 return False
 
             # If the un-modified value doesnt match
-            if key in request_changes and request_changes[key] != current_state.get(key, ''):
+            if key in request_changes and isinstance(request_changes[key], str) and request_changes[key] != current_state.get(key, ''):
                 return False
         return True
 
@@ -111,8 +111,11 @@ class TestPost(APITestCase):
         url = "{}/post/{}/".format(url_prefix, self.post.id)
         prev_state = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token).data.get('data', {})
 
-        request_changes = {"content": "Changed content"}
-        response = self.client.post(url, request_changes, HTTP_AUTHORIZATION=self.creator_token)
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            request_changes = {"content": "Changed content", "link": "http://ogp.me", "picture": pic}
+            response = self.client.post(url, request_changes, HTTP_AUTHORIZATION=self.creator_token)
+
+        #response = self.client.post(url, request_changes, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
 
         # Check if the changes reflect in the `Post`
