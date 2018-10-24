@@ -147,8 +147,10 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
         if User.objects.get(id=target_user_id).teacher and request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
             return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        allowed_keywords = ['gender', 'description', 'date_of_birth', 'avatar_url', 'username']
-        # If differnt user_id, the requester must be the creator
+        # Get all keywords that are not in `keywords_require_superuser`
+        allowed_keywords = [ field for field in iter(User.__dict__.keys()) if field not in keywords_require_superuser]
+
+        # If different user_id, the requester must be the creator
         if request.user.id != target_user_id:
             allowed_keywords = set(allowed_keywords + list(keywords_require_superuser))
 
@@ -214,7 +216,8 @@ class GetInfoUser(generics.ListAPIView):
             user_id = kargs.get('pk', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(request.user.is_superuser):
+                is_correct_virtual = user.teacher and user.teacher.id == request.user.id
+                if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer

@@ -11,14 +11,14 @@ import json
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'is_superuser', 'description', "realname", 'group_users', 'profile_photo')
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users')
         depth = 1
 
 # This class is for public profile
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'is_active', 'is_superuser', 'username', 'description')
+        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description')
 
 class PostSerializer(serializers.ModelSerializer):
 
@@ -125,4 +125,4 @@ class CommentSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('id', 'name', 'description', 'creator', 'created_at', 'users')
+        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users')
