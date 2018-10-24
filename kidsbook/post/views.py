@@ -42,7 +42,7 @@ class GroupPostList(generics.ListCreateAPIView):
 class GroupFlaggedPostList(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated, IsInGroup)
+    permission_classes = (IsAuthenticated, IsInGroup, IsTokenValid, IsSuperUser)
 
     def list(self, request, **kwargs):
         # try:
