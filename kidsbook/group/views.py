@@ -117,7 +117,6 @@ def group_member(request, **kargs):
 def get_all_members_in_group(request, **kargs):
     try:
         users = Group.objects.get(id=kargs.get('pk', '')).users
-
         # Define different Serializer depends on the requester
         if request.user.is_superuser:
             serializer = UserSerializer(users, many=True)
@@ -129,7 +128,6 @@ def get_all_members_in_group(request, **kargs):
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
-
 #################################################################################################################
 ## GROUP DETAILS ##
 
@@ -140,7 +138,6 @@ def get_group_detail(request, kargs):
         return Response({'data': serializer.data})
     except Exception:
         pass
-
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
 def update_group_detail(request, kargs):

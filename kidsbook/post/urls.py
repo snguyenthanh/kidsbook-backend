@@ -3,6 +3,7 @@ from kidsbook.post import views
 
 urlpatterns = [
     path('group/<uuid:pk>/posts/', views.GroupPostList.as_view()),
+    path('group/<uuid:pk>/flagged-posts/', views.GroupFlaggedPostList.as_view()),
     path('post/<uuid:pk>/', views.PostDetail.as_view()),
     path('post/<uuid:pk>/likes/', views.PostLike.as_view()),
     path('post/<uuid:pk>/shares/', views.PostShare.as_view()),
