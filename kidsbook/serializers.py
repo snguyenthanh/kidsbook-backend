@@ -125,4 +125,4 @@ class CommentSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('id', 'name', 'description', 'creator', 'created_at', 'users')
+        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users')

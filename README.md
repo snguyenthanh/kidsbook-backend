@@ -34,9 +34,11 @@ Status Code | Method | Description
 
 Column `Arguments` refers to the keyword arguments in the requests' body.
 
-## 1. User
+`*` in column `Arguments` refers the fields of [the return model](./kidsbook/models.py).
 
-`*` in column `Arguments` refers the fields of [User model](./kidsbook/models.py#L97-L125).
+However, only the fields defined in the [serializers](./kidsbook/serializers.py) are returned.
+
+## 1. User
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
@@ -57,7 +59,6 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
 
 ## 3. Post
-`*` in column `Arguments` refers the fields of [the return model](./kidsbook/models.py).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
@@ -83,7 +84,6 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /comment/<comment_id>/flags/ | status:*str* | Create a flag for the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
 
 ## 4. Group
-`*` in column `Arguments` refers the fields of [Group model](./kidsbook/models.py#L165-L173).
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |

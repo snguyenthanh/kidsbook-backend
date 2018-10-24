@@ -165,6 +165,7 @@ class Group(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
+    picture = models.ImageField(null=True)
     creator = models.ForeignKey(User, related_name='group_owner', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     users = models.ManyToManyField(User, related_name='group_users', through='GroupMember')
@@ -208,7 +209,7 @@ class Post(models.Model):
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
-    picture = models.ImageField(default="default.png", null=True)
+    picture = models.ImageField(null=True)
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)
 
