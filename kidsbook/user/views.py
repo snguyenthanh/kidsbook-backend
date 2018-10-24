@@ -166,6 +166,10 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             setattr(target_user, attr, value)
 
         if 'password' in request.data:
+            isAuthenticate = authenticate(email_address=request.data['email'], password=request.data['oldPassword'])
+            if(isAuthenticate is None):
+                res = {'error': ' Your old password is incorrect '}
+                return Response({'error': res}, status=status.HTTP_405_METHOD_NOT_ALLOWED)  
             target_user.set_password(request.data['password'])
 
         try:
@@ -212,7 +216,8 @@ class GetInfoUser(generics.ListAPIView):
             user_id = kargs.get('pk', None)
             if user_id:
                 user = User.objects.get(id=user_id)
-                if(request.user.is_superuser):
+                is_correct_virtual = user.teacher and user.teacher.id == request.user.id
+                if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
                 else:
                     self.serializer_class = UserPublicSerializer

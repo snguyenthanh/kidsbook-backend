@@ -50,7 +50,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /user/register/ | * | Create an user using the given arguments. | IsAuthenticated, IsSuperUser | User: *dict*
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
-`POST` | /user/update/<user_id/ | * | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
+`POST` | /user/update/<user_id/ | * (If update password then need email, oldPassword, password) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
 
 ## 2. Users
 

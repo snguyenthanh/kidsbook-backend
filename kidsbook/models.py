@@ -107,6 +107,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     profile_photo = models.ImageField(null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
+    profile_photo = models.ImageField(default="default.png", null=True)
 
     teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
@@ -210,7 +211,9 @@ class Post(models.Model):
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
+    flags = models.ManyToManyField(User, related_name='flags', through='UserFlagPost')
     picture = models.ImageField(null=True)
+    
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)
 
@@ -225,12 +228,15 @@ class UserLikePost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     like_or_dislike = models.BooleanField(default=True)
+    class Meta:
+        unique_together = ["user", "post"]
 
 class UserSharePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-
+    class Meta:
+        unique_together = ["user", "post"]
 # class CommentManager(models.Manager):
 #     def create_comment(self, **kargs):
 #         comment = self.model(**kargs)
@@ -270,4 +276,6 @@ class UserFlagPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)
-    status = models.CharField(max_length=120, unique=True)
+    status = models.CharField(max_length=120)
+    class Meta:
+        unique_together = ["user", "comment", "post"]
