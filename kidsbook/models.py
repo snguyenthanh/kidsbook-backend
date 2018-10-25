@@ -256,6 +256,7 @@ class Comment(models.Model):
 
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    likes = models.ManyToManyField(User, related_name='comment_likers', through='UserLikeComment')
 
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
@@ -277,5 +278,7 @@ class UserFlagPost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         unique_together = ["user", "comment", "post"]

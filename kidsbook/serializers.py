@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts', 'role')
+        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts')
         depth = 1
 
 class PostSerializer(serializers.ModelSerializer):
@@ -75,7 +75,7 @@ class PostFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFlagPost
-        fields = ('id', 'user', 'post', 'status', 'comment')
+        fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
         depth = 1
 
     def create(self, data):
@@ -88,7 +88,7 @@ class CommentFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFlagPost
-        fields = ('id', 'user', 'post', 'status', 'comment')
+        fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
         depth = 1
 
     def create(self, data):

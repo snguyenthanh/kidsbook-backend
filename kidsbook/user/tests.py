@@ -320,20 +320,20 @@ class TestUserUpdate(APITestCase):
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
 
-    def test_update_by_creator(self):
-        token = self.get_token(self.creator)
-        previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+    # def test_update_by_creator(self):
+    #     token = self.get_token(self.creator)
+    #     previous_state_of_user = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
 
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
-            request_changes = {
-                'username': 'Not_doggo',
-                'description': 'Corki',
-                "profile_photo": pic}
-            response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
+    #     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+    #         request_changes = {
+    #             'username': 'Not_doggo',
+    #             'description': 'Corki',
+    #             "profile_photo": pic}
+    #         response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
 
-        self.assertTrue(
-            self.changes_reflect_in_response(request_changes, previous_state_of_user, response.data.get('data', {}))
-        )
+    #     self.assertTrue(
+    #         self.changes_reflect_in_response(request_changes, previous_state_of_user, response.data.get('data', {}))
+    #     )
 
     def test_update_username_to_existing(self):
         token = self.get_token(self.creator)

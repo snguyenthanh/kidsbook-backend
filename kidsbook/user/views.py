@@ -129,7 +129,6 @@ class Register(APIView):
         serializer = self.serializer_class(user)
         return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
 
-
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
@@ -222,8 +221,9 @@ class GetInfoUser(generics.ListAPIView):
                 else:
                     self.serializer_class = UserPublicSerializer
                 serializer = self.serializer_class(user, many=False)
-                response_data = clean_data(serializer.data, 'group_users')
-                response_data['role'] = response_data['role']['name']
+                response_data = serializer.data
+                if('role' in response_data):
+                    response_data['role'] = response_data['role']['id']
                 comments = Comment.objects.all().filter(creator=user)
                 response_data['num_comment'] = len(comments)
 
