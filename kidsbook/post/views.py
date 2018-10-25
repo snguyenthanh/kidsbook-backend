@@ -48,11 +48,11 @@ class GroupPostList(generics.ListCreateAPIView):
 class GroupFlaggedPostList(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated, IsInGroup)
+    permission_classes = (IsAuthenticated, IsInGroup, IsTokenValid, IsSuperUser)
 
     def list(self, request, **kwargs):
         # try:
-        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags=[]).order_by('-created_at')
+        queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True).order_by('-created_at')
         # except Exception:
             # return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostSerializer(queryset, many=True)
