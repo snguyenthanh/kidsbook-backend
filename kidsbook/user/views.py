@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from kidsbook.models import *
 from kidsbook.serializers import *
 from kidsbook.permissions import *
-
+from kidsbook.utils import *
 
 # import settings
 permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -222,7 +222,24 @@ class GetInfoUser(generics.ListAPIView):
                 else:
                     self.serializer_class = UserPublicSerializer
                 serializer = self.serializer_class(user, many=False)
-                return Response({'data': serializer.data})
+                response_data = clean_data(serializer.data, 'group_users')
+                response_data['role'] = response_data['role']['name']
+                comments = Comment.objects.all().filter(creator=user)
+                response_data['num_comment'] = len(comments)
+
+                post_like_received = 0
+                if('user_posts' in response_data):
+                    response_data['user_posts'] = list(map(lambda post: post['id'], response_data['user_posts']))
+                    for post_id in response_data['user_posts']:
+                        print(post_id)
+                        post_like = UserLikePost.objects.all().filter(post=Post.objects.get(id=post_id)).filter(like_or_dislike=True)
+                        post_like_received += len(post_like)
+                response_data['num_like_received'] = post_like_received
+
+                posts_likes_given = UserLikePost.objects.all().filter(user=user).filter(like_or_dislike=True)
+                response_data['num_like_given'] = len(posts_likes_given)
+
+                return Response({'data': response_data})
         except Exception:
             pass
 

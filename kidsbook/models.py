@@ -207,7 +207,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
     objects = PostManager()
-    creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    creator = models.ForeignKey(User, related_name='user_posts', on_delete=models.CASCADE, default=uuid.uuid4)
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')

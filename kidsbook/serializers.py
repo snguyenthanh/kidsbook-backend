@@ -11,14 +11,15 @@ import json
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users')
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role')
         depth = 1
 
 # This class is for public profile
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description')
+        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts', 'role')
+        depth = 1
 
 class PostSerializer(serializers.ModelSerializer):
 
