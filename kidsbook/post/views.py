@@ -34,32 +34,33 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostSerializer(queryset, many=True)
-        response_data =serializer.data
+        response_data = serializer.data.copy()
 
         really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
         really_likes_users = User.objects.all().filter(id__in=[x.user.id for x in really_likes])
 
-        for post in serializer.data:
+        for post in serializer.data.copy():
             queryset = UserLikePost.objects.all().filter(post=Post.objects.get(id=post['id']))
             likes = PostLikeSerializer(queryset, many=True)
-            post['likes_list'] = likes.data
+            post['likes_list'] = likes.data.copy()
 
             queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id']))
             queryset.query.group_by = ['id']
             queryset = queryset.annotate(
                 like_count=Sum(
                     Case(
-                        When(likes__in=really_likes_users, then=1), 
+                        When(likes__in=really_likes_users, then=1),
                         default=0, output_field=IntegerField()
                     )
                 )
             ).order_by('-like_count', '-created_at')[:3]
 
             comments = CommentSerializer(queryset, many=True)
-            for comment in comments.data:
-                comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
-            comment_data = clean_data_iterative(comments.data, 'post')
-            post['comments'] = comments.data
+            comments_data = comments.data.copy()
+            # for comment in comments.data.copy():
+            #     comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
+            comment_data = clean_data_iterative(comments_data, 'post')
+            post['comments'] = comments.data.copy()
 
         return Response({'data': serializer.data})
 
@@ -86,15 +87,15 @@ class GroupFlaggedList(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        response_data = PostFlagSerializer(post_queryset, many=True).data
+        response_data = PostFlagSerializer(post_queryset, many=True).data.copy()
         post_data = []
         comment_data = []
 
         for flag in response_data:
-            flag['user_id'] = flag['user']['id']
-            flag['user_photo'] = flag['user']['profile_photo']
-            flag['user_name'] = flag['user']['realname']
-            flag.pop('user', None)
+            # flag['user_id'] = flag['user']['id']
+            # flag['user_photo'] = flag['user']['profile_photo']
+            # flag['user_name'] = flag['user']['realname']
+            # flag.pop('user', None)
             if(flag['comment'] == None):
                 flag.pop('comment', None)
                 post_data.append(flag)

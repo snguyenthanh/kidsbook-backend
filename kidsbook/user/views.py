@@ -168,7 +168,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             isAuthenticate = authenticate(email_address=request.data['email'], password=request.data['oldPassword'])
             if(isAuthenticate is None):
                 res = {'error': ' Your old password is incorrect '}
-                return Response({'error': res}, status=status.HTTP_405_METHOD_NOT_ALLOWED)  
+                return Response({'error': res}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             target_user.set_password(request.data['password'])
 
         try:
@@ -221,9 +221,10 @@ class GetInfoUser(generics.ListAPIView):
                 else:
                     self.serializer_class = UserPublicSerializer
                 serializer = self.serializer_class(user, many=False)
-                response_data = serializer.data
-                if('role' in response_data):
-                    response_data['role'] = response_data['role']['id']
+                response_data = serializer.data.copy()
+
+                # if('role' in response_data):
+                #     response_data['role'] = response_data['role']['id']
                 comments = Comment.objects.all().filter(creator=user)
                 response_data['num_comment'] = len(comments)
 
@@ -231,7 +232,6 @@ class GetInfoUser(generics.ListAPIView):
                 if('user_posts' in response_data):
                     response_data['user_posts'] = list(map(lambda post: post['id'], response_data['user_posts']))
                     for post_id in response_data['user_posts']:
-                        print(post_id)
                         post_like = UserLikePost.objects.all().filter(post=Post.objects.get(id=post_id)).filter(like_or_dislike=True)
                         post_like_received += len(post_like)
                 response_data['num_like_received'] = post_like_received
