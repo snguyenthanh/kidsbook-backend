@@ -330,8 +330,10 @@ class TestUserUpdate(APITestCase):
                 "profile_photo": pic}
             response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
 
+        cur_state = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
         self.assertTrue(
-            self.changes_reflect_in_response(request_changes, previous_state_of_user, response.data.get('data', {}))
+            self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
         )
 
     def test_update_username_to_existing(self):

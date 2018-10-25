@@ -57,8 +57,8 @@ class GroupPostList(generics.ListCreateAPIView):
 
             comments = CommentSerializer(queryset, many=True)
             comments_data = comments.data.copy()
-            # for comment in comments.data.copy():
-            #     comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
+            for comment in comments.data.copy():
+                comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             comment_data = clean_data_iterative(comments_data, 'post')
             post['comments'] = comments.data.copy()
 
@@ -92,10 +92,10 @@ class GroupFlaggedList(generics.ListAPIView):
         comment_data = []
 
         for flag in response_data:
-            # flag['user_id'] = flag['user']['id']
-            # flag['user_photo'] = flag['user']['profile_photo']
-            # flag['user_name'] = flag['user']['realname']
-            # flag.pop('user', None)
+            flag['user_id'] = flag['user']['id']
+            flag['user_photo'] = flag['user']['profile_photo']
+            flag['user_name'] = flag['user']['realname']
+            flag.pop('user', None)
             if(flag['comment'] == None):
                 flag.pop('comment', None)
                 post_data.append(flag)

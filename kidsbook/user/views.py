@@ -223,8 +223,8 @@ class GetInfoUser(generics.ListAPIView):
                 serializer = self.serializer_class(user, many=False)
                 response_data = serializer.data.copy()
 
-                # if('role' in response_data):
-                #     response_data['role'] = response_data['role']['id']
+                if('role' in response_data):
+                    response_data['role'] = response_data['role']['id']
                 comments = Comment.objects.all().filter(creator=user)
                 response_data['num_comment'] = len(comments)
 
