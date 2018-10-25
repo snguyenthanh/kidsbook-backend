@@ -251,7 +251,7 @@ class CommentManager(models.Manager):
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    content = models.CharField(max_length=100)
+    content = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
 
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)

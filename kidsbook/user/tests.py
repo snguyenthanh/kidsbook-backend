@@ -327,7 +327,6 @@ class TestUserUpdate(APITestCase):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
             request_changes = {
                 'username': 'Not_doggo',
-                'password': self.password,
                 'description': 'Corki',
                 "profile_photo": pic}
             response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
