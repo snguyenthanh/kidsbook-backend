@@ -31,6 +31,12 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = PostSerializer(queryset, many=True)
+
+        for post in serializer.data:
+            queryset = UserLikePost.objects.all().filter(post=Post.objects.get(id=post['id']))
+            likes = PostLikeSerializer(queryset, many=True)
+            post['likes_list'] = likes.data
+
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
