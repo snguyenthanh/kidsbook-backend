@@ -64,6 +64,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /group/<group_id>/posts/ | | Get all posts in the group. | IsAuthenticated, IsInGroup | Post: *list*
 `POST` | /group/<group_id>/posts/ | * | Create a post in the group. | IsAuthenticated, IsInGroup | Post: *dict*
+`POST` | group/<group_id>/flagged/ | Get all flagged posts in the group | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
 `GET` | /post/<post_id>/ | | Get post's details by ID. | IsAuthenticated, HasAccessToPost | Post: *dict*
 `POST` | /post/<post_id>/ | * | Update the post. | IsAuthenticated, HasAccessToPost | Post: *dict*
 `DELETE` | /post/<post_id>/ | * | Delete the post. | IsAuthenticated, HasAccessToPost | {}

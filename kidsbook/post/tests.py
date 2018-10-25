@@ -329,7 +329,7 @@ class TestPost(APITestCase):
         response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
         flag_id = response.data.get('data', {}).get('id', '')
-
+        
         self.assertTrue(
             UserFlagPost.objects.filter(id=flag_id).exists()
             and (UserFlagPost.objects.get(id=flag_id).status) == flag_status

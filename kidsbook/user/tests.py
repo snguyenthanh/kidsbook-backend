@@ -278,11 +278,10 @@ class TestUserUpdate(APITestCase):
         return token
 
     def changes_reflect_in_response(self, request_changes, previous_state, current_state):
-
         difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
 
         for key, prev_val in iter(previous_state.items()):
-            if key == 'id' or key == 'password':
+            if key in {'id', 'password', 'num_comment', 'num_like_received', 'num_like_given'}:
                 continue
 
             # If the un-modified value changes
@@ -327,13 +326,14 @@ class TestUserUpdate(APITestCase):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
             request_changes = {
                 'username': 'Not_doggo',
-                'password': self.password,
                 'description': 'Corki',
                 "profile_photo": pic}
             response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
 
+        cur_state = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
         self.assertTrue(
-            self.changes_reflect_in_response(request_changes, previous_state_of_user, response.data.get('data', {}))
+            self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
         )
 
     def test_update_username_to_existing(self):
