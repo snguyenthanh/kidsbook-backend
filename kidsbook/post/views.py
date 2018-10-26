@@ -143,8 +143,8 @@ class CommentLike(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = CommentLikeSerializer(queryset, many=True)
         return Response({'data': serializer.data})
 
