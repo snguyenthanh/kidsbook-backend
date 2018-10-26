@@ -6,11 +6,13 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.parsers import FileUploadParser
 from csv import reader
 from typing import List
+from django.db import Error, transaction
 
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
 from kidsbook.permissions import IsSuperUser
 User = get_user_model()
+
 
 def read_file_obj_to_list(file_obj) -> List[str]:
     # Remove the wrapper of the request
@@ -48,7 +50,10 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
     }
 
     user['gender'] = int(user.get('gender', 0)) > 0
-    user['is_superuser'] = int(user.get('gender', 0)) > 0
+    if user.get('is_superuser', '0') != '0':
+        raise TypeError('Only Admin-level users can create superusers.')
+    if 'role' in user and user['role'] <= 1:
+        raise TypeError('Only Admin-level users can create superusers.')
 
     user = {k: v for k, v in user.items() if str(v) != ''}
 
@@ -57,7 +62,6 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
         created_user = User.objects.create_superuser(**user)
     else:
         created_user = User.objects.create_user(**user)
-
     return str(created_user.id)
 
 
@@ -79,24 +83,20 @@ def batch_create(request, filename, format=None):
         for index, field in iter(enumerate(headers))
     }
 
-    failed_users = []
     created_users = []
-    for user in iter(user_list):
-        try:
-            created_users.append(
-                create_user_from_list(user, mapping_fields)
-            )
-        except Exception:
-            failed_users.append(user)
+    error = None
+    try:
+        with transaction.atomic():
+            for user in iter(user_list):
+                created_users.append(
+                    create_user_from_list(user, mapping_fields)
+                )
+    except Error as db_err:
+        error = str(db_err)
+    except Exception as exc:
+        error = str(exc)
 
-    if failed_users:
-        return Response({
-            'result': 'Unsuccessful',
-            'error': 'Unable to read {} users'.format(len(failed_users)),
-            'data': {
-                'failed_users': failed_users,
-                'created_users': created_users
-            }
-        }, status=status.HTTP_400_BAD_REQUEST)
+    if error:
+        return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'data': {'created_users': created_users}}, status=status.HTTP_202_ACCEPTED)

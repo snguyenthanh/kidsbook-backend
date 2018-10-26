@@ -107,8 +107,8 @@ def group_member(request, **kargs):
             function_mappings[request.method](new_member, target_group)
 
             return Response({}, status=status.HTTP_202_ACCEPTED)
-    except Exception:
-        pass
+    except Exception as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -25,7 +25,7 @@ User = get_user_model()
 class GroupPostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated, IsInGroup)
+    permission_classes = (IsAuthenticated, IsTokenValid, IsInGroup)
 
     def list(self, request, **kwargs):
         try:
@@ -107,7 +107,7 @@ class GroupFlaggedList(generics.ListAPIView):
 class PostLike(generics.ListCreateAPIView):
     queryset = UserLikePost.objects.all()
     serializer_class = PostLikeSerializer
-    permission_classes = (IsAuthenticated, HasAccessToPost,)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost,)
 
     def list(self, request, **kwargs):
         try:
@@ -126,7 +126,7 @@ class PostLike(generics.ListCreateAPIView):
 class CommentLike(generics.ListCreateAPIView):
     queryset = UserLikeComment.objects.all()
     serializer_class = CommentLikeSerializer
-    permission_classes = (IsAuthenticated, HasAccessToComment)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToComment)
 
     def list(self, request, **kwargs):
         try:
@@ -145,7 +145,7 @@ class CommentLike(generics.ListCreateAPIView):
 class PostFlag(generics.ListCreateAPIView):
     queryset = UserFlagPost.objects.all()
     serializer_class = PostFlagSerializer
-    permission_classes = (IsAuthenticated, HasAccessToPost)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
 
     def list(self, request, **kwargs):
         try:
@@ -164,7 +164,7 @@ class PostFlag(generics.ListCreateAPIView):
 class CommentFlag(generics.ListCreateAPIView):
     queryset = UserFlagPost.objects.all()
     serializer_class = CommentFlagSerializer
-    permission_classes = (IsAuthenticated, HasAccessToComment)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToComment)
 
     def list(self, request, **kwargs):
         try:
@@ -183,7 +183,7 @@ class CommentFlag(generics.ListCreateAPIView):
 class PostShare(generics.ListCreateAPIView):
     queryset = UserSharePost.objects.all()
     serializer_class = PostShareSerializer
-    permission_classes = (IsAuthenticated, HasAccessToPost,)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost,)
 
     def list(self, request, **kwargs):
         try:
@@ -202,7 +202,7 @@ class PostShare(generics.ListCreateAPIView):
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated, HasAccessToPost)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
 
     def get(self, request, *args, **kwargs):
         try:
@@ -225,7 +225,7 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
 class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticated, HasAccessToPost)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
 
     def list(self, request, **kwargs):
         try:
@@ -244,7 +244,7 @@ class PostCommentList(generics.ListCreateAPIView):
 class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticated, HasAccessToComment)
+    permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToComment)
 
     def get(self, request, *args, **kwargs):
         try:

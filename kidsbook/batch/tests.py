@@ -17,20 +17,52 @@ class TestBatch(APITestCase):
         self.token = 'Bearer {0}'.format(token.decode('utf-8'))
 
     def test_batch_create(self):
+        prev_count_users = User.objects.count()
         data = {
             'file': (
                 'test_dataset.csv',
                 """username,email_address,password,realname,gender,is_superuser
                 chris,chris@email.com,password_for_kris,Christiana Messi,0,0
-                james,james@email.com,password_for_kris,Christiana Messi,1,1
+                james,james@email.com,password_for_kris,Christiana Messi,1,0
                 ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
             )
         }
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(202, response.status_code)
+        num_of_created_users = len(response.data.get('data', {}).get('created_users', []))
         self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 3
+             num_of_created_users == 3
+        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(
+            cur_count_users, prev_count_users + num_of_created_users
+        )
+
+    def test_batch_create_without_col_is_superuser(self):
+        prev_count_users = User.objects.count()
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender
+                chris,chris@email.com,password_for_kris,Christiana Messi,0
+                james,james@email.com,password_for_kris,Christiana Messi,1
+                ama,ama@email.com,ama_pwd,Ama Johnson,1"""
+            )
+        }
+
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(202, response.status_code)
+        num_of_created_users = len(response.data.get('data', {}).get('created_users', []))
+        self.assertTrue(
+             num_of_created_users == 3
+        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(
+            cur_count_users, prev_count_users + num_of_created_users
         )
 
     def test_batch_create_without_token(self):
@@ -52,6 +84,7 @@ class TestBatch(APITestCase):
         self.assertEqual(400, response.status_code)
 
     def test_batch_create_with_failed_users(self):
+        prev_count_users = User.objects.count()
         data = {
             'file': (
                 'test_dataset.csv',
@@ -64,9 +97,49 @@ class TestBatch(APITestCase):
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(400, response.status_code)
-        self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 2
-        )
-        self.assertTrue(
-            len(response.data.get('data', {}).get('failed_users', [])) == 1
-        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(cur_count_users, prev_count_users)
+
+    def test_batch_create_existing_user(self):
+        # Create a normal user
+        username = "chris"
+        email = "chris@email.com"
+        password = "maybeYouRRight"
+        self.user = User.objects.create_user(username=username, email_address=email, password=password)
+
+        prev_count_users = User.objects.count()
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender,is_superuser
+                chris,chris@email.com,password_for_kris,Christiana Messi,0,0
+                james,james@email.com,password_for_kris,Christiana Messi,1,0
+                ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
+            )
+        }
+
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(400, response.status_code)
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(cur_count_users, prev_count_users)
+
+    def test_batch_create_existing_user_2(self):
+        prev_count_users = User.objects.count()
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender,is_superuser
+                chris,chris@email.com,password_for_kris,Christiana Messi,0,0
+                james,james@email.com,password_for_kris,Christiana Messi,1,0
+                ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
+            )
+        }
+        # Create the users twice
+        response_first = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(400, response.status_code)
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(cur_count_users, prev_count_users + len(response_first.data.get('data', {}).get('created_users', [])))
