@@ -57,9 +57,9 @@ class GroupPostList(generics.ListCreateAPIView):
 
             # queryset = queryset.annotate(
             #     like_count=Count(
-            #         'likes', 
+            #         'likes',
             #         likes__in = User.objects.all().filter(id__in= [x.user.id for x in UserLikeComment.objects.all().filter(comment=Comment.objects.get(id=)).filter(like_or_dislike=True)])
-            #     )   
+            #     )
             # ).order_by('-like_count', '-created_at')[:3]
 
             queryset = queryset.annotate(
@@ -68,10 +68,10 @@ class GroupPostList(generics.ListCreateAPIView):
 
             comments = CommentSerializer(queryset, many=True)
             comments_data = comments.data.copy()
-            for comment in comments.data.copy():
+            for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             comment_data = clean_data_iterative(comments_data, 'post')
-            post['comments'] = comments.data.copy()
+            post['comments'] = comments_data.copy()
             post['comments'] = clean_data_iterative(post['comments'], 'likes')
 
         return Response({'data': serializer.data})
