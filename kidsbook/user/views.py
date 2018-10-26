@@ -122,7 +122,10 @@ class Register(APIView):
             except Exception:
                 return Response({'error': "Invalid teacher's ID."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        user = mapping_create[user_role](**request_data)
+        try:
+            user = mapping_create[user_role](**request_data)
+        except Exception as exc:
+            Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # group = Group.objects.get(id=request.data['group_id'])
         # group.add_member(user)
@@ -133,17 +136,51 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
 
+    def is_creator_of_user(self, request, target_user_id):
+        return User.objects.get(id=target_user_id).teacher and request.user.id == User.objects.get(id=target_user_id).teacher.id
+
+    def user_has_no_groups(self, target_user_id):
+        return not GroupMember.objects.filter(user_id=target_user_id).exists()
+
+    def is_user_in_same_group_with_requester(self, request, target_user_id):
+        requester_id = request.user.id
+        groups_that_request_is_in = GroupMember.objects.filter(user_id=requester_id)
+
+        # Check if the `target_user_id` exists in any groups that the requester is in
+        for group in iter(groups_that_request_is_in):
+            if GroupMember.objects.filter(user_id=target_user_id, group_id=group.id).exists():
+                return True
+        return False
+
     def post(self, request, **kargs):
         target_user_id = kargs['pk']
         if not User.objects.filter(id=target_user_id).exists():
             return Response({'error': 'User not found.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        # Check for permission
+        # Required Superuser
         keywords_require_superuser = ('email_address', 'realname')
         if any(kw in kargs for kw in iter(keywords_require_superuser)) and not request.user.is_superuser:
             return Response({'error': 'Only superuser and above of this user can edit email, username and real name.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        if User.objects.get(id=target_user_id).teacher and request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
+        # Permissions - For Superuser
+        # - Cannot update other superusers
+        # - Anyone in the same group
+        # - Anyone that have no group
+        # - Anyone he created
+        # if User.objects.get(id=target_user_id).teacher and request.user.id != User.objects.get(id=target_user_id).teacher.id and request.user.id != target_user_id:
+        #     return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        target_user = User.objects.get(id=target_user_id)
+        if target_user.role.id <= 1 and target_user.id != request.user.id:
+            return Response({'error': 'A superuser can only be modified by Admin or himself.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        if request.user.role.id == 2 and target_user.id != request.user.id:
+            return Response({'error': 'A student cannot modify another user.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        if not (self.is_creator_of_user(request, target_user_id)
+                or self.user_has_no_groups(target_user_id)
+                or self.is_user_in_same_group_with_requester(request, target_user_id)
+                or request.user.id == target_user_id):
             return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         # Get all keywords that are not in `keywords_require_superuser`
@@ -154,7 +191,6 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             allowed_keywords = set(allowed_keywords + list(keywords_require_superuser))
 
         # Update the user
-        target_user = User.objects.get(id=target_user_id)
         update_data = {
             key: val
             for key, val in iter(request.data.items())
@@ -165,8 +201,15 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
             setattr(target_user, attr, value)
 
         if 'password' in request.data:
-            isAuthenticate = authenticate(email_address=request.data['email'], password=request.data['oldPassword'])
-            if(isAuthenticate is None):
+            if request.user.id == target_user_id and 'oldPassword' not in request.data:
+                return Response({'error': "Field 'oldPassword' is required."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            #isAuthenticate = authenticate(email_address=request.data['email'], password=request.data['oldPassword'])
+            isAuthenticate = True
+            if request.user.id == target_user_id:
+                isAuthenticate = authenticate(email_address=target_user.email_address, password=request.data['oldPassword'])
+
+            if not isAuthenticate:
                 res = {'error': ' Your old password is incorrect '}
                 return Response({'error': res}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             target_user.set_password(request.data['password'])
