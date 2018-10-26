@@ -22,12 +22,30 @@ class TestBatch(APITestCase):
                 'test_dataset.csv',
                 """username,email_address,password,realname,gender,is_superuser
                 chris,chris@email.com,password_for_kris,Christiana Messi,0,0
-                james,james@email.com,password_for_kris,Christiana Messi,1,1
+                james,james@email.com,password_for_kris,Christiana Messi,1,0
                 ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
             )
         }
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(202, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', {}).get('created_users', [])) == 3
+        )
+
+    def test_batch_create_without_col_is_superuser(self):
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender
+                chris,chris@email.com,password_for_kris,Christiana Messi,0
+                james,james@email.com,password_for_kris,Christiana Messi,1
+                ama,ama@email.com,ama_pwd,Ama Johnson,1"""
+            )
+        }
+
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+
         self.assertEqual(202, response.status_code)
         self.assertTrue(
             len(response.data.get('data', {}).get('created_users', [])) == 3
@@ -65,8 +83,8 @@ class TestBatch(APITestCase):
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(400, response.status_code)
         self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 2
+            len(response.data.get('data', {}).get('created_users', [])) == 1
         )
         self.assertTrue(
-            len(response.data.get('data', {}).get('failed_users', [])) == 1
+            len(response.data.get('data', {}).get('failed_users', [])) == 2
         )

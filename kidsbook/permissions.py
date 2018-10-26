@@ -34,6 +34,10 @@ class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_superuser
 
+class isAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == 0
+
 class IsInGroup(permissions.BasePermission):
     def has_permission(self, request, view):
         # If there are no `pk`

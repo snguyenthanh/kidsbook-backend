@@ -103,7 +103,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.BooleanField(default=False)
     description = models.TextField(default="")
     date_of_birth = models.DateField(null=True)
-    #avatar_url = models.CharField(max_length=65530, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     profile_photo = models.ImageField(null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
@@ -213,7 +213,7 @@ class Post(models.Model):
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
     flags = models.ManyToManyField(User, related_name='flags', through='UserFlagPost')
     picture = models.ImageField(null=True)
-    
+
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)
 

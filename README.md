@@ -50,13 +50,15 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /user/register/ | * | Create an user using the given arguments. | IsAuthenticated, IsSuperUser | User: *dict*
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
-`POST` | /user/update/<user_id/ | * (If update password then need email, oldPassword, password) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
+`POST` | /user/update/<user_id/ | * (If update password then need `oldPassword` and `password`) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user, the user himself or a superuser in a same group. | User: *dict*
 
 ## 2. Users
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
+`GET` | /users/ | | Get all superusers, all users in the same group or have no groups or created by the requester. | IsAuthenticated, IsSuperUser | User:*list*
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
+
 
 ## 3. Post
 
@@ -99,14 +101,18 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 ## 5. Batch
 An URL argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
-A header row is required for the `.csv` files. Empty `is_superuser` and `gender` will default to 0.
+A header row is required for the `.csv` files. The headers allowed include:
+```
+username,email_address,password,realname,gender,description
+```
+ Empty `gender` will default to 0.
 
 An example `.csv` file:
 ```
-username,email_address,password,realname,gender,is_superuser
-chris,chris@email.com,password_for_kris,Christiana Messi,0,0
-james,james@email.com,password_for_kris,Christiana Messi,1,1
-ama,ama@email.com,ama_pwd,Ama Johnson,1,0
+username,email_address,password,realname,gender
+chris,chris@email.com,password_for_kris,Christiana Messi,0
+james,james@email.com,password_for_kris,Christiana Messi,1
+ama,ama@email.com,ama_pwd,Ama Johnson,1
 ```
 
 Method | Endpoint | Arguments | Description | Permissions | Return

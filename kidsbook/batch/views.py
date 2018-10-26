@@ -48,7 +48,10 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
     }
 
     user['gender'] = int(user.get('gender', 0)) > 0
-    user['is_superuser'] = int(user.get('gender', 0)) > 0
+    if user.get('is_superuser', '0') != '0':
+        raise TypeError('Only Admin-level users can create superusers.')
+    if 'role' in user and user['role'] <= 1:
+        raise TypeError('Only Admin-level users can create superusers.')
 
     user = {k: v for k, v in user.items() if str(v) != ''}
 
@@ -81,22 +84,24 @@ def batch_create(request, filename, format=None):
 
     failed_users = []
     created_users = []
+    errors = set()
     for user in iter(user_list):
         try:
             created_users.append(
                 create_user_from_list(user, mapping_fields)
             )
-        except Exception:
+        except Exception as exc:
+            errors.add(str(exc))
             failed_users.append(user)
 
     if failed_users:
         return Response({
             'result': 'Unsuccessful',
-            'error': 'Unable to read {} users'.format(len(failed_users)),
+            'error': ". ".join(errors),
             'data': {
                 'failed_users': failed_users,
                 'created_users': created_users
             }
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({'data': {'created_users': created_users}}, status=status.HTTP_202_ACCEPTED)
+    return Response({'data': {'created_users': created_users, 'failed_users': []}}, status=status.HTTP_202_ACCEPTED)

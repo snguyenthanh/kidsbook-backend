@@ -371,7 +371,7 @@ class TestUserUpdate(APITestCase):
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
 
-    def test_update_by_non_creator(self):
+    def test_update_in_no_groups_by_non_creator(self):
         # Create a random user
         username = "chris"
         email = "chris@snow.com"
@@ -384,7 +384,10 @@ class TestUserUpdate(APITestCase):
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
-        self.assertEqual(405, response.status_code)
+        self.assertEqual(202, response.status_code)
+
+    #def test_update_in_a_diff_group_by_non_creator(self):
+
 
 def TestUserPost(self):
     def setUp(self):
