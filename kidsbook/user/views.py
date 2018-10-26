@@ -168,8 +168,8 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
         #     return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         target_user = User.objects.get(id=target_user_id)
-        if target_user.role.id == 1:
-            return Response({'error': 'A superuser can only be modified by Admin.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if target_user.role.id <= 1 and target_user.id != request.user.id:
+            return Response({'error': 'A superuser can only be modified by Admin or himself.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         if request.user.role.id == 2 and target_user.id != request.user.id:
             return Response({'error': 'A student cannot modify another user.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

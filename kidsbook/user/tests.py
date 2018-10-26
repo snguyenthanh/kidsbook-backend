@@ -329,9 +329,9 @@ class TestUserUpdate(APITestCase):
                 'description': 'Corki',
                 "profile_photo": pic}
             response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
+            self.assertTrue(202, response.status_code)
 
         cur_state = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
-
         self.assertTrue(
             self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
         )
@@ -351,7 +351,7 @@ class TestUserUpdate(APITestCase):
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
-
+        self.assertEqual(405, response.status_code)
         self.assertFalse(
             self.changes_reflect_in_response(data, previous_state_of_user, response.data.get('data', {}))
         )
@@ -369,6 +369,21 @@ class TestUserUpdate(APITestCase):
             'description': 'Corki'
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
+        self.assertEqual(405, response.status_code)
+
+    def test_update_superuser_by_non_superuser(self):
+        # Create a random user
+        username = "chris"
+        email = "chris@snow.com"
+        password = self.password
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        token = self.get_token(user)
+
+        data = {
+            'username': 'Not_doggo',
+            'description': 'Corki'
+        }
+        response = self.client.post("{}update/{}/".format(self.url, self.creator.id), data=data, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
 
     def test_update_in_no_groups_by_non_creator(self):
@@ -405,6 +420,25 @@ class TestUserUpdate(APITestCase):
         }
         response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=token)
         self.assertEqual(405, response.status_code)
+
+    def test_update_superuser_by_himself(self):
+        token = self.get_token(self.creator)
+        previous_state_of_user = self.client.get("{}{}/".format(self.url, self.creator.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            request_changes = {
+                'username': 'Not_doggo',
+                'description': 'Corki',
+                "profile_photo": pic}
+            response = self.client.post("{}update/{}/".format(self.url, self.creator.id), request_changes, HTTP_AUTHORIZATION=token)
+            self.assertTrue(202, response.status_code)
+
+        cur_state = self.client.get("{}{}/".format(self.url, self.creator.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        self.assertTrue(
+            self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
+        )
+
 
 class TestUpdateVirtualUser(APITestCase):
     def setUp(self):
