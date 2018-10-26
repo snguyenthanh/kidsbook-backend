@@ -68,13 +68,11 @@ class CommentLikeSerializer(serializers.ModelSerializer):
     def create(self, data):
         comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
+        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
         if(data["like_or_dislike"] == False):
             old_comment_like = UserLikeComment.objects.get(comment=comment, user=current_user)
             old_comment_like.delete()
-            return old_comment_like
-        else:
-            new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
-            return new_comment
+        return new_comment
 
 class PostFlagSerializer(serializers.ModelSerializer):
 

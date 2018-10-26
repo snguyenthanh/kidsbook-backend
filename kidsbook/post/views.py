@@ -247,6 +247,7 @@ class PostCommentList(generics.ListCreateAPIView):
         serializer = CommentSerializer(queryset, many=True)
         for comment in serializer.data:
             comment['like_count'] = len(comment['likes'])
+            comment['likers'] = [x['id'] for x in comment['likes']]
         response_data = clean_data_iterative(serializer.data, 'likes')
         return Response({'data': serializer.data})
 
