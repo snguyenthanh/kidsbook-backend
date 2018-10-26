@@ -6,12 +6,13 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.parsers import FileUploadParser
 from csv import reader
 from typing import List
-from django.db import transaction
+from django.db import Error, transaction
 
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
 from kidsbook.permissions import IsSuperUser
 User = get_user_model()
+
 
 def read_file_obj_to_list(file_obj) -> List[str]:
     # Remove the wrapper of the request
@@ -90,6 +91,8 @@ def batch_create(request, filename, format=None):
                 created_users.append(
                     create_user_from_list(user, mapping_fields)
                 )
+    except Error as db_err:
+        error = str(db_err)
     except Exception as exc:
         error = str(exc)
 

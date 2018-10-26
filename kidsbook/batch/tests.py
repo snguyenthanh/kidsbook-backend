@@ -124,3 +124,22 @@ class TestBatch(APITestCase):
 
         cur_count_users = User.objects.count()
         self.assertEqual(cur_count_users, prev_count_users)
+
+    def test_batch_create_existing_user_2(self):
+        prev_count_users = User.objects.count()
+        data = {
+            'file': (
+                'test_dataset.csv',
+                """username,email_address,password,realname,gender,is_superuser
+                chris,chris@email.com,password_for_kris,Christiana Messi,0,0
+                james,james@email.com,password_for_kris,Christiana Messi,1,0
+                ama,ama@email.com,ama_pwd,Ama Johnson,1,0"""
+            )
+        }
+        # Create the users twice
+        response_first = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(400, response.status_code)
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(cur_count_users, prev_count_users + len(response_first.data.get('data', {}).get('created_users', [])))
