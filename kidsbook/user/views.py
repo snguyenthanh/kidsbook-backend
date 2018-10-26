@@ -122,7 +122,10 @@ class Register(APIView):
             except Exception:
                 return Response({'error': "Invalid teacher's ID."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        user = mapping_create[user_role](**request_data)
+        try:
+            user = mapping_create[user_role](**request_data)
+        except Exception as exc:
+            Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # group = Group.objects.get(id=request.data['group_id'])
         # group.add_member(user)
