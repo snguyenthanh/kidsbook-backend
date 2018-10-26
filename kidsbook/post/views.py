@@ -67,7 +67,7 @@ class GroupPostList(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         try:
             return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
-        except Exception:
+        except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupFlaggedList(generics.ListAPIView):
