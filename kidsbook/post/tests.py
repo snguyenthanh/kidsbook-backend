@@ -48,6 +48,14 @@ class TestPost(APITestCase):
             creator=self.creator
         )
 
+        # Create another comment
+        self.another_comment = Comment.objects.create_comment(
+            content='not okay at all',
+            post=self.post,
+            creator=self.creator
+        )
+
+
     def changes_reflect_in_response(self, request_changes, previous_state, current_state):
         difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
 
@@ -329,11 +337,29 @@ class TestPost(APITestCase):
         response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
         flag_id = response.data.get('data', {}).get('id', '')
-        
+
         self.assertTrue(
             UserFlagPost.objects.filter(id=flag_id).exists()
             and (UserFlagPost.objects.get(id=flag_id).status) == flag_status
         )
+
+    def test_flag_2_comments_and_post(self):
+        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+
+        url = "{}/comment/{}/flags/".format(url_prefix, self.another_comment.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+
+        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+
+        self.assertEqual(202, response.status_code)
+
 
     def test_flag_comment_by_non_member(self):
         url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)

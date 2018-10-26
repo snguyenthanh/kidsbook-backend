@@ -85,8 +85,10 @@ class PostFlagSerializer(serializers.ModelSerializer):
 
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+
         current_user = self.context['request'].user
-        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'status': data["status"], 'comment': None})
+        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, comment__isnull=True, defaults={'status': data["status"], 'comment': None})
+
         return new_obj
 
 class CommentFlagSerializer(serializers.ModelSerializer):
