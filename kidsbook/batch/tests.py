@@ -17,6 +17,7 @@ class TestBatch(APITestCase):
         self.token = 'Bearer {0}'.format(token.decode('utf-8'))
 
     def test_batch_create(self):
+        prev_count_users = User.objects.count()
         data = {
             'file': (
                 'test_dataset.csv',
@@ -29,11 +30,18 @@ class TestBatch(APITestCase):
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(202, response.status_code)
+        num_of_created_users = len(response.data.get('data', {}).get('created_users', []))
         self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 3
+             num_of_created_users == 3
+        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(
+            cur_count_users, prev_count_users + num_of_created_users
         )
 
     def test_batch_create_without_col_is_superuser(self):
+        prev_count_users = User.objects.count()
         data = {
             'file': (
                 'test_dataset.csv',
@@ -47,8 +55,14 @@ class TestBatch(APITestCase):
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
 
         self.assertEqual(202, response.status_code)
+        num_of_created_users = len(response.data.get('data', {}).get('created_users', []))
         self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 3
+             num_of_created_users == 3
+        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(
+            cur_count_users, prev_count_users + num_of_created_users
         )
 
     def test_batch_create_without_token(self):
@@ -70,6 +84,7 @@ class TestBatch(APITestCase):
         self.assertEqual(400, response.status_code)
 
     def test_batch_create_with_failed_users(self):
+        prev_count_users = User.objects.count()
         data = {
             'file': (
                 'test_dataset.csv',
@@ -82,9 +97,6 @@ class TestBatch(APITestCase):
 
         response = self.client.post(self.url + 'create/user/test_dataset.csv/', data=data, HTTP_AUTHORIZATION=self.token)
         self.assertEqual(400, response.status_code)
-        self.assertTrue(
-            len(response.data.get('data', {}).get('created_users', [])) == 1
-        )
-        self.assertTrue(
-            len(response.data.get('data', {}).get('failed_users', [])) == 2
-        )
+
+        cur_count_users = User.objects.count()
+        self.assertEqual(cur_count_users, prev_count_users)

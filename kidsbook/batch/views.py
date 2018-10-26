@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.parsers import FileUploadParser
 from csv import reader
 from typing import List
+from django.db import transaction
 
 from kidsbook.serializers import UserSerializer, GroupSerializer
 from kidsbook.models import Group, GroupMember
@@ -82,26 +83,18 @@ def batch_create(request, filename, format=None):
         for index, field in iter(enumerate(headers))
     }
 
-    failed_users = []
     created_users = []
-    errors = set()
-    for user in iter(user_list):
-        try:
-            created_users.append(
-                create_user_from_list(user, mapping_fields)
-            )
-        except Exception as exc:
-            errors.add(str(exc))
-            failed_users.append(user)
+    error = None
+    try:
+        with transaction.atomic():
+            for user in iter(user_list):
+                created_users.append(
+                    create_user_from_list(user, mapping_fields)
+                )
+    except Exception as exc:
+        error = str(exc)
 
-    if failed_users:
-        return Response({
-            'result': 'Unsuccessful',
-            'error': ". ".join(errors),
-            'data': {
-                'failed_users': failed_users,
-                'created_users': created_users
-            }
-        }, status=status.HTTP_400_BAD_REQUEST)
+    if error:
+        return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({'data': {'created_users': created_users, 'failed_users': []}}, status=status.HTTP_202_ACCEPTED)
+    return Response({'data': {'created_users': created_users}}, status=status.HTTP_202_ACCEPTED)

@@ -118,4 +118,4 @@ ama,ama@email.com,ama_pwd,Ama Johnson,1
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
-`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. The UUIDs of created users are returned. | IsAuthenticated, IsSuperUser | {data: {created_users: [], failed_users: []}}
+`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. The UUIDs of created users are returned. | IsAuthenticated, IsSuperUser | {data: {created_users: []}}
