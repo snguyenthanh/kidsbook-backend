@@ -14,7 +14,7 @@ from django.http import (
 from django.contrib.auth import (
     authenticate, login, logout
 )
-from django.db.models import Case, Count, IntegerField, Sum, When
+from django.db.models import Case, Count, IntegerField, Sum, When, F
 
 from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -46,13 +46,24 @@ class GroupPostList(generics.ListCreateAPIView):
 
             queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id']))
             queryset.query.group_by = ['id']
+            # queryset = queryset.annotate(
+            #     like_count=Sum(
+            #         Case(
+            #             When(likes__in=really_likes_users, then=1),
+            #             default=0, output_field=IntegerField()
+            #         )
+            #     )
+            # ).order_by('-like_count', '-created_at')[:3]
+
+            # queryset = queryset.annotate(
+            #     like_count=Count(
+            #         'likes', 
+            #         likes__in = User.objects.all().filter(id__in= [x.user.id for x in UserLikeComment.objects.all().filter(comment=Comment.objects.get(id=)).filter(like_or_dislike=True)])
+            #     )   
+            # ).order_by('-like_count', '-created_at')[:3]
+
             queryset = queryset.annotate(
-                like_count=Sum(
-                    Case(
-                        When(likes__in=really_likes_users, then=1),
-                        default=0, output_field=IntegerField()
-                    )
-                )
+                like_count=Count('likes')
             ).order_by('-like_count', '-created_at')[:3]
 
             comments = CommentSerializer(queryset, many=True)
@@ -61,6 +72,7 @@ class GroupPostList(generics.ListCreateAPIView):
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             comment_data = clean_data_iterative(comments_data, 'post')
             post['comments'] = comments.data.copy()
+            post['comments'] = clean_data_iterative(post['comments'], 'likes')
 
         return Response({'data': serializer.data})
 
@@ -130,7 +142,7 @@ class CommentLike(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
-            queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk']))
+            queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = CommentLikeSerializer(queryset, many=True)
@@ -233,6 +245,9 @@ class PostCommentList(generics.ListCreateAPIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = CommentSerializer(queryset, many=True)
+        for comment in serializer.data:
+            comment['like_count'] = len(comment['likes'])
+        response_data = clean_data_iterative(serializer.data, 'likes')
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
