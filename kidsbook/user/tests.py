@@ -329,7 +329,7 @@ class TestUserUpdate(APITestCase):
                 'description': 'Corki',
                 "profile_photo": pic}
             response = self.client.post(self.update_url, request_changes, HTTP_AUTHORIZATION=token)
-            self.assertTrue(202, response.status_code)
+            self.assertEqual(202, response.status_code)
 
         cur_state = self.client.get("{}{}/".format(self.url, self.modify_user.id), HTTP_AUTHORIZATION=token).data.get('data', {})
         self.assertTrue(
@@ -431,13 +431,45 @@ class TestUserUpdate(APITestCase):
                 'description': 'Corki',
                 "profile_photo": pic}
             response = self.client.post("{}update/{}/".format(self.url, self.creator.id), request_changes, HTTP_AUTHORIZATION=token)
-            self.assertTrue(202, response.status_code)
+            self.assertEqual(202, response.status_code)
 
         cur_state = self.client.get("{}{}/".format(self.url, self.creator.id), HTTP_AUTHORIZATION=token).data.get('data', {})
 
         self.assertTrue(
             self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
         )
+
+    def test_update_superuser_password_by_himself(self):
+        token = self.get_token(self.creator)
+        previous_state_of_user = self.client.get("{}{}/".format(self.url, self.creator.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            request_changes = {
+                'username': 'Not_doggo',
+                'description': 'Corki',
+                "profile_photo": pic,
+                'password': 'new_pass',
+                'oldPassword': self.password}
+            response = self.client.post("{}update/{}/".format(self.url, self.creator.id), request_changes, HTTP_AUTHORIZATION=token)
+            self.assertEqual(202, response.status_code)
+
+        cur_state = self.client.get("{}{}/".format(self.url, self.creator.id), HTTP_AUTHORIZATION=token).data.get('data', {})
+
+        self.assertTrue(
+            self.changes_reflect_in_response(request_changes, previous_state_of_user, cur_state)
+        )
+
+    def test_update_superuser_password_without_oldpassword_by_himself(self):
+        token = self.get_token(self.creator)
+        
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
+            request_changes = {
+                'username': 'Not_doggo',
+                'description': 'Corki',
+                "profile_photo": pic,
+                'password': 'new_pass'}
+            response = self.client.post("{}update/{}/".format(self.url, self.creator.id), request_changes, HTTP_AUTHORIZATION=token)
+            self.assertEqual(405, response.status_code)
 
 
 class TestUpdateVirtualUser(APITestCase):
