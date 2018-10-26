@@ -41,7 +41,6 @@ class UserManager(BaseUserManager):
         self.create_roles()
         if 'username' not in kargs:
             raise ValueError('The given username must be set')
-            # kargs['username'] = 'anonymous'
 
         role = kargs.pop('role', 2)
         password = kargs.pop('password', '12345')
@@ -57,13 +56,9 @@ class UserManager(BaseUserManager):
         #     teacher = User.objects.get(id=kargs['teacher_id'])
         #     user.teacher = teacher
 
-        #print("ABOUT TO SAVE")
-        #print(self._db)
-        try:
-            user.save(using=self._db)
-            #print("HIEU")
-        except Exception as e:
-            print(e)
+        # Don't try-catch this command, as other functions will catch and return the error message
+        user.save(using=self._db)
+
         return user
 
     def create_user(self, **kargs):

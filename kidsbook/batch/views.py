@@ -61,7 +61,6 @@ def create_user_from_list(arr: List[str], mappings: dict):# Careful with the ind
         created_user = User.objects.create_superuser(**user)
     else:
         created_user = User.objects.create_user(**user)
-
     return str(created_user.id)
 
 
