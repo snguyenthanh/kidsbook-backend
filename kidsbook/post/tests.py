@@ -357,8 +357,6 @@ class TestPost(APITestCase):
         url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
         flag_status = "IN_PROGRESS"
         response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
-        # with open('output.txt', 'w') as out_f:
-        #     out_f.write(str(response.data))
 
         self.assertEqual(202, response.status_code)
 
