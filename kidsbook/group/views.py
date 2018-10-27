@@ -146,7 +146,7 @@ def update_group_detail(request, kargs):
 
         group_fields = set(Group.__dict__.keys())
         if request.user.id != group.creator.id:
-            return Response({'error': "Only the creator can modify group's details."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': "Only the creator can modify group's details."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         for attr, value in iter(request.data.dict().items()):
             if attr in group_fields:

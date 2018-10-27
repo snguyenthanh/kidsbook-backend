@@ -461,7 +461,7 @@ class TestUserUpdate(APITestCase):
 
     def test_update_superuser_password_without_oldpassword_by_himself(self):
         token = self.get_token(self.creator)
-        
+
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../backend/media/picture.png'), 'rb') as pic:
             request_changes = {
                 'username': 'Not_doggo',
@@ -562,6 +562,11 @@ def TestUserPost(self):
             creator=self.user,
             group=self.group
         )
+        self.post2 = Post.objects.create_post(
+            content='Need someone to eat lunch at pgp?',
+            creator=self.creator,
+            group=self.group
+        )
 
 
     def get_token(self, user):
@@ -575,7 +580,32 @@ def TestUserPost(self):
 
         response = self.client.get("{}/posts/".format(self.url, self.user.id), HTTP_AUTHORIZATION=token)
         self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
 
     def test_get_all_posts_of_user_without_token(self):
         response = self.client.get("{}/posts/".format(self.url, self.user.id))
         self.assertEqual(401, response.status_code)
+
+    def test_get_all_posts_except_deleted(self):
+        token = self.get_token(self.user)
+
+        # Create another post
+        Post.objects.create_post(
+            content='This is new',
+            creator=self.user,
+            group=self.group
+        )
+
+        url = "{}/post/{}/".format(url_prefix, self.post.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        response = self.client.get("{}/posts/".format(self.url, self.user.id), HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
+        self.assertTrue(
+            response.data.get('data', {}).get('content') == 'This is new'
+        )

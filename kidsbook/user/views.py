@@ -292,10 +292,11 @@ class GetPost(generics.ListAPIView):
     queryset = ''
     serializer_class = PostSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
-    def list(self, request):
+    def list(self, request, **kargs):
         try:
-            current_user = request.user
-            posts = Post.objects.filter(creator=current_user).order_by('-created_at')
+            user_id = kargs.get('pk', '')
+            user = User.objects.get(id=user_id)
+            posts = Post.objects.filter(creator=user).exclude(is_deleted=False).order_by('-created_at')
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
