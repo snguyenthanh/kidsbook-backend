@@ -22,27 +22,25 @@ class UserPublicSerializer(serializers.ModelSerializer):
         depth = 1
 
 class PostSerializer(serializers.ModelSerializer):
-
-    # image = Base64ImageField(
-    #     max_length=None, use_url=True,
-    # )
-
     def create(self, data):
         try:
             group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
         except Exception:
             raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
-        # try:
-        # print(opengraph.OpenGraph(url=data["link"]).__str__())
+
         return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
             link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
-        # except Exception:
-            # raise serializers.ValidationError({'error': 'Unknown error while creating post'})
 
     class Meta:
         model = Post
         fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares')
+        depth = 1
+
+class PostSuperuserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'is_deleted')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):
@@ -127,6 +125,13 @@ class CommentSerializer(serializers.ModelSerializer):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
+
+class CommentSuperuserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'post', 'creator', 'likes', 'is_deleted')
+        depth = 1
+
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:

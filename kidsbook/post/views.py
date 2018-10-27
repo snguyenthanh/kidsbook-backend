@@ -43,7 +43,12 @@ class GroupPostList(generics.ListCreateAPIView):
             queryset = queryset.order_by('-created_at')
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = PostSerializer(queryset, many=True)
+
+        # Change the Serializer depends on the role of requester
+        if request.user.role.id <= 1:
+            serializer = PostSuperuserSerializer(queryset, many=True)
+        else:
+            serializer = PostSerializer(queryset, many=True)
         response_data = serializer.data.copy()
 
         really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
@@ -280,7 +285,11 @@ class PostCommentList(generics.ListCreateAPIView):
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = CommentSerializer(queryset, many=True)
+        if request.user.role.id <= 1:
+            serializer = CommentSuperuserSerializer(queryset, many=True)
+        else:
+            serializer = CommentSerializer(queryset, many=True)
+
         for comment in serializer.data:
             comment['like_count'] = len(comment['likes'])
             comment['likers'] = [x['id'] for x in comment['likes']]
