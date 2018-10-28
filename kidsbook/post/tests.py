@@ -142,6 +142,27 @@ class TestPost(APITestCase):
             len(response.data.get('data', [])) == 1
         )
 
+    def test_get_posts_in_group_exclude_deleted_comments_in_top_3(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.another_comment.id)
+        self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+        second_post = response.data.get('data', [])[1]
+        comments = second_post.get('comments', [])
+        self.assertTrue(
+            len(comments) == 1
+        )
+        self.assertTrue(
+            comments[0].get('content') == 'OKAY'
+        )
+
     def test_get_all_posts_in_group_exclude_deleted_with_all(self):
         # Delete a post
         url = "{}/post/{}/".format(url_prefix, self.post2.id)
@@ -276,11 +297,6 @@ class TestPost(APITestCase):
         self.assertTrue(
             len(response.data.get('data', [])) == 1
         )
-
-
-
-
-
 
     def test_create_comment_of_post(self):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)

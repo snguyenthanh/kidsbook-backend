@@ -59,7 +59,7 @@ class GroupPostList(generics.ListCreateAPIView):
             likes = PostLikeSerializer(queryset, many=True)
             post['likes_list'] = likes.data.copy()
 
-            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id']))
+            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id'])).exclude(is_deleted=True)
             queryset.query.group_by = ['id']
             # queryset = queryset.annotate(
             #     like_count=Sum(

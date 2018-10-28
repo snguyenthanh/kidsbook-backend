@@ -296,7 +296,7 @@ class GetPost(generics.ListAPIView):
         try:
             user_id = kargs.get('pk', '')
             user = User.objects.get(id=user_id)
-            posts = Post.objects.filter(creator=user).exclude(is_deleted=False).order_by('-created_at')
+            posts = Post.objects.filter(creator=user).exclude(is_deleted=True).order_by('-created_at')
             serializer = PostSerializer(posts, many=True)
             return Response({'data': serializer.data})
         except Exception as e:
