@@ -29,11 +29,26 @@ class GroupPostList(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
-            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).order_by('-created_at')
+            # Get all posts in the group
+            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
 
+            if ('all' in request.query_params
+                    and str(request.query_params.get('all', 'false')).lower() == 'true'
+                    and request.user.role.id <= 1
+                    ):
+                pass
+            else:
+                queryset = queryset.exclude(is_deleted=True)
+
+            queryset = queryset.order_by('-created_at')
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = PostSerializer(queryset, many=True)
+
+        # Change the Serializer depends on the role of requester
+        if request.user.role.id <= 1:
+            serializer = PostSuperuserSerializer(queryset, many=True)
+        else:
+            serializer = PostSerializer(queryset, many=True)
         response_data = serializer.data.copy()
 
         really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
@@ -44,7 +59,7 @@ class GroupPostList(generics.ListCreateAPIView):
             likes = PostLikeSerializer(queryset, many=True)
             post['likes_list'] = likes.data.copy()
 
-            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id']))
+            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id'])).exclude(is_deleted=True)
             queryset.query.group_by = ['id']
             # queryset = queryset.annotate(
             #     like_count=Sum(
@@ -217,10 +232,20 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
 
     def get(self, request, *args, **kwargs):
+        post_id = kwargs.get('pk', None)
+
+        if post_id and not Post.objects.filter(id=post_id).exists():
+            return Response({'error': 'Post not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         try:
-            return Response({'data': self.retrieve(request, *args, **kwargs).data})
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            post = Post.objects.get(id=post_id)
+            if post.is_deleted and not request.user.is_superuser:
+                return Response({'error': 'Post not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            serializer = PostSerializer(post)
+            return Response({'data': serializer.data})
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -230,7 +255,11 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            post_id = kwargs.get('pk', '')
+            post_to_delete = Post.objects.get(id=post_id)
+            post_to_delete.is_deleted = True
+            post_to_delete.save()
+            return Response({}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -241,10 +270,26 @@ class PostCommentList(generics.ListCreateAPIView):
 
     def list(self, request, **kwargs):
         try:
+            # Get all comments in the post
             queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['pk']))
+
+            if ('all' in request.query_params
+                    and str(request.query_params.get('all', 'false')).lower() == 'true'
+                    and request.user.role.id <= 1
+                    ):
+                pass
+            else:
+                queryset = queryset.exclude(is_deleted=True)
+
+            queryset = queryset.order_by('-created_at')
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = CommentSerializer(queryset, many=True)
+
+        if request.user.role.id <= 1:
+            serializer = CommentSuperuserSerializer(queryset, many=True)
+        else:
+            serializer = CommentSerializer(queryset, many=True)
+
         for comment in serializer.data:
             comment['like_count'] = len(comment['likes'])
             comment['likers'] = [x['id'] for x in comment['likes']]
@@ -263,8 +308,18 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToComment)
 
     def get(self, request, *args, **kwargs):
+        comment_id = kwargs.get('pk', None)
+
+        if comment_id and not Comment.objects.filter(id=comment_id).exists():
+            return Response({'error': 'Comment not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         try:
-            return Response({'data': self.retrieve(request, *args, **kwargs).data})
+            comment = Comment.objects.get(id=comment_id)
+            if comment.is_deleted and not request.user.is_superuser:
+                return Response({'error': 'Comment not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            serializer = CommentSerializer(comment)
+            return Response({'data': serializer.data})
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -276,7 +331,12 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            comment_id = kwargs.get('pk', '')
+            comment_to_delete = Comment.objects.get(id=comment_id)
+            comment_to_delete.is_deleted = True
+            comment_to_delete.save()
+            return Response({}, status=status.HTTP_202_ACCEPTED)
+            #return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

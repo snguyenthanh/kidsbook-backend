@@ -208,9 +208,9 @@ class Post(models.Model):
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
     flags = models.ManyToManyField(User, related_name='flags', through='UserFlagPost')
     picture = models.ImageField(null=True)
-
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)
+    is_deleted = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["content"]
 
@@ -252,7 +252,8 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='comment_likers', through='UserLikeComment')
-
+    is_deleted = models.BooleanField(default=False)
+    
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
