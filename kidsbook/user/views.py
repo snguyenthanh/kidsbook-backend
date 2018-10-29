@@ -314,11 +314,14 @@ class GetVirtualUsers(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class UserSettings(generics.ListAPIView):
+class SettingUser(generics.ListAPIView):
     serializer_class = UserSettingSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
 
     def list(self, request, **kargs):
+        user_setting = UserSetting.objects.get(user_id=kargs.get('pk', ''))
+        serializer = self.serializer_class(user_setting)
+        return Response({'data': serializer.data})
         try:
             user_setting = UserSetting.objects.get(user_id=kargs.get('pk', ''))
             serializer = self.serializer_class(user_setting)
@@ -328,6 +331,17 @@ class UserSettings(generics.ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            user_setting = UserSetting.objects.get(user_id=kwargs.get('pk', ''))
+            if request.user.id != user_setting.user.id:
+                return Response({'error': "Only the user can modify his settings."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            setting_fields = set(UserSetting.__dict__.keys())
+            for attr, value in iter(request.data.dict().items()):
+                if attr in setting_fields:
+                    setattr(user_setting, attr, value)
+            user_setting.save()
+
+            serializer = self.serializer_class(user_setting)
+            return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

@@ -66,9 +66,12 @@ class TestGroup(APITestCase):
 
     def reset_notifications_count_for_all(self):
         # Reset notification count
-        self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.creator_token)
-        self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.member_token)
-        self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.another_member_token)
+        response = self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+        response = self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(202, response.status_code)
+        response = self.client.post(url_prefix + "/notifications/", HTTP_AUTHORIZATION=self.another_member_token)
+        self.assertEqual(202, response.status_code)
 
     def test_notification_when_a_new_post_is_created(self):
         self.assertTrue(
@@ -649,4 +652,54 @@ class TestGroup(APITestCase):
                 comment_id__isnull=True,
                 action_user__isnull=True
             ).content == 'You have been removed from group {}'.format(self.group.name)
+        )
+
+    def test_get_all_notifications(self):
+        self.reset_notifications_count_for_all()
+
+        # Create a member
+        username = "powerwolf"
+        email = "man@of.war"
+        password = "sa_ba_ton?"
+        user = User.objects.create_user(username=username, email_address=email, password=password)
+        token = self.get_token(user)
+
+        # Add the user to group
+        self.client.post("{}/group/{}/user/{}/".format(url_prefix, self.group.id, user.id), HTTP_AUTHORIZATION=self.creator_token)
+
+        # The user create a post
+        response = self.client.post("{}/group/{}/posts/".format(url_prefix, self.group_id),
+                            {"content": "testing 2 content", "link": "http://ogp.me"}, HTTP_AUTHORIZATION=token)
+        post = Post.objects.get(id=response.data.get('data', {}).get('id', ''))
+
+        # A member like the user's post
+        url = "{}/post/{}/likes/".format(url_prefix, post.id)
+        self.client.post(url, {"like_or_dislike": True}, HTTP_AUTHORIZATION=self.member_token)
+
+        # Another member comment in the post
+        url = "{}/post/{}/comments/".format(url_prefix, post.id)
+        comment_id = self.client.post(url, {"content": "another comment"}, HTTP_AUTHORIZATION=self.another_member_token).data.get('data', {}).get('id', '')
+        comment = Comment.objects.get(id=comment_id)
+
+        response = self.client.get(url_prefix + '/notifications/', HTTP_AUTHORIZATION=token)
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(
+            Notification.objects.filter(
+                user_id=user.id,
+                group_id=self.group_id
+            ).exists()
+        )
+
+        self.assertTrue(
+            len(Notification.objects.filter(
+                user_id=user.id,
+                group_id=self.group_id
+            )) == 3
+        )
+
+        self.assertTrue(
+            NotificationUser.objects.get(
+                user_id=user.id,
+            ).number_of_unseen == 3
         )

@@ -30,6 +30,16 @@ Status Code | Method | Description
 404 | `GET`, `POST`, `DELETE` | URL not found.
 405 | `GET`, `POST`, `DELETE` | The sender does not has permissions to perform this action. Handled by custom logic.
 
+## 5. Notifications
+Notifications are created when:
+- A group that the user is in has new posts.
+- The post of  the user has 1 more like/dislike.
+- The comment of  the user has 1 more like/dislike.
+- Another user comments on the user's post.
+- Another user comments on a post that the user comments.
+- The user is added to a group.
+- The user is removed from a group.
+
 # Web API References
 
 Column `Arguments` refers to the keyword arguments in the requests' body.
@@ -59,8 +69,16 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /users/ | | Get all superusers, all users in the same group or have no groups or created by the requester. | IsAuthenticated, IsSuperUser | User:*list*
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
 
+## 3. User Setting
 
-## 3. Post
+
+## 3. Notifications
+Method | Endpoint | Arguments | Description | Permissions | Return
+--- | --- | --- | --- | --- | --- |
+`GET` | /notifications/ | | Get at most 50 notifications and the count of unseen ones of the requester. | IsAuthenticated | Notification:*list*
+`POST` | /notifications/ | | Reset the count of unseen notifications to 0. | IsAuthenticated | NotificationUser:*dict*
+
+## 4. Post
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
@@ -88,7 +106,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /comment/<comment_id>/flags/ | | Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
 `POST` | /comment/<comment_id>/flags/ | status:*str* | Create a flag for the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
 
-## 4. Group
+## 5. Group
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |

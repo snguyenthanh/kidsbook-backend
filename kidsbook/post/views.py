@@ -93,7 +93,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
                     ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
                     ## Push the notification to all users in group
-                    # if UserSetting.objects.get(user_id=user.user.id).receive_notifcations:
+                    # if UserSetting.objects.get(user_id=user.user.id).receive_notifications:
                     #     noti_serializer = NotificationSerializer(noti).data
                     #     push_notification(noti_serializer)
 
@@ -183,7 +183,7 @@ class PostLike(generics.ListCreateAPIView):
 
                 ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
                 ## Push the notification to the user
-                # if UserSetting.objects.get(user_id=user.id).receive_notifcations:
+                # if UserSetting.objects.get(user_id=user.id).receive_notifications:
                 #     noti_serializer = NotificationSerializer(noti).data
                 #     push_notification(noti_serializer)
 
@@ -242,7 +242,7 @@ class CommentLike(generics.ListCreateAPIView):
 
                 ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
                 ## Push the notification to the user
-                # if UserSetting.objects.get(user_id=user.id).receive_notifcations:
+                # if UserSetting.objects.get(user_id=user.id).receive_notifications:
                 #     noti_serializer = NotificationSerializer(noti).data
                 #     push_notification(noti_serializer)
             return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
@@ -402,7 +402,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
             ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
             ## Push the notification to all users in group
-            # if UserSetting.objects.get(user_id=post_owner.id).receive_notifcations:
+            # if UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
             #     noti_serializer = NotificationSerializer(noti).data
             #     push_notification(noti_serializer)
 
@@ -423,7 +423,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
                     ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
                     ## Push the notification to all users in group
-                    # if UserSetting.objects.get(user_id=user.id).receive_notifcations:
+                    # if UserSetting.objects.get(user_id=user.id).receive_notifications:
                     #     noti_serializer = NotificationSerializer(noti).data
                     #     push_notification(noti_serializer)
 

@@ -6,7 +6,7 @@ urlpatterns = [
     # Get User's Info
     # path('all/', views.GetAllUser.as_view()),
     path('<uuid:pk>/', views.GetInfoUser.as_view()),
-    path('<uuid:pk>/', views.UserSettings.as_view()),
+    path('<uuid:pk>/setting/', views.SettingUser.as_view()),
     path('<uuid:pk>/groups/', views.GetGroups.as_view()),
 
     path('<uuid:pk>/posts/', views.GetPost.as_view()),

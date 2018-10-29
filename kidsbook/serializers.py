@@ -24,7 +24,7 @@ class UserPublicSerializer(serializers.ModelSerializer):
 class UserSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSetting
-        fields = ('id', 'user', 'receive_notifcations')
+        fields = ('id', 'user', 'receive_notifications')
         depth = 1
 
 class PostSerializer(serializers.ModelSerializer):

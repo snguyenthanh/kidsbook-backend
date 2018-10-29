@@ -64,7 +64,7 @@ class UserManager(BaseUserManager):
 
         # Create a setting instance for the user
         UserSetting.objects.create(user=user)
-        
+
         return user
 
     def create_user(self, **kargs):
@@ -128,8 +128,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserSetting(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, related_name='setting_user', on_delete=models.CASCADE, default=uuid.uuid4, unique=True)
-    receive_notifcations = models.BooleanField(default=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    receive_notifications = models.BooleanField(default=True)
 
     REQUIRED_FIELDS = ["user"]
 
