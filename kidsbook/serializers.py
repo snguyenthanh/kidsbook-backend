@@ -21,6 +21,12 @@ class UserPublicSerializer(serializers.ModelSerializer):
         fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts')
         depth = 1
 
+class UserSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSetting
+        fields = ('id', 'user', 'receive_notifcations')
+        depth = 1
+
 class PostSerializer(serializers.ModelSerializer):
     def create(self, data):
         try:
@@ -35,6 +41,18 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares')
+        depth = 1
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ('id', 'created_at', 'content', 'user', 'group', 'post', 'action_user')
+        depth = 1
+
+class NotificationUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationUser
+        fields = ('id', 'user', 'number_of_unseen')
         depth = 1
 
 class PostSuperuserSerializer(serializers.ModelSerializer):

@@ -313,3 +313,21 @@ class GetVirtualUsers(generics.ListAPIView):
             return Response({'data': serializer.data})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class UserSettings(generics.ListAPIView):
+    serializer_class = UserSettingSerializer
+    permission_classes = (IsAuthenticated, IsTokenValid)
+
+    def list(self, request, **kargs):
+        try:
+            user_setting = UserSetting.objects.get(user_id=kargs.get('pk', ''))
+            serializer = self.serializer_class(user_setting)
+            return Response({'data': serializer.data})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

@@ -59,6 +59,12 @@ class UserManager(BaseUserManager):
         # Don't try-catch this command, as other functions will catch and return the error message
         user.save(using=self._db)
 
+        # Create a notification instance for the user
+        NotificationUser.objects.create(user=user)
+
+        # Create a setting instance for the user
+        UserSetting.objects.create(user=user)
+        
         return user
 
     def create_user(self, **kargs):
@@ -78,7 +84,6 @@ class UserManager(BaseUserManager):
 
         # kargs.setdefault('is_superuser', False)
         return self._create_user(role=3, **kargs)
-
 
     def create_superuser(self, **kargs):
         if 'is_staff' not in kargs:
@@ -121,13 +126,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["username", "password", "is_active", "realname"]
     objects = UserManager()
 
-    # def check_password(self, raw_password):
-    #     print(self.password)
-    #     print(make_password(raw_password))
-    #     if self.password == make_password(raw_password):
-    #         return True
-    #     else:
-    #         return False
+class UserSetting(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, related_name='setting_user', on_delete=models.CASCADE, default=uuid.uuid4, unique=True)
+    receive_notifcations = models.BooleanField(default=True)
+
+    REQUIRED_FIELDS = ["user"]
+
+
+
+
 
 class BlackListedToken(models.Model):
     token = models.CharField(max_length=500)
@@ -136,11 +144,6 @@ class BlackListedToken(models.Model):
 
     class Meta:
         unique_together = ("token", "user")
-
-# class FakeStudent(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     student = models.ForeignKey(User, related_name='student', on_delete=models.CASCADE)
-#     teacher = models.ForeignKey(User, related_name='teacher', on_delete=models.CASCADE)
 
 class GroupManager(models.Manager):
     #def create_group(self, name, creator):
@@ -182,13 +185,6 @@ class GroupMember(models.Model):
     class Meta:
         unique_together = ('user', 'group')
 
-
-# class PostManager(models.Manager):
-#     #def create_post(self, title, content, creator):
-#     def create_post(self, **kargs):
-#         post = self.model(**kargs)
-#         post.save(using=self._db)
-#         return post
 
 class PostManager(models.Manager):
     def create_post(self, **kargs):
@@ -253,7 +249,7 @@ class Comment(models.Model):
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='comment_likers', through='UserLikeComment')
     is_deleted = models.BooleanField(default=False)
-    
+
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
@@ -278,3 +274,20 @@ class UserFlagPost(models.Model):
 
     class Meta:
         unique_together = ["user", "comment", "post"]
+
+class Notification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, related_name='user_notification', on_delete=models.CASCADE, default=uuid.uuid4)
+    group = models.ForeignKey(Group, related_name='group_notification', on_delete=models.CASCADE, default=uuid.uuid4)
+    post = models.ForeignKey(Post, related_name='post_notification', on_delete=models.CASCADE, null=True)
+    comment =  models.ForeignKey(Comment, related_name='comment_notification', on_delete=models.CASCADE, null=True)
+    action_user = models.ForeignKey(User, related_name='action_user_notification', on_delete=models.CASCADE, null=True)
+    content = models.CharField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    REQUIRED_FIELDS = ["content", "user"]
+
+class NotificationUser(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, related_name='notification_user', on_delete=models.CASCADE, default=uuid.uuid4)
+    number_of_unseen = models.PositiveIntegerField(default=0)
