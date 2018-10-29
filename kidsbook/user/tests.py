@@ -620,7 +620,7 @@ class TestUserSetting(APITestCase):
                                             email_address=email,
                                             password=password)
         self.user_token = self.get_token(self.user)
-        self.url = "{}/user/{}/setting/".format(url_prefix,self.user.id)
+        self.url = "{}/user/setting/".format(url_prefix,self.user.id)
 
     def get_token(self, user):
         token = generate_token(user)

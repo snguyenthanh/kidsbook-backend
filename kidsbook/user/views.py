@@ -319,11 +319,8 @@ class SettingUser(generics.ListAPIView):
     permission_classes = (IsAuthenticated, IsTokenValid)
 
     def list(self, request, **kargs):
-        user_setting = UserSetting.objects.get(user_id=kargs.get('pk', ''))
-        serializer = self.serializer_class(user_setting)
-        return Response({'data': serializer.data})
         try:
-            user_setting = UserSetting.objects.get(user_id=kargs.get('pk', ''))
+            user_setting = UserSetting.objects.get(user_id=request.user.id)
             serializer = self.serializer_class(user_setting)
             return Response({'data': serializer.data})
         except Exception as e:
@@ -331,9 +328,7 @@ class SettingUser(generics.ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            user_setting = UserSetting.objects.get(user_id=kwargs.get('pk', ''))
-            if request.user.id != user_setting.user.id:
-                return Response({'error': "Only the user can modify his settings."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            user_setting = UserSetting.objects.get(user_id=request.user.id)
 
             setting_fields = set(UserSetting.__dict__.keys())
             for attr, value in iter(request.data.dict().items()):
