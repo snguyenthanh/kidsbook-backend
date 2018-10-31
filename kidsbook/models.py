@@ -83,8 +83,9 @@ class UserManager(BaseUserManager):
 
         # kargs.setdefault('is_superuser', False)
         virtual_user =  self._create_user(role=3, **kargs)
-        for group in Group.objects.filter(creator=kargs['teacher']):
-            group.add_member(virtual_user)
+
+        for group_member in GroupMember.objects.filter(user=kargs['teacher']):
+            group_member.group.add_member(virtual_user)
         return virtual_user
 
 
@@ -182,6 +183,10 @@ class Group(models.Model):
     def add_member(self, user):
         group_member = GroupMember(group=self, user=user)
         group_member.save()
+        if(user.is_superuser):
+            for virtual_user in User.objects.filter(teacher=user):
+                group_member = GroupMember(group=self, user=virtual_user)
+                group_member.save()
 
 
 class GroupMember(models.Model):
