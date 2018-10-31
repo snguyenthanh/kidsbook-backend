@@ -178,7 +178,7 @@ class PostShareSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled')
+        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users')
 
 class GroupSettingsSerializer(serializers.ModelSerializer):
     class Meta:

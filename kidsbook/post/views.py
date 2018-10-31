@@ -296,9 +296,10 @@ class PostCommentList(generics.ListCreateAPIView):
             queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['pk']))
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = self.get_serializer(data=queryset, many=True)
-        serializer.is_valid()
+
+        try:
+            serializer = self.get_serializer(data=queryset, many=True)
+            serializer.is_valid()
 
             if ('all' in request.query_params
                     and str(request.query_params.get('all', 'false')).lower() == 'true'
