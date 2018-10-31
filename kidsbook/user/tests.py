@@ -405,7 +405,7 @@ class TestUserUpdate(APITestCase):
         # Create a group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group by a random stranger"}, HTTP_AUTHORIZATION=self.get_token(self.creator))
         group = Group.objects.get(id=response.data.get('data', {}).get('id', ''))
-        group.add_member(self.modify_user)
+        # group.add_member(self.modify_user)
 
         # Create a random superuser
         username = "chris"
@@ -526,7 +526,7 @@ class TestUpdateVirtualUser(APITestCase):
         }
         response = self.client.post(url_prefix + '/user/register/', payload, HTTP_AUTHORIZATION=self.creator_token)
         virtual_user = User.objects.get(id=response.data.get('data', {}).get('id', ''))
-        self.group.add_member(virtual_user)
+        # self.group.add_member(virtual_user)
 
         data = {
             'username': 'Not_doggo',
