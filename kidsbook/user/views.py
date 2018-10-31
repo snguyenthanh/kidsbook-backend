@@ -128,12 +128,13 @@ class Register(APIView):
         try:
             user = mapping_create[user_role](**request_data)
         except Exception as exc:
-            Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # group = Group.objects.get(id=request.data['group_id'])
         # group.add_member(user)
         serializer = self.serializer_class(user)
         return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
+
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
