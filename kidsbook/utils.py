@@ -16,7 +16,6 @@ def clean_data_iterative(data, *args):
 def usage_time(user, num_days):
   arr = []
   tz = pytz.timezone('Asia/Singapore')
-  date = datetime.now(tz).date()
   for i in range(num_days):
     day = (datetime.datetime.now(tz) - datetime.timedelta(days=i)).date()
     if(ScreenTime.objects.filter(user=user, date=day)):

@@ -71,8 +71,12 @@ def users_allowed_to_be_discovered(request):
         result_list = sorted(result_list, key=lambda instance: instance.created_at, reverse=True)
         serializer = UserSerializer(result_list, many=True)
 
+        if('num_days' in request.data):
+            num_days = request.data['num_days']
+        else:
+            num_days = 0
         for user in serializer.data:
-            user['time_history'] = usage_time(User.objects.get(id=user['id']), request.data['num_days'])
+            user['time_history'] = usage_time(User.objects.get(id=user['id']), num_days)
 
         return Response({'data': serializer.data})
     except Exception as exc:

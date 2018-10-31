@@ -291,7 +291,11 @@ class GetInfoUser(generics.ListAPIView):
                     self.serializer_class = UserSerializer
                     
                     ## TODO: Factor this into UserSerializer( Tried but some configuration error)
-                    time_arr = usage_time(user, request.data['num_days'])
+                    if('num_days' in request.data):
+                        num_days = request.data['num_days']
+                    else:
+                        num_days = 0
+                    time_arr = usage_time(user, num_days)
                 else:
                     self.serializer_class = UserPublicSerializer
                     time_arr = []
