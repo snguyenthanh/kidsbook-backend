@@ -25,18 +25,11 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-  
-    filtered_content = serializers.SerializerMethodField()
+
     content = serializers.SerializerMethodField()
 
-    def get_filtered_content(self, obj):
-        return profanity.censor(obj.content)
-
     def get_content(self, obj):
-        if(not self.context['request'].user.is_superuser):
-            return profanity.censor(obj.content)
-        else:
-            return obj.content
+        return profanity.censor(obj.content)
 
     def create(self, data):
         try:
@@ -50,26 +43,19 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'filtered_content')
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares')
         depth = 1
 
 class CommentSerializer(serializers.ModelSerializer):
 
-    filtered_content = serializers.SerializerMethodField()
     content = serializers.SerializerMethodField()
 
-    def get_filtered_content(self, obj):
-        return profanity.censor(obj.content)
-
     def get_content(self, obj):
-        if(not self.context['request'].user.is_superuser):
-            return profanity.censor(obj.content)
-        else:
-            return obj.content
+        return profanity.censor(obj.content)
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content')
+        fields = ('id', 'content', 'created_at', 'post', 'creator')
         depth = 1
 
     def create(self, data):
@@ -79,12 +65,40 @@ class CommentSerializer(serializers.ModelSerializer):
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 
 class PostSuperuserSerializer(serializers.ModelSerializer):
+
+    filtered_content = serializers.SerializerMethodField()
+
+    def get_filtered_content(self, obj):
+        return profanity.censor(obj.content)
+
+    def create(self, data):
+        try:
+            group = Group.objects.get(id=self.context['view'].kwargs.get("pk"))
+        except Exception:
+            raise serializers.ValidationError({'error': 'Group Not found'})
+        current_user = self.context['request'].user
+        data = self.context['request'].data
+        return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
+            link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
+
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'is_deleted')
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'filtered_content', 'is_deleted')
         depth = 1
         
 class CommentSuperuserSerializer(serializers.ModelSerializer):
+
+    filtered_content = serializers.SerializerMethodField()
+
+    def get_filtered_content(self, obj):
+        return profanity.censor(obj.content)
+
+    def create(self, data):
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        current_user = self.context['request'].user
+        data = self.context['request'].data
+        return Comment.objects.create(content=data["content"], post=post, creator=current_user)
+
     class Meta:
         model = Comment
         fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted')

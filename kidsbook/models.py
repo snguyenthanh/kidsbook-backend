@@ -164,6 +164,7 @@ class GroupManager(models.Manager):
         return group
 
 class Group(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
     picture = models.ImageField(null=True)
