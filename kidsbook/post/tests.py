@@ -24,13 +24,22 @@ class TestPost(APITestCase):
         self.username = "hey"
         self.email = "kid@s.sss"
         self.password = "want_some_cookies?"
-        self.member = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
-        token = generate_token(self.member)
+        self.user = User.objects.create_user(username=self.username, email_address=self.email, password=self.password)
+        token = generate_token(self.user)
         self.user_token = 'Bearer {0}'.format(token.decode('utf-8'))
+
+        # Member
+        username = "not_hey"
+        email = "not_kid@s.sss"
+        password = "want_some_cookies?"
+        member = User.objects.create_user(username=username, email_address=email, password=password)
+        token = generate_token(member)
+        self.member_token = 'Bearer {0}'.format(token.decode('utf-8'))
 
         # Create a Group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
         self.group_id = response.data.get('data', {}).get('id', '')
+        Group.objects.get(id=self.group_id).add_member(member)
 
         #self.url = "{}/group/{}/".format(url_prefix, self.group_id)
 
@@ -41,12 +50,26 @@ class TestPost(APITestCase):
             group=Group.objects.get(id=self.group_id)
         )
 
+        self.post2 = Post.objects.create_post(
+            content='Another post',
+            creator=self.creator,
+            group=Group.objects.get(id=self.group_id)
+        )
+
         # Create a comment
         self.comment = Comment.objects.create_comment(
             content='OKAY',
             post=self.post,
             creator=self.creator
         )
+
+        # Create another comment
+        self.another_comment = Comment.objects.create_comment(
+            content='not okay at all',
+            post=self.post,
+            creator=self.creator
+        )
+
 
     def changes_reflect_in_response(self, request_changes, previous_state, current_state):
         difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
@@ -91,6 +114,78 @@ class TestPost(APITestCase):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+    def test_get_all_posts_in_group_include_deleted_with_all(self):
+        # Delete a post
+        url = "{}/post/{}/".format(url_prefix, self.post2.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/?all=true".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+    def test_get_all_posts_in_group_include_deleted_with_all_by_non_superuser(self):
+        # Delete a post
+        url = "{}/post/{}/".format(url_prefix, self.post2.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/?all=true".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
+
+    def test_get_posts_in_group_exclude_deleted_comments_in_top_3(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.another_comment.id)
+        self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+        second_post = response.data.get('data', [])[1]
+        comments = second_post.get('comments', [])
+        self.assertTrue(
+            len(comments) == 1
+        )
+        self.assertTrue(
+            comments[0].get('content') == 'OKAY'
+        )
+
+    def test_get_all_posts_in_group_exclude_deleted_with_all(self):
+        # Delete a post
+        url = "{}/post/{}/".format(url_prefix, self.post2.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/?all=false".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
+
+    def test_get_all_posts_in_group_exclude_deleted(self):
+        # Delete a post
+        url = "{}/post/{}/".format(url_prefix, self.post2.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
 
     def test_get_all_post_in_group_by_non_member(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
@@ -148,6 +243,60 @@ class TestPost(APITestCase):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+    def test_get_all_comments_include_deleted(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/post/{}/comments/?all=TRUE".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(
+            len(response.data.get('data', [])) == 2
+        )
+
+    def test_get_all_comments_include_deleted_by_non_superuser(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/post/{}/comments/?all=TRUE".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
+
+    def test_get_all_comments_of_post_exclude_deleted(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
+
+    def test_get_all_comments_of_post_exclude_deleted_by_member_non_superuser(self):
+        # Delete a comment
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+
+        url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(
+            len(response.data.get('data', [])) == 1
+        )
 
     def test_create_comment_of_post(self):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
@@ -335,6 +484,24 @@ class TestPost(APITestCase):
             and (UserFlagPost.objects.get(id=flag_id).status) == flag_status
         )
 
+    def test_flag_2_comments_and_post(self):
+        url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+
+        url = "{}/comment/{}/flags/".format(url_prefix, self.another_comment.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+
+        url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
+        flag_status = "IN_PROGRESS"
+        response = self.client.post(url, {"status": flag_status}, HTTP_AUTHORIZATION=self.creator_token)
+
+        self.assertEqual(202, response.status_code)
+
+
     def test_flag_comment_by_non_member(self):
         url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
         response = self.client.post(url, {"status": "UNDER APPROVAL"}, HTTP_AUTHORIZATION=self.user_token)
@@ -349,6 +516,19 @@ class TestPost(APITestCase):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
+
+    def test_get_deleted_comment_by_superuser(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_deleted_comment_by_member_non_superuser(self):
+        url = "{}/comment/{}/".format(url_prefix, self.comment.id)
+        self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+
+        self.assertEqual(405, response.status_code)
 
     def test_update_comment_by_id(self):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
@@ -388,8 +568,13 @@ class TestPost(APITestCase):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
-        self.assertFalse(
+
+        # Delete is just to set the flag `is_deleted` to True
+        self.assertTrue(
             Comment.objects.filter(id=self.comment.id).exists()
+        )
+        self.assertTrue(
+            Comment.objects.get(id=self.comment.id).is_deleted
         )
 
     def test_delete_comment_by_non_member(self):
@@ -406,6 +591,14 @@ class TestPost(APITestCase):
         url = "{}/post/{}/".format(url_prefix, self.post.id)
         response = self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
+
+        # Delete is just to set the flag `is_deleted` of the post to True
+        self.assertTrue(
+            Post.objects.filter(id=self.post.id).exists()
+        )
+        self.assertTrue(
+            Post.objects.get(id=self.post.id).is_deleted
+        )
 
     def test_delete_post_by_non_creator(self):
         url = "{}/post/{}/".format(url_prefix, self.post.id)

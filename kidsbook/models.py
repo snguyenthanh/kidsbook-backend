@@ -41,7 +41,6 @@ class UserManager(BaseUserManager):
         self.create_roles()
         if 'username' not in kargs:
             raise ValueError('The given username must be set')
-            # kargs['username'] = 'anonymous'
 
         role = kargs.pop('role', 2)
         password = kargs.pop('password', '12345')
@@ -57,13 +56,9 @@ class UserManager(BaseUserManager):
         #     teacher = User.objects.get(id=kargs['teacher_id'])
         #     user.teacher = teacher
 
-        #print("ABOUT TO SAVE")
-        #print(self._db)
-        try:
-            user.save(using=self._db)
-            #print("HIEU")
-        except Exception as e:
-            print(e)
+        # Don't try-catch this command, as other functions will catch and return the error message
+        user.save(using=self._db)
+
         return user
 
     def create_user(self, **kargs):
@@ -108,7 +103,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.BooleanField(default=False)
     description = models.TextField(default="")
     date_of_birth = models.DateField(null=True)
-    #avatar_url = models.CharField(max_length=65530, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     profile_photo = models.ImageField(null=True)
     login_time = models.PositiveIntegerField(default=0)
     screen_time = models.PositiveIntegerField(default=0)
@@ -223,15 +218,15 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
     objects = PostManager()
-    creator = models.ForeignKey(User, related_name='post_owner', on_delete=models.CASCADE, default=uuid.uuid4)
+    creator = models.ForeignKey(User, related_name='user_posts', on_delete=models.CASCADE, default=uuid.uuid4)
     group = models.ForeignKey(Group, related_name='post_group', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='likes', through='UserLikePost')
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
     flags = models.ManyToManyField(User, related_name='flags', through='UserFlagPost')
     picture = models.ImageField(null=True)
-    
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)
+    is_deleted = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["content"]
 
@@ -267,12 +262,14 @@ class CommentManager(models.Manager):
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    content = models.CharField(max_length=100)
+    content = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
 
     post = models.ForeignKey(Post, related_name='comments_post', on_delete=models.CASCADE, default=uuid.uuid4)
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
-
+    likes = models.ManyToManyField(User, related_name='comment_likers', through='UserLikeComment')
+    is_deleted = models.BooleanField(default=False)
+    
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
@@ -293,5 +290,7 @@ class UserFlagPost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         unique_together = ["user", "comment", "post"]

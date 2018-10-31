@@ -13,18 +13,19 @@ profanity.set_censor_characters("*")
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users')
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role', 'created_at')
         depth = 1
 
 # This class is for public profile
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description')
+        fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts')
+        depth = 1
 
 
 class PostSerializer(serializers.ModelSerializer):
-
+  
     filtered_content = serializers.SerializerMethodField()
     content = serializers.SerializerMethodField()
 
@@ -44,14 +45,8 @@ class PostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'error': 'Group Not found'})
         current_user = self.context['request'].user
         data = self.context['request'].data
-        # try:
-        # print(opengraph.OpenGraph(url=data["link"]).__str__())
         return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
-            link=data.get("link", None), picture=data.get("picture", None), content=data.get("content", ""), group=group, creator=current_user,
-            is_like_enabled = data.get("is_like_enabled", True), is_share_enabled = data.get("is_share_enabled", True), 
-            is_flag_enabled = data.get("is_flag_enabled", True), is_comment_enabled = data.get("is_comment_enabled", True))
-        # except Exception:
-            # raise serializers.ValidationError({'error': 'Unknown error while creating post'})
+            link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
 
     class Meta:
         model = Post
@@ -83,6 +78,18 @@ class CommentSerializer(serializers.ModelSerializer):
         data = self.context['request'].data
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 
+class PostSuperuserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'is_deleted')
+        depth = 1
+        
+class CommentSuperuserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted')
+        depth = 1
+
 class PostLikeSerializer(serializers.ModelSerializer):
 
     post = PostSerializer(required=False)
@@ -112,7 +119,10 @@ class CommentLikeSerializer(serializers.ModelSerializer):
         comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         data = self.context['request'].data
-        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike':str(data["like_or_dislike"]).strip().lower() == 'true'})
+        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
+        if(data["like_or_dislike"] == False):
+            old_comment_like = UserLikeComment.objects.get(comment=comment, user=current_user)
+            old_comment_like.delete()
         return new_comment
 
 class PostFlagSerializer(serializers.ModelSerializer):
@@ -122,14 +132,14 @@ class PostFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFlagPost
-        fields = ('id', 'user', 'post', 'status', 'comment')
+        fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
         depth = 1
 
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         data = self.context['request'].data
-        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, defaults={'status': data["status"], 'comment': None})
+        new_obj, created = UserFlagPost.objects.update_or_create(post=post, user=current_user, comment__isnull=True, defaults={'status': data["status"], 'comment': None})
         return new_obj
 
 class CommentFlagSerializer(serializers.ModelSerializer):
@@ -139,7 +149,7 @@ class CommentFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFlagPost
-        fields = ('id', 'user', 'post', 'status', 'comment')
+        fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
         depth = 1
 
     def create(self, data):

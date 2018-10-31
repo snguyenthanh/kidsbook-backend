@@ -8,7 +8,7 @@ urlpatterns = [
     path('<uuid:pk>/', views.GetInfoUser.as_view()),
     path('<uuid:pk>/groups/', views.GetGroups.as_view()),
 
-    path('posts/', views.GetPost.as_view()),
+    path('<uuid:pk>/posts/', views.GetPost.as_view()),
     path('login/', views.LogIn.as_view()),
     path('login_as_virtual/', views.LogInAsVirtual.as_view()),
     path('register/', views.Register.as_view()),

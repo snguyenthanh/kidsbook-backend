@@ -178,5 +178,5 @@ db.sqlite3
 **/media/portrait/*/*
 **/media/document_thumbnails/*
 .DS_Store
-
+*.txt
 **/migrations/*

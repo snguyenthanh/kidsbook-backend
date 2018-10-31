@@ -44,40 +44,45 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /user/<user_id>/ | | Get the user's information. | IsAuthenticated | User: *dict*
 `GET` | /user/<user_id>/groups/ | | Get all the groups the user is in. | IsAuthenticated | User: *list*
-`GET` | /user/posts/ | | Get all posts created by the current user. | IsAuthenticated | User: *list*
+`GET` | /user/<user_id>/posts/ | | Get all posts created by the user. | IsAuthenticated | User: *list*
 `POST` | /user/login/ | email_address:*str*, password:*str* | Return an authentication token for the user. | AllowAny | {data: {id: '', token: ''}}
 `POST` | /user/login_as_virtual/ | email_address:*str* | Return an authentication for the `virtual` user. | IsAuthenticated, IsSuperUser | {data: {name: '', token: ''}}
 `POST` | /user/register/ | * | Create an user using the given arguments. | IsAuthenticated, IsSuperUser | User: *dict*
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
-`POST` | /user/update/<user_id/ | * (If update password then need email, oldPassword, password) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user or the user himself. | User: *dict*
+`POST` | /user/update/<user_id/ | * (If update password then need `oldPassword` and `password`) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user, the user himself or a superuser in a same group. | User: *dict*
 
 ## 2. Users
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
+`GET` | /users/ | | Get all superusers, all users in the same group or have no groups or created by the requester. | IsAuthenticated, IsSuperUser | User:*list*
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
+
 
 ## 3. Post
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
-`GET` | /group/<group_id>/posts/ | | Get all posts in the group. | IsAuthenticated, IsInGroup | Post: *list*
+`GET` | /group/<group_id>/posts/ | | Get all posts in the group (exclude deleted ones). | IsAuthenticated, IsInGroup | Post: *list*
+`GET` | /group/<group_id>/posts/?all=<bool> | | Get all posts in the group (include deleted ones). `bool` is case-insensitive. | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
 `POST` | /group/<group_id>/posts/ | * | Create a post in the group. | IsAuthenticated, IsInGroup | Post: *dict*
+`GET` | group/<group_id>/flagged/ | Get all flagged posts in the group. | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
 `GET` | /post/<post_id>/ | | Get post's details by ID. | IsAuthenticated, HasAccessToPost | Post: *dict*
 `POST` | /post/<post_id>/ | * | Update the post. | IsAuthenticated, HasAccessToPost | Post: *dict*
-`DELETE` | /post/<post_id>/ | * | Delete the post. | IsAuthenticated, HasAccessToPost | {}
+`DELETE` | /post/<post_id>/ | * | Set the flag `is_deleted` of the post to `True`. | IsAuthenticated, HasAccessToPost | {}
 `GET` | /post/<post_id>/likes/ | | Get all likes/dislikes of the post. | IsAuthenticated, HasAccessToPost | UserLikePost: *list*
 `POST` | /post/<post_id>/likes/ | like_or_dislike: *bool* | Like/dislike the post. | IsAuthenticated, HasAccessToPost | UserLikePost: *dict*
 `GET` | /post/<post_id>/shares/ | | Get all shares of the post. | IsAuthenticated, HasAccessToPost | UserSharePost: *list*
 `POST` | /post/<post_id>/shares/ | | User `shares` the post.  | IsAuthenticated, HasAccessToPost | UserSharePost: *dict*
-`GET` | /post/<post_id>/comments/ | | Get all comments of the post. | IsAuthenticated, HasAccessToPost | Comment: *list*
+`GET` | /post/<post_id>/comments/ | | Get all comments of the post (exclude deleted ones). | IsAuthenticated, HasAccessToPost | Comment: *list*
+`GET` | /post/<post_id>/comments/?all=<bool> | | Get all comments of the post (include deleted ones). `bool` is case-insensitive.. | IsAuthenticated, HasAccessToPost, IsSuperUser | Comment: *list*
 `POST` | /post/<post_id>/comments/ | content:*str* | Create a comment for the post. | IsAuthenticated, HasAccessToPost | Comment: *dict*
 `GET` | /post/<post_id>/flags/ | | Get all flags of the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *list*
 `POST` | /post/<post_id>/flags/ | status:*str* | Create a flag for the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *dict*
 `GET` | /comment/<comment_id>/ | | Get comment's details by ID. | IsAuthenticated, HasAccessToComment | Comment: *dict*
 `POST` | /comment/<comment_id>/ | content:*str* | Update the comment. | IsAuthenticated, HasAccessToComment | Comment: *dict*
-`DELETE` | /comment/<comment_id>/ | | Delete the comment. | IsAuthenticated, HasAccessToComment | {}
+`DELETE` | /comment/<comment_id>/ | | Set the flag `is_deleted` of the comment to `True`. | IsAuthenticated, HasAccessToComment | {}
 `GET` | /comment/<comment_id>/likes/ | | Get the likes/dislikes of the comment. | IsAuthenticated, HasAccessToComment | UserLikeComment: *list*
 `POST` | /comment/<comment_id>/likes/ | like_or_dislike:*bool* | User likes/dislikes a comment. | IsAuthenticated, HasAccessToComment | UserLikeComment: *dict*
 `GET` | /comment/<comment_id>/flags/ | | Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
@@ -99,16 +104,20 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 ## 5. Batch
 An URL argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
-A header row is required for the `.csv` files. Empty `is_superuser` and `gender` will default to 0.
+A header row is required for the `.csv` files. The headers allowed include:
+```
+username,email_address,password,realname,gender,description
+```
+ Empty `gender` will default to 0.
 
 An example `.csv` file:
 ```
-username,email_address,password,realname,gender,is_superuser
-chris,chris@email.com,password_for_kris,Christiana Messi,0,0
-james,james@email.com,password_for_kris,Christiana Messi,1,1
-ama,ama@email.com,ama_pwd,Ama Johnson,1,0
+username,email_address,password,realname,gender
+chris,chris@email.com,password_for_kris,Christiana Messi,0
+james,james@email.com,password_for_kris,Christiana Messi,1
+ama,ama@email.com,ama_pwd,Ama Johnson,1
 ```
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
-`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. The UUIDs of created users are returned. | IsAuthenticated, IsSuperUser | {data: {created_users: [], failed_users: []}}
+`POST` | /batch/create/user/<file_name>/ | file | Create users from the uploaded file. The UUIDs of created users are returned. | IsAuthenticated, IsSuperUser | {data: {created_users: []}}

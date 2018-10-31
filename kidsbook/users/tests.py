@@ -67,3 +67,51 @@ class TestUsers(APITestCase):
         url = self.url + 'non_group/'
         response = self.client.get(url)
         self.assertTrue(401, response.status_code)
+
+
+    def test_get_discoverable_users(self):
+        # Group
+        response = self.client.post(url_prefix + '/group/', {"name": "another group"}, HTTP_AUTHORIZATION=self.creator_token)
+        group_id = response.data.setdefault('data', {}).get('id', '')
+        another_group = Group.objects.get(id=group_id)
+
+        # Member
+        username = "zxc"
+        email = "lqets@go.ooo"
+        password = "blackberry"
+        another_member = User.objects.create_user(username=username, email_address=email, password=password)
+        another_group.add_member(another_member)
+
+        # A Superuser in another group
+        username = "old"
+        email = "chang@go.ooo"
+        password = "kee"
+        another_super = User.objects.create_superuser(username=username, email_address=email, password=password)
+        another_group.add_member(another_super)
+
+        # A superuser
+        username = "apple"
+        email = "pie@snow.com"
+        password = "you_know_nothing"
+        super_user = User.objects.create_superuser(username=username, email_address=email, password=password)
+        token = self.get_token(super_user)
+        self.group.add_member(super_user)
+
+        response = self.client.get("{}/users/".format(url_prefix), HTTP_AUTHORIZATION=token)
+        self.assertTrue(200, response.status_code)
+
+        returned_user_ids = set([user.get('id', '') for user in response.data.get('data', [])])
+        self.assertTrue(len(returned_user_ids) == 4)
+
+        user_ids = set([
+            str(self.creator.id), str(self.user.id), str(self.member.id), str(another_super.id)
+        ])
+        self.assertTrue(returned_user_ids == user_ids)
+
+    def test_get_discoverable_users_by_non_superuser(self):
+        response = self.client.get("{}/users/".format(url_prefix), HTTP_AUTHORIZATION=self.user_token)
+        self.assertTrue(401, response.status_code)
+
+    def test_get_discoverable_users_without_token(self):
+        response = self.client.get("{}/users/".format(url_prefix))
+        self.assertTrue(403, response.status_code)
