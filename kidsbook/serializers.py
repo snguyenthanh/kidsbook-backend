@@ -7,11 +7,12 @@ User = get_user_model()
 import opengraph
 import json
 
+
 # This is for private profile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role', 'created_at')
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role', 'created_at', 'last_active_time')
         depth = 1
 
 # This class is for public profile
