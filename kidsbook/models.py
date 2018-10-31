@@ -197,7 +197,7 @@ class GroupMember(models.Model):
 
 class GroupSettings(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, unique=True)
+    group = models.OneToOneField(Group, on_delete=models.CASCADE)
     is_like_enabled = models.BooleanField(default=True)
     is_comment_enabled = models.BooleanField(default=True)
     is_share_enabled = models.BooleanField(default=True)
