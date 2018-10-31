@@ -169,7 +169,6 @@ class GroupManager(models.Manager):
         return group
 
 class Group(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
     picture = models.ImageField(null=True)
@@ -195,6 +194,14 @@ class GroupMember(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     class Meta:
         unique_together = ('user', 'group')
+
+class GroupSettings(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, unique=True)
+    is_like_enabled = models.BooleanField(default=True)
+    is_comment_enabled = models.BooleanField(default=True)
+    is_share_enabled = models.BooleanField(default=True)
+    is_flag_enabled = models.BooleanField(default=True)
 
 
 # class PostManager(models.Manager):
@@ -222,10 +229,6 @@ class Post(models.Model):
     shares = models.ManyToManyField(User, related_name='shares', through='UserSharePost')
     flags = models.ManyToManyField(User, related_name='flags', through='UserFlagPost')
     picture = models.ImageField(null=True)
-    is_like_enabled = models.BooleanField(default=True)
-    is_comment_enabled = models.BooleanField(default=True)
-    is_share_enabled = models.BooleanField(default=True)
-    is_flag_enabled = models.BooleanField(default=True)
     
     link = models.URLField(null=True)
     ogp = models.TextField(null=True)

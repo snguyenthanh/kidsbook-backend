@@ -55,7 +55,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled', 'filtered_content')
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'filtered_content')
         depth = 1
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -168,4 +168,9 @@ class PostShareSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users')
+        fields = ('id', 'name', 'description', 'picture', 'creator', 'created_at', 'users', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled')
+
+class GroupSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupSettings
+        fields = ('id', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled')
