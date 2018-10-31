@@ -298,9 +298,6 @@ class PostCommentList(generics.ListCreateAPIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            serializer = self.get_serializer(data=queryset, many=True)
-            serializer.is_valid()
-
             if ('all' in request.query_params
                     and str(request.query_params.get('all', 'false')).lower() == 'true'
                     and request.user.role.id <= 1
@@ -310,6 +307,8 @@ class PostCommentList(generics.ListCreateAPIView):
                 queryset = queryset.exclude(is_deleted=True)
 
             queryset = queryset.order_by('-created_at')
+            serializer = self.get_serializer(data=queryset, many=True)
+            serializer.is_valid()
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -348,7 +347,8 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            Comment.objects.filter(id=kwargs.get('pk', None)).update(**request.data)
+            return Response({'data': CommentSerializer(Comment.objects.get(id=kwargs.get('pk', None))).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

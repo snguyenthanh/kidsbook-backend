@@ -281,6 +281,8 @@ class TestPost(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(200, response.status_code)
 
+        print(response.data.get('data', []))
+
         self.assertTrue(
             len(response.data.get('data', [])) == 1
         )
