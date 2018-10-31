@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime, timezone
+import pytz
 import time
 from django.shortcuts import render
 from rest_framework import generics
@@ -258,13 +259,13 @@ class RecordTime(APIView):
         interval = 30
         user_id = request.user.id
         user = User.objects.get(id=user_id)
-        date = datetime.date.today()
-        print(float(request.data['timestamp']))
-        print(user.last_active_time)
-        if(float(request.data['timestamp']) - user.last_active_time > 2*interval):
+        tz = pytz.timezone('Asia/Singapore')
+        date = datetime.now(tz).date()
+        time_elapsed = int(float(request.data['timestamp'])) - user.last_active_time
+        if(time_elapsed > 2*interval or time_elapsed < 0):
             new_time = 0
         else:
-            new_time = interval
+            new_time = time_elapsed
 
         if(ScreenTime.objects.filter(user=user, date=date).exists()):
             obj = ScreenTime.objects.get(user=user, date=date)
@@ -290,7 +291,7 @@ class GetInfoUser(generics.ListAPIView):
                     self.serializer_class = UserSerializer
                     
                     ## TODO: Factor this into UserSerializer( Tried but some configuration error)
-                    time_arr = usage_time(user)
+                    time_arr = usage_time(user, request.data['num_days'])
                 else:
                     self.serializer_class = UserPublicSerializer
                     time_arr = []
