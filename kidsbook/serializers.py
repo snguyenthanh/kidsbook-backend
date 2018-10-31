@@ -55,7 +55,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator')
+        fields = ('id', 'content', 'created_at', 'post', 'creator', 'likes')
         depth = 1
 
     def create(self, data):
@@ -101,7 +101,7 @@ class CommentSuperuserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted')
+        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted', 'likes')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):
