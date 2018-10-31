@@ -82,7 +82,11 @@ class UserManager(BaseUserManager):
             kargs['is_superuser'] = False
 
         # kargs.setdefault('is_superuser', False)
-        return self._create_user(role=3, **kargs)
+        virtual_user =  self._create_user(role=3, **kargs)
+        for group in Group.objects.filter(creator=kargs['teacher']):
+            group.add_member(virtual_user)
+        return virtual_user
+
 
 
     def create_superuser(self, **kargs):
