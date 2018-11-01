@@ -113,6 +113,7 @@ class TestPost(APITestCase):
     def test_get_all_posts_in_group(self):
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 2
@@ -125,6 +126,7 @@ class TestPost(APITestCase):
 
         url = "{}/group/{}/posts/?all=true".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 2
@@ -137,6 +139,7 @@ class TestPost(APITestCase):
 
         url = "{}/group/{}/posts/?all=true".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 1
@@ -149,6 +152,7 @@ class TestPost(APITestCase):
 
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 2
@@ -170,6 +174,7 @@ class TestPost(APITestCase):
 
         url = "{}/group/{}/posts/?all=false".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 1
@@ -182,6 +187,7 @@ class TestPost(APITestCase):
 
         url = "{}/group/{}/posts/".format(url_prefix, self.group_id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 1
@@ -200,6 +206,7 @@ class TestPost(APITestCase):
     def test_get_post_detail_with_id(self):
         url = "{}/post/{}/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_update_post_detail_with_id(self):
@@ -241,6 +248,7 @@ class TestPost(APITestCase):
     def test_get_all_comments_of_post(self):
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 2
@@ -253,6 +261,7 @@ class TestPost(APITestCase):
 
         url = "{}/post/{}/comments/?all=TRUE".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
         self.assertTrue(
@@ -266,6 +275,7 @@ class TestPost(APITestCase):
 
         url = "{}/post/{}/comments/?all=TRUE".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
         self.assertTrue(
             len(response.data.get('data', [])) == 1
@@ -278,6 +288,7 @@ class TestPost(APITestCase):
 
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
 
@@ -292,6 +303,7 @@ class TestPost(APITestCase):
 
         url = "{}/post/{}/comments/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
         self.assertTrue(
@@ -325,6 +337,7 @@ class TestPost(APITestCase):
     def test_get_all_likes_of_post(self):
         url = "{}/post/{}/likes/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_likes_of_post_by_non_member(self):
@@ -359,6 +372,7 @@ class TestPost(APITestCase):
     def test_get_all_shares_of_post(self):
         url = "{}/post/{}/shares/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_shares_of_post_by_non_member(self):
@@ -393,6 +407,7 @@ class TestPost(APITestCase):
     def test_get_all_flags_of_post(self):
         url = "{}/post/{}/flags/".format(url_prefix, self.post.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_flags_of_post_by_non_member(self):
@@ -425,6 +440,7 @@ class TestPost(APITestCase):
     def test_get_all_likes_of_comment(self):
         url = "{}/comment/{}/likes/".format(url_prefix, self.comment.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_likes_of_comment_by_non_member(self):
@@ -460,6 +476,7 @@ class TestPost(APITestCase):
     def test_get_all_flags_of_comment(self):
         url = "{}/comment/{}/flags/".format(url_prefix, self.comment.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_all_flags_of_comment_by_non_member(self):
@@ -515,12 +532,14 @@ class TestPost(APITestCase):
     def test_get_comment_by_id(self):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_deleted_comment_by_superuser(self):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
         self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.creator_token)
+        print(response.data)
         self.assertEqual(200, response.status_code)
 
     def test_get_deleted_comment_by_member_non_superuser(self):

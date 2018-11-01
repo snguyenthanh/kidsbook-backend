@@ -51,8 +51,7 @@ class GroupPostList(generics.ListCreateAPIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         
         response_data = serializer.data.copy()
 
@@ -112,8 +111,7 @@ class GroupFlaggedList(generics.ListAPIView):
 #         except Exception:
 #             return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer = self.get_serializer(data=queryset, many=True)
-            if not serializer.is_valid():
-                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid()
 #         return Response({'data': serializer.data})
             queryset = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
             post_queryset = UserFlagPost.objects.all().filter(post__in=queryset).order_by('-created_at')
@@ -153,8 +151,7 @@ class PostLike(generics.ListCreateAPIView):
         except Exception  as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -174,8 +171,7 @@ class CommentLike(generics.ListCreateAPIView):
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -195,8 +191,7 @@ class PostFlag(generics.ListCreateAPIView):
         except Exception  as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -216,8 +211,7 @@ class CommentFlag(generics.ListCreateAPIView):
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -237,8 +231,7 @@ class PostShare(generics.ListCreateAPIView):
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
-        if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid()
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -320,8 +313,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
             queryset = queryset.order_by('-created_at')
             serializer = self.get_serializer(data=queryset, many=True)
-            if not serializer.is_valid():
-                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid()
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
