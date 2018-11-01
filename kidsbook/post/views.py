@@ -111,9 +111,9 @@ class GroupFlaggedList(generics.ListAPIView):
 #             queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags=[]).order_by('-created_at')
 #         except Exception:
 #             return Response(status=status.HTTP_400_BAD_REQUEST)
-#         serializer = self.get_serializer(data=queryset, many=True)
-         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=queryset, many=True)
+            if not serializer.is_valid():
+                return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
 #         return Response({'data': serializer.data})
             queryset = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
             post_queryset = UserFlagPost.objects.all().filter(post__in=queryset).order_by('-created_at')
@@ -150,8 +150,8 @@ class PostLike(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except  as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
             return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
@@ -171,8 +171,8 @@ class CommentLike(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk']))
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
             return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
@@ -192,8 +192,8 @@ class PostFlag(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except  as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
             return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
@@ -213,8 +213,8 @@ class CommentFlag(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(comment = Comment.objects.get(id=kwargs['pk']))
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
             return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
@@ -234,8 +234,8 @@ class PostShare(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk']))
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except  as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
             return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
@@ -306,8 +306,8 @@ class PostCommentList(generics.ListCreateAPIView):
         try:
             # Get all comments in the post
             queryset = self.get_queryset().filter(post=Post.objects.get(id=kwargs['pk']))
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             if ('all' in request.query_params
