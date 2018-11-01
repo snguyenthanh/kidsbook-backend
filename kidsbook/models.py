@@ -76,14 +76,11 @@ class UserManager(BaseUserManager):
         if 'is_superuser' not in kargs:
             kargs['is_superuser'] = False
 
-        # kargs.setdefault('is_superuser', False)
         virtual_user =  self._create_user(role=3, **kargs)
 
         for group_member in GroupMember.objects.filter(user=kargs['teacher']):
             group_member.group.add_member(virtual_user)
         return virtual_user
-
-
 
     def create_superuser(self, **kargs):
         if 'is_staff' not in kargs:
@@ -270,7 +267,7 @@ class Comment(models.Model):
     creator = models.ForeignKey(User, related_name='comment_owner', on_delete=models.CASCADE, default=uuid.uuid4)
     likes = models.ManyToManyField(User, related_name='comment_likers', through='UserLikeComment')
     is_deleted = models.BooleanField(default=False)
-    
+
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True

@@ -210,7 +210,6 @@ class TestPost(APITestCase):
             request_changes = {"content": "Changed content", "link": "http://ogp.me", "picture": pic}
             response = self.client.post(url, request_changes, HTTP_AUTHORIZATION=self.creator_token)
 
-        #response = self.client.post(url, request_changes, HTTP_AUTHORIZATION=self.creator_token)
         self.assertEqual(202, response.status_code)
 
         # Check if the changes reflect in the `Post`

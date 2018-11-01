@@ -26,7 +26,7 @@ class GroupPostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
 #     serializer_class = PostSerializer
     permission_classes = (IsAuthenticated, IsTokenValid, IsInGroup)
-  
+
     def get_serializer_class(self):
       if self.request.user.role.id <= 1:
           return PostSuperuserSerializer
@@ -49,7 +49,7 @@ class GroupPostList(generics.ListCreateAPIView):
             queryset = queryset.order_by('-created_at')
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-          
+
         serializer = self.get_serializer(data=queryset, many=True)
         serializer.is_valid()
         response_data = serializer.data.copy()
@@ -94,8 +94,6 @@ class GroupPostList(generics.ListCreateAPIView):
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
-        print(args)
-        print(kwargs)
         try:
             return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
@@ -282,7 +280,7 @@ class PostCommentList(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
-    
+
     def get_serializer_class(self):
       if self.request.user.role.id <= 1:
           return CommentSuperuserSerializer
