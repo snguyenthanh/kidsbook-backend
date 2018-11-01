@@ -117,7 +117,7 @@ class PostLikeSerializer(serializers.ModelSerializer):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         data = self.context['request'].data
-        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': str(data["like_or_dislike"]).strip().lower() == 'true'})
+        new_post, created = UserLikePost.objects.update_or_create(post=post, user=current_user, defaults={'like_or_dislike': str(data.get("like_or_dislike", 'true')).strip().lower() == 'true'})
         return new_post
 
 class CommentLikeSerializer(serializers.ModelSerializer):
@@ -133,7 +133,7 @@ class CommentLikeSerializer(serializers.ModelSerializer):
         comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         data = self.context['request'].data
-        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': data["like_or_dislike"]})
+        new_comment, created = UserLikeComment.objects.update_or_create(comment=comment, user=current_user, defaults={'like_or_dislike': str(data.get("like_or_dislike", 'true')).strip().lower() == 'true'})
         if(data["like_or_dislike"] == False):
             old_comment_like = UserLikeComment.objects.get(comment=comment, user=current_user)
             old_comment_like.delete()
