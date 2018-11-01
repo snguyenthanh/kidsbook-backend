@@ -51,6 +51,8 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
 `POST` | /user/update/<user_id/ | * (If update password then need `oldPassword` and `password`) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user, the user himself or a superuser in a same group. | User: *dict*
+`POST` | /user/record_time/ |'timestamp': The current epoch time | Ping request to record time. | IsAuthenticated | {}
+
 
 ## 2. Users
 

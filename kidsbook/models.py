@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-
+import datetime
 import uuid
 import bcrypt
 from django.db import models
@@ -106,11 +106,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     profile_photo = models.ImageField(null=True)
     login_time = models.PositiveIntegerField(default=0)
-    screen_time = models.PositiveIntegerField(default=0)
+    # screen_time = models.PositiveIntegerField(default=0)
     profile_photo = models.ImageField(default="default.png", null=True)
 
     teacher = models.ForeignKey('self', related_name='teacher_in_chage', on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=True)
+    last_active_time = models.PositiveIntegerField(default=0)
     # role_id = models.ForeignKey(Role, related_name='post_owner', on_delete=models.CASCADE, default=0)
     role = models.ForeignKey(Role, related_name='group_owner', on_delete=models.CASCADE)
 
@@ -133,6 +134,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     #         return True
     #     else:
     #         return False
+
+class ScreenTime(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, related_name='screen_time', on_delete=models.CASCADE)
+    date = models.DateField(_("Date"), default=datetime.date.today)
+    total_time = models.FloatField(default=0)
 
 class BlackListedToken(models.Model):
     token = models.CharField(max_length=500)

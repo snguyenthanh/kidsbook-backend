@@ -10,6 +10,7 @@ from itertools import chain
 from kidsbook.serializers import *
 from kidsbook.models import *
 from kidsbook.permissions import *
+from kidsbook.utils import *
 
 User = get_user_model()
 
@@ -69,6 +70,13 @@ def users_allowed_to_be_discovered(request):
         result_list = list(set(chain(users_not_in_any_groups, all_superusers, all_users_in_same_groups, users_created_by_requester)))
         result_list = sorted(result_list, key=lambda instance: instance.created_at, reverse=True)
         serializer = UserSerializer(result_list, many=True)
+
+        if('num_days' in request.data):
+            num_days = request.data['num_days']
+        else:
+            num_days = 0
+        for user in serializer.data:
+            user['time_history'] = usage_time(User.objects.get(id=user['id']), num_days)
 
         return Response({'data': serializer.data})
     except Exception as exc:
