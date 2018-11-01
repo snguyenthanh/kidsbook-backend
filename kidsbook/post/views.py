@@ -263,8 +263,14 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
+        # for key, value in request.POST.iteritems():
+        #     print((key, value))
+        update_data = {}
+        for tup in request.data.lists():
+            update_data[tup[0]] = tup[1][0]
         try:
-            return Response({'data': self.update(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            Post.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
+            return Response({'data': PostSerializer(Post.objects.get(id=kwargs.get('pk', None))).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -346,8 +352,11 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
+        update_data = {}
+        for tup in request.data.lists():
+            update_data[tup[0]] = tup[1][0]
         try:
-            Comment.objects.filter(id=kwargs.get('pk', None)).update(**request.data)
+            Comment.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
             return Response({'data': CommentSerializer(Comment.objects.get(id=kwargs.get('pk', None))).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

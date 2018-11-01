@@ -528,12 +528,14 @@ class TestUpdateVirtualUser(APITestCase):
         virtual_user = User.objects.get(id=response.data.get('data', {}).get('id', ''))
         # self.group.add_member(virtual_user)
 
+        new_update_url = "{}update/{}/".format(self.url, virtual_user.id)
+
         data = {
             'username': 'Not_doggo',
             'description': 'Corki'
         }
-        response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=self.superuser_token)
-        self.assertEqual(202, response.status_code)
+        response = self.client.post(new_update_url, data=data, HTTP_AUTHORIZATION=self.superuser_token)
+        self.assertEqual(405, response.status_code)
 
 
 
