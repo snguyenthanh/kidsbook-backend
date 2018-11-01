@@ -52,7 +52,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
         response_data = serializer.data.copy()
 
@@ -113,7 +113,7 @@ class GroupFlaggedList(generics.ListAPIView):
 #             return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer = self.get_serializer(data=queryset, many=True)
             if not serializer.is_valid():
-                return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 #         return Response({'data': serializer.data})
             queryset = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
             post_queryset = UserFlagPost.objects.all().filter(post__in=queryset).order_by('-created_at')
@@ -154,7 +154,7 @@ class PostLike(generics.ListCreateAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -175,7 +175,7 @@ class CommentLike(generics.ListCreateAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -196,7 +196,7 @@ class PostFlag(generics.ListCreateAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -217,7 +217,7 @@ class CommentFlag(generics.ListCreateAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -238,7 +238,7 @@ class PostShare(generics.ListCreateAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'data': serializer.data})
 
     def post(self, request, *args, **kwargs):
@@ -321,7 +321,7 @@ class PostCommentList(generics.ListCreateAPIView):
             queryset = queryset.order_by('-created_at')
             serializer = self.get_serializer(data=queryset, many=True)
             if not serializer.is_valid():
-                return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
