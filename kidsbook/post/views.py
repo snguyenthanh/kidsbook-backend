@@ -52,7 +52,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
         serializer = self.get_serializer(data=queryset, many=True)
         if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST):
+            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
         
         response_data = serializer.data.copy()
 
@@ -321,7 +321,7 @@ class PostCommentList(generics.ListCreateAPIView):
             queryset = queryset.order_by('-created_at')
             serializer = self.get_serializer(data=queryset, many=True)
             if not serializer.is_valid():
-            return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
+                return Response({'error': serializer.errors}, status=HTTP_400_BAD_REQUEST)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
