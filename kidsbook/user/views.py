@@ -255,7 +255,7 @@ class LogOut(generics.ListAPIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class RecordTime(APIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsTokenValid)
     def post(self, request, **kargs):
         interval = 30
         user_id = request.user.id
