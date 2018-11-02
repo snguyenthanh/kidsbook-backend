@@ -1,13 +1,14 @@
 from rest_framework import serializers, status
 from rest_framework.response import Response
-from kidsbook.models import *
-# from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-User = get_user_model()
 import opengraph
 import json
-from profanity import profanity
-profanity.set_censor_characters("*")
+
+from kidsbook.models import *
+from kidsbook.utils import censor
+
+
+User = get_user_model()
 
 # This is for private profile
 class UserSerializer(serializers.ModelSerializer):
@@ -29,7 +30,7 @@ class PostSerializer(serializers.ModelSerializer):
     content = serializers.SerializerMethodField()
 
     def get_content(self, obj):
-        return profanity.censor(obj.content)
+        return censor(obj.content)
 
     def create(self, data):
         try:
@@ -51,7 +52,7 @@ class CommentSerializer(serializers.ModelSerializer):
     content = serializers.SerializerMethodField()
 
     def get_content(self, obj):
-        return profanity.censor(obj.content)
+        return censor(obj.content)
 
     class Meta:
         model = Comment
@@ -69,7 +70,7 @@ class PostSuperuserSerializer(serializers.ModelSerializer):
     filtered_content = serializers.SerializerMethodField()
 
     def get_filtered_content(self, obj):
-        return profanity.censor(obj.content)
+        return censor(obj.content)
 
     def create(self, data):
         try:
@@ -85,13 +86,13 @@ class PostSuperuserSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'filtered_content', 'is_deleted')
         depth = 1
-        
+
 class CommentSuperuserSerializer(serializers.ModelSerializer):
 
     filtered_content = serializers.SerializerMethodField()
 
     def get_filtered_content(self, obj):
-        return profanity.censor(obj.content)
+        return censor(obj.content)
 
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
