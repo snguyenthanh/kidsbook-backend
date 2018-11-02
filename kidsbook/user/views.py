@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+import pytz
+import time
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -5,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required, user_passes_test
 from rest_framework import permissions
-from profanity import profanity
 
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
@@ -125,12 +127,13 @@ class Register(APIView):
         try:
             user = mapping_create[user_role](**request_data)
         except Exception as exc:
-            Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # group = Group.objects.get(id=request.data['group_id'])
         # group.add_member(user)
         serializer = self.serializer_class(user)
         return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
+
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
@@ -148,7 +151,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         # Check if the `target_user_id` exists in any groups that the requester is in
         for group in iter(groups_that_request_is_in):
-            if GroupMember.objects.filter(user_id=target_user_id, group_id=group.id).exists():
+            if GroupMember.objects.filter(user_id=target_user_id, group_id=group.group.id).exists():
                 return True
         return False
 
@@ -181,7 +184,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
                 or self.user_has_no_groups(target_user_id)
                 or self.is_user_in_same_group_with_requester(request, target_user_id)
                 or request.user.id == target_user_id):
-            return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'error': 'Only the creator, superusers in the same group and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         # Get all keywords that are not in `keywords_require_superuser`
         allowed_keywords = [ field for field in iter(User.__dict__.keys()) if field not in keywords_require_superuser]
@@ -250,6 +253,31 @@ class LogOut(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class RecordTime(APIView):
+    permission_classes = (IsAuthenticated, IsTokenValid)
+    def post(self, request, **kargs):
+        interval = 30
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        tz = pytz.timezone('Asia/Singapore')
+        date = datetime.now(tz).date()
+        time_elapsed = int(float(request.data['timestamp'])) - user.last_active_time
+        if(time_elapsed > 2*interval or time_elapsed < 0):
+            new_time = 0
+        else:
+            new_time = time_elapsed
+
+        if(ScreenTime.objects.filter(user=user, date=date).exists()):
+            obj = ScreenTime.objects.get(user=user, date=date)
+            setattr(obj, 'total_time', obj.total_time + new_time)
+            obj.save()
+        else:
+            obj = ScreenTime.objects.create(user=user, date=date, total_time=new_time)
+
+        setattr(user, 'last_active_time', int(float(request.data['timestamp'])))
+        user.save()
+        return Response({'data': user.last_active_time, 'new_time': obj.total_time, 'date': date}, status=status.HTTP_202_ACCEPTED)
+
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
@@ -261,8 +289,16 @@ class GetInfoUser(generics.ListAPIView):
                 is_correct_virtual = user.teacher and user.teacher.id == request.user.id
                 if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
+                    
+                    ## TODO: Factor this into UserSerializer( Tried but some configuration error)
+                    if('num_days' in request.data):
+                        num_days = request.data['num_days']
+                    else:
+                        num_days = 0
+                    time_arr = usage_time(user, num_days)
                 else:
                     self.serializer_class = UserPublicSerializer
+                    time_arr = []
                 serializer = self.serializer_class(user, many=False)
                 response_data = serializer.data.copy()
 
@@ -282,6 +318,8 @@ class GetInfoUser(generics.ListAPIView):
                 posts_likes_given = UserLikePost.objects.all().filter(user=user).filter(like_or_dislike=True)
                 response_data['num_like_given'] = len(posts_likes_given)
 
+                if(len(time_arr) > 0):
+                    response_data['time_history'] = time_arr
                 return Response({'data': response_data})
         except Exception:
             pass
