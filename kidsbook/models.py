@@ -278,7 +278,6 @@ class Comment(models.Model):
     REQUIRED_FIELDS = ['post', 'creator', 'content']
 
     # use_in_migrations = True
-    # objects = CommentManager()
     objects = CommentManager()
 
 class UserLikeComment(models.Model):
