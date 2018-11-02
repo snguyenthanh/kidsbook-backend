@@ -69,6 +69,25 @@ class CommentSerializer(serializers.ModelSerializer):
         data = self.context['request'].data
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 
+class CommentSuperuserSerializer(serializers.ModelSerializer):
+
+    filtered_content = serializers.SerializerMethodField()
+
+    def get_filtered_content(self, obj):
+        return censor(obj.content)
+
+    def create(self, data):
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        current_user = self.context['request'].user
+        data = self.context['request'].data
+        return Comment.objects.create(content=data["content"], post=post, creator=current_user)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted', 'likes')
+        depth = 1
+
+
 class PostSuperuserSerializer(serializers.ModelSerializer):
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
@@ -96,28 +115,10 @@ class PostSuperuserSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'content', 'creator', 'picture', 'link', 'ogp', 'likes', 'flags', 'filtered_content', 'is_deleted')
         depth = 1
 
-class CommentSuperuserSerializer(serializers.ModelSerializer):
-
-    filtered_content = serializers.SerializerMethodField()
-
-    def get_filtered_content(self, obj):
-        return censor(obj.content)
-
-    def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
-        current_user = self.context['request'].user
-        data = self.context['request'].data
-        return Comment.objects.create(content=data["content"], post=post, creator=current_user)
-
-    class Meta:
-        model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted', 'likes')
-        depth = 1
-
 class PostLikeSerializer(serializers.ModelSerializer):
 
     post = PostSerializer(required=False)
-    
+
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
         queryset = queryset.select_related('user', 'post')
@@ -204,14 +205,17 @@ class PostShareSerializer(serializers.ModelSerializer):
         return new_post
 
 class CommentSerializer(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
         queryset = queryset.select_related('creator', 'post')
         queryset = queryset.prefetch_related('likes', 'post__creator', 'post__group', 'post__likes', 'post__shares', 'post__flags')
         return queryset
-    # likes = CommentLikeSerializer(many=True)
-    # post = PostSerializer()
-    # creator = UserSerializer()
+
+    def get_content(self, obj):
+        return censor(obj.content)
+
     class Meta:
         model = Comment
         fields = ('id', 'content', 'created_at', 'post', 'creator' , 'likes')
@@ -221,8 +225,6 @@ class CommentSerializer(serializers.ModelSerializer):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
         current_user = self.context['request'].user
         return Comment.objects.create(content=data["content"], post=post, creator=current_user)
-
-
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
