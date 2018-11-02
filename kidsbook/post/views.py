@@ -21,8 +21,6 @@ from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from kidsbook.utils import *
 from django.db import connection, reset_queries
-from pprint import pprint
-
 
 
 User = get_user_model()
@@ -89,8 +87,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
         for post in iter(response_data):
             post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], likes_queryset_data))
-
-            comments_data = list(filter(lambda comment: comment['post']['id'] == post['id'], copy.deepcopy(comments_serializer_data)))[:3]
+            comments_data = list(filter(lambda comment: str(comment['post']) == post['id'], comments_serializer_data))[:3]
             for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             comment_data = clean_data_iterative(comments_data, 'post')
@@ -154,7 +151,7 @@ class PostLike(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
-        except Exception  as exc:
+        except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         serializer.is_valid()
@@ -268,8 +265,6 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
-        # for key, value in request.POST.iteritems():
-        #     print((key, value))
         update_data = request.data.dict()
         try:
             Post.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
@@ -323,7 +318,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
         for comment in serializer.data:
             comment['like_count'] = len(comment['likes'])
-            comment['likers'] = [x['id'] for x in comment['likes']]
+            comment['likers'] = [x for x in comment['likes']]
         response_data = clean_data_iterative(serializer.data, 'likes')
         return Response({'data': serializer.data})
 
