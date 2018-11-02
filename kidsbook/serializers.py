@@ -32,15 +32,26 @@ class PostSerializer(serializers.ModelSerializer):
         return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
             link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
 
+    def setup_eager_loading(queryset):
+        queryset = queryset.select_related('creator', 'group')
+        queryset = queryset.prefetch_related('flags', 'likes')
+        return queryset
+
     class Meta:
         model = Post
         fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares')
         depth = 1
 
 class PostSuperuserSerializer(serializers.ModelSerializer):
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('creator')
+        queryset = queryset.prefetch_related('flags', 'likes')
+        # queryset = queryset.prefetch_related('auth_group')
+        return queryset
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'is_deleted')
+        fields = ('id', 'created_at', 'content', 'picture', 'link', 'ogp', 'creator', 'flags', 'likes', 'is_deleted')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):
@@ -115,6 +126,11 @@ class PostShareSerializer(serializers.ModelSerializer):
         return new_post
 
 class CommentSerializer(serializers.ModelSerializer):
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('creator', 'post')
+        queryset = queryset.prefetch_related('likes')
+        return queryset
 
     class Meta:
         model = Comment

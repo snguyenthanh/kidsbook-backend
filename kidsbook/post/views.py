@@ -1,3 +1,4 @@
+import copy
 from kidsbook.models import *
 from kidsbook.serializers import *
 from kidsbook.permissions import *
@@ -19,6 +20,8 @@ from django.db.models import Case, Count, IntegerField, Sum, When, F
 from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from kidsbook.utils import *
+from django.db import connection
+from django.db import reset_queries
 
 User = get_user_model()
 
@@ -30,66 +33,59 @@ class GroupPostList(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             # Get all posts in the group
-            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
-
+            post_queryset = self.get_queryset().filter(group__id = kwargs['pk'])
+            
             if ('all' in request.query_params
                     and str(request.query_params.get('all', 'false')).lower() == 'true'
                     and request.user.role.id <= 1
                     ):
                 pass
             else:
-                queryset = queryset.exclude(is_deleted=True)
+                post_queryset = post_queryset.exclude(is_deleted=True)
 
-            queryset = queryset.order_by('-created_at')
+            post_queryset = post_queryset.order_by('-created_at')
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
         # Change the Serializer depends on the role of requester
         if request.user.role.id <= 1:
-            serializer = PostSuperuserSerializer(queryset, many=True)
+            post_queryset = PostSuperuserSerializer.setup_eager_loading(post_queryset)
+            serializer = PostSuperuserSerializer(post_queryset, many=True)
         else:
-            serializer = PostSerializer(queryset, many=True)
+            post_queryset = PostUserSerializer.setup_eager_loading(post_queryset)
+            serializer = PostSerializer(post_queryset, many=True)
+        reset_queries()
+        
         response_data = serializer.data.copy()
+        for x in connection.queries:
+            print(x)
+            print("")
+        print(len(connection.queries))
 
-        really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
-        really_likes_users = User.objects.all().filter(id__in=[x.user.id for x in really_likes])
+        reset_queries()
+        comment_queryset = Comment.objects.all().filter(post__in=post_queryset).exclude(is_deleted=True)
+        comment_queryset.query.group_by = ['id']
+        comment_queryset = comment_queryset.annotate(
+            like_count=Count('likes')
+        ).order_by('-like_count', '-created_at')[:3]
 
-        for post in serializer.data.copy():
-            queryset = UserLikePost.objects.all().filter(post=Post.objects.get(id=post['id']))
-            likes = PostLikeSerializer(queryset, many=True)
-            post['likes_list'] = likes.data.copy()
+        comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
+        comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
+        print(len(connection.queries))
 
-            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id'])).exclude(is_deleted=True)
-            queryset.query.group_by = ['id']
-            # queryset = queryset.annotate(
-            #     like_count=Sum(
-            #         Case(
-            #             When(likes__in=really_likes_users, then=1),
-            #             default=0, output_field=IntegerField()
-            #         )
-            #     )
-            # ).order_by('-like_count', '-created_at')[:3]
+        likes_queryset = UserLikePost.objects.all().filter(post__in=post_queryset).filter(like_or_dislike=True)
+        likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
 
-            # queryset = queryset.annotate(
-            #     like_count=Count(
-            #         'likes',
-            #         likes__in = User.objects.all().filter(id__in= [x.user.id for x in UserLikeComment.objects.all().filter(comment=Comment.objects.get(id=)).filter(like_or_dislike=True)])
-            #     )
-            # ).order_by('-like_count', '-created_at')[:3]
+        for post in response_data:
+            post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], likes_queryset_data))
 
-            queryset = queryset.annotate(
-                like_count=Count('likes')
-            ).order_by('-like_count', '-created_at')[:3]
-
-            comments = CommentSerializer(queryset, many=True)
-            comments_data = comments.data.copy()
+            comments_data = list(filter(lambda comment: comment['post']['id'] == post['id'], copy.deepcopy(comments_serializer_data)))[:3]
             for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             comment_data = clean_data_iterative(comments_data, 'post')
             post['comments'] = comments_data.copy()
             post['comments'] = clean_data_iterative(post['comments'], 'likes')
 
-        return Response({'data': serializer.data})
+        return Response({'data': response_data})
 
     def post(self, request, *args, **kwargs):
         try:
