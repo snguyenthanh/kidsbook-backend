@@ -40,6 +40,10 @@ However, only the fields defined in the [serializers](./kidsbook/serializers.py)
 
 ## 1. User
 
+```
+When a virtual user is created, it will be automatically added to all groups the creator is in.
+```
+
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /user/<user_id>/ | | Get the user's information. | IsAuthenticated | User: *dict*
@@ -61,6 +65,10 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 
 
 ## 3. Post
+
+```
+All posts and comments are censored by replacing the each letter with a asterisk `*`.
+```
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |

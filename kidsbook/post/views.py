@@ -52,7 +52,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
         serializer = self.get_serializer(data=queryset, many=True)
         serializer.is_valid()
-        
+
         response_data = serializer.data.copy()
 
         really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
@@ -264,9 +264,7 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     def post(self, request, *args, **kwargs):
         # for key, value in request.POST.iteritems():
         #     print((key, value))
-        update_data = {}
-        for tup in request.data.lists():
-            update_data[tup[0]] = tup[1][0]
+        update_data = request.data.dict()
         try:
             Post.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
             return Response({'data': PostSerializer(Post.objects.get(id=kwargs.get('pk', None))).data}, status=status.HTTP_202_ACCEPTED)
@@ -351,9 +349,7 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
-        update_data = {}
-        for tup in request.data.lists():
-            update_data[tup[0]] = tup[1][0]
+        update_data = request.data.dict()
         try:
             Comment.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
             return Response({'data': CommentSerializer(Comment.objects.get(id=kwargs.get('pk', None))).data}, status=status.HTTP_202_ACCEPTED)
@@ -367,7 +363,6 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
             comment_to_delete.is_deleted = True
             comment_to_delete.save()
             return Response({}, status=status.HTTP_202_ACCEPTED)
-            #return Response({'data': self.destroy(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
