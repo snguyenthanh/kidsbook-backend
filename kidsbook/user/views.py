@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+import pytz
+import time
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -124,12 +127,13 @@ class Register(APIView):
         try:
             user = mapping_create[user_role](**request_data)
         except Exception as exc:
-            Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # group = Group.objects.get(id=request.data['group_id'])
         # group.add_member(user)
         serializer = self.serializer_class(user)
         return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
+
 
 class Update(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
@@ -249,6 +253,31 @@ class LogOut(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class RecordTime(APIView):
+    permission_classes = (IsAuthenticated, IsTokenValid)
+    def post(self, request, **kargs):
+        interval = 30
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        tz = pytz.timezone('Asia/Singapore')
+        date = datetime.now(tz).date()
+        time_elapsed = int(float(request.data['timestamp'])) - user.last_active_time
+        if(time_elapsed > 2*interval or time_elapsed < 0):
+            new_time = 0
+        else:
+            new_time = time_elapsed
+
+        if(ScreenTime.objects.filter(user=user, date=date).exists()):
+            obj = ScreenTime.objects.get(user=user, date=date)
+            setattr(obj, 'total_time', obj.total_time + new_time)
+            obj.save()
+        else:
+            obj = ScreenTime.objects.create(user=user, date=date, total_time=new_time)
+
+        setattr(user, 'last_active_time', int(float(request.data['timestamp'])))
+        user.save()
+        return Response({'data': user.last_active_time, 'new_time': obj.total_time, 'date': date}, status=status.HTTP_202_ACCEPTED)
+
 class GetInfoUser(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsTokenValid)
@@ -260,8 +289,16 @@ class GetInfoUser(generics.ListAPIView):
                 is_correct_virtual = user.teacher and user.teacher.id == request.user.id
                 if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
+                    
+                    ## TODO: Factor this into UserSerializer( Tried but some configuration error)
+                    if('num_days' in request.data):
+                        num_days = request.data['num_days']
+                    else:
+                        num_days = 0
+                    time_arr = usage_time(user, num_days)
                 else:
                     self.serializer_class = UserPublicSerializer
+                    time_arr = []
                 serializer = self.serializer_class(user, many=False)
                 response_data = serializer.data.copy()
 
@@ -281,6 +318,8 @@ class GetInfoUser(generics.ListAPIView):
                 posts_likes_given = UserLikePost.objects.all().filter(user=user).filter(like_or_dislike=True)
                 response_data['num_like_given'] = len(posts_likes_given)
 
+                if(len(time_arr) > 0):
+                    response_data['time_history'] = time_arr
                 return Response({'data': response_data})
         except Exception:
             pass

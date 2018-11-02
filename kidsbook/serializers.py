@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 import opengraph
 import json
-
 from kidsbook.models import *
 from kidsbook.utils import censor
 
@@ -14,7 +13,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role', 'created_at')
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'group_users', 'user_posts', 'role', 'created_at', 'last_active_time')
         depth = 1
 
 # This class is for public profile
