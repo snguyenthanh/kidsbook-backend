@@ -1,6 +1,10 @@
 import datetime
 import pytz
+from profanity import profanity
 from kidsbook.models import *
+
+
+profanity.set_censor_characters("*")
 
 def clean_data(data, *args):
   for field in args:
@@ -13,6 +17,9 @@ def clean_data_iterative(data, *args):
       row.pop(field, None)
   return data
 
+def censor(text: str):
+    return profanity.censor(text)
+  
 def usage_time(user, num_days):
   arr = []
   tz = pytz.timezone('Asia/Singapore')

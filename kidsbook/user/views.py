@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth.decorators import login_required, user_passes_test
 from rest_framework import permissions
-from profanity import profanity
 
 from django.http import (
     HttpResponse, HttpResponseNotFound, JsonResponse
@@ -152,7 +151,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
 
         # Check if the `target_user_id` exists in any groups that the requester is in
         for group in iter(groups_that_request_is_in):
-            if GroupMember.objects.filter(user_id=target_user_id, group_id=group.id).exists():
+            if GroupMember.objects.filter(user_id=target_user_id, group_id=group.group.id).exists():
                 return True
         return False
 
@@ -185,7 +184,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
                 or self.user_has_no_groups(target_user_id)
                 or self.is_user_in_same_group_with_requester(request, target_user_id)
                 or request.user.id == target_user_id):
-            return Response({'error': 'Only the creator and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'error': 'Only the creator, superusers in the same group and this user can edit.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         # Get all keywords that are not in `keywords_require_superuser`
         allowed_keywords = [ field for field in iter(User.__dict__.keys()) if field not in keywords_require_superuser]
