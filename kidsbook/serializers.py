@@ -198,4 +198,4 @@ class GroupSerializer(serializers.ModelSerializer):
 class GroupSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupSettings
-        fields = ('id', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled')
+        fields = ('id', 'group', 'is_like_enabled', 'is_comment_enabled', 'is_share_enabled', 'is_flag_enabled')

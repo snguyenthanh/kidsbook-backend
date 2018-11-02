@@ -30,7 +30,6 @@ def get_groups(request):
     except Exception:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
     serializer = GroupSerializer(groups, many=True)
     return Response({'data': serializer.data})
 
@@ -52,6 +51,10 @@ def create_group(request):
             # Re-assign the `User` object
             request_data['creator'] = creator
             new_group = Group.objects.create_group(**request_data)
+
+            # Create a GroupSetting instance
+            GroupSettings.objects.create(group=new_group)
+
             serializer = GroupSerializer(new_group)
             return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
@@ -132,13 +135,14 @@ def get_all_members_in_group(request, **kargs):
 ## GROUP DETAILS ##
 
 def get_group_detail(request, kargs):
+    error = ''
     try:
         group = Group.objects.get(id=kargs.get('pk'))
         serializer = GroupSerializer(group)
         return Response({'data': serializer.data})
-    except Exception:
-        pass
-    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as exc:
+        error = str(exc)
+    return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
 def update_group_detail(request, kargs):
     try:
@@ -191,5 +195,59 @@ def delete_group(request, **kargs):
             return Response({}, status=status.HTTP_202_ACCEPTED)
     except Exception:
         pass
+
+    return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#################################################################################################################
+## GROUP SETTINGS ##
+
+def get_group_settings(request, kargs):
+    error = ''
+    group = GroupSettings.objects.get(group_id=kargs.get('pk'))
+    serializer = GroupSettingsSerializer(group)
+    return Response({'data': serializer.data})
+    # try:
+    #
+    # except Exception as exc:
+    #     error = str(exc)
+    return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
+
+def update_group_settings(request, kargs):
+    group_setting = GroupSettings.objects.get(group_id=kargs.get('pk'))
+    group = Group.objects.get(id=kargs.get('pk'))
+    group_fields = set(GroupSettings.__dict__.keys())
+    group_setting_meta = GroupSettings._meta
+
+    if request.user.id != group.creator.id:
+        return Response({'error': "Only the creator can modify group's settings."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    for attr, value in iter(request.data.dict().items()):
+        if attr in group_fields:
+            if 'boolean' in str(group_setting_meta.get_field(attr).get_internal_type()).lower():
+                setattr(group_setting, attr, str(value).lower()=='true')
+                continue
+
+            setattr(group_setting, attr, value)
+    group_setting.save()
+    #
+    # try:
+    #
+    # except Exception as exc:
+    #     Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = GroupSettingsSerializer(group_setting)
+    return Response({'data': serializer.data}, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated, IsTokenValid, IsInGroup))
+def group_settings(request, **kargs):
+    function_mappings = {
+        'GET': get_group_settings,
+        'POST': update_group_settings
+    }
+
+    if request.method in function_mappings:
+        return function_mappings[request.method](request, kargs)
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
