@@ -96,7 +96,7 @@ class CommentSuperuserSerializer(serializers.ModelSerializer):
 
 
 class PostSuperuserSerializer(serializers.ModelSerializer):
-    creator = NestedCreatorSerializer()
+    creator = NestedCreatorSerializer(read_only=True)
     filtered_content = serializers.SerializerMethodField()
 
     def setup_eager_loading(queryset):
