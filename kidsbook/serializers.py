@@ -34,7 +34,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     def setup_eager_loading(queryset):
         queryset = queryset.select_related('creator', 'group')
-        queryset = queryset.prefetch_related('flags', 'likes')
+        queryset = queryset.prefetch_related('flags', 'likes', 'group__users')
         return queryset
 
     class Meta:
@@ -45,17 +45,20 @@ class PostSerializer(serializers.ModelSerializer):
 class PostSuperuserSerializer(serializers.ModelSerializer):
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
-        queryset = queryset.select_related('creator')
-        queryset = queryset.prefetch_related('flags', 'likes')
-        # queryset = queryset.prefetch_related('auth_group')
+        queryset = queryset.select_related('creator', 'group')
+        queryset = queryset.prefetch_related('flags', 'likes', 'group__users')
         return queryset
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'picture', 'link', 'ogp', 'creator', 'flags', 'likes', 'is_deleted')
+        fields = ('id', 'created_at', 'content', 'picture', 'link', 'ogp', 'group', 'flags', 'likes', 'is_deleted')
         depth = 1
 
 class PostLikeSerializer(serializers.ModelSerializer):
-
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('user', 'post')
+        queryset = queryset.prefetch_related('post__creator', 'post__group', 'post__likes', 'post__shares', 'post__flags')
+        return queryset
     class Meta:
         model = UserLikePost
         fields = ('id', 'user', 'post', 'like_or_dislike')
@@ -68,7 +71,6 @@ class PostLikeSerializer(serializers.ModelSerializer):
         return new_post
 
 class CommentLikeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = UserLikeComment
         fields = ('id', 'user', 'comment', 'like_or_dislike')
@@ -129,12 +131,14 @@ class CommentSerializer(serializers.ModelSerializer):
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
         queryset = queryset.select_related('creator', 'post')
-        queryset = queryset.prefetch_related('likes')
+        queryset = queryset.prefetch_related('likes', 'post__creator', 'post__group', 'post__likes', 'post__shares', 'post__flags')
         return queryset
-
+    # likes = CommentLikeSerializer(many=True)
+    # post = PostSerializer()
+    # creator = UserSerializer()
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator', 'likes')
+        fields = ('id', 'content', 'created_at', 'post', 'creator' , 'likes')
         depth = 1
 
     def create(self, data):

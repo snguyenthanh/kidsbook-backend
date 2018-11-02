@@ -33,11 +33,12 @@ class GroupPostList(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             # Get all posts in the group
+            user_role_id = request.user.role.id
             post_queryset = self.get_queryset().filter(group__id = kwargs['pk'])
             
             if ('all' in request.query_params
                     and str(request.query_params.get('all', 'false')).lower() == 'true'
-                    and request.user.role.id <= 1
+                    and user_role_id <= 1
                     ):
                 pass
             else:
@@ -47,7 +48,7 @@ class GroupPostList(generics.ListCreateAPIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         # Change the Serializer depends on the role of requester
-        if request.user.role.id <= 1:
+        if user_role_id <= 1:
             post_queryset = PostSuperuserSerializer.setup_eager_loading(post_queryset)
             serializer = PostSuperuserSerializer(post_queryset, many=True)
         else:
@@ -70,11 +71,20 @@ class GroupPostList(generics.ListCreateAPIView):
 
         comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
         comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
+        for x in connection.queries:
+            print(x)
+            print("")
         print(len(connection.queries))
 
+        reset_queries()
         likes_queryset = UserLikePost.objects.all().filter(post__in=post_queryset).filter(like_or_dislike=True)
+        likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
         likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
-
+        for x in connection.queries:
+            print(x)
+            print("")
+        print(len(connection.queries))
+        
         for post in response_data:
             post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], likes_queryset_data))
 
