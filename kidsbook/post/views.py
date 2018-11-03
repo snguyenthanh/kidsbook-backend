@@ -36,7 +36,7 @@ class GroupPostList(generics.ListCreateAPIView):
             return PostSerializer
 
     def list(self, request, **kwargs):
-        print(len(connection.queries))
+
 
         try:
             # Get all posts in the group
@@ -65,7 +65,7 @@ class GroupPostList(generics.ListCreateAPIView):
 
         reset_queries()
         response_data = serializer.data
-        print(len(connection.queries))
+
 
         reset_queries()
         comment_queryset = Comment.objects.filter(post__in=post_queryset).exclude(is_deleted=True)
@@ -77,14 +77,14 @@ class GroupPostList(generics.ListCreateAPIView):
         comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
 
         comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
-        print(len(connection.queries))
+
 
         reset_queries()
         likes_queryset = UserLikePost.objects.filter(post__in=post_queryset).exclude(like_or_dislike=False)
         likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
         likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
 
-        print(len(connection.queries))
+
 
         for post in iter(response_data):
             post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], copy.deepcopy(likes_queryset_data)))
