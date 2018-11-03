@@ -90,7 +90,7 @@ def delete_member_from_group(user, group):
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
 
 @api_view(['POST', 'DELETE'])
-@permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
+@permission_classes((IsAuthenticated, IsTokenValid, IsSuperUser))
 def group_member(request, **kargs):
     """Add new member or remove a member in a group."""
 
