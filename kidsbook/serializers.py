@@ -23,9 +23,13 @@ class UserPublicSerializer(serializers.ModelSerializer):
         fields = ('id', 'is_active', 'is_superuser', 'profile_photo', 'username', 'description', 'user_posts')
         depth = 1
 
+class NestedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email_address', 'is_active', 'profile_photo', 'is_superuser', 'description', "realname", 'role', 'created_at', 'last_active_time')
 
 class PostSerializer(serializers.ModelSerializer):
-
+    creator = NestedUserSerializer(read_only=True)
     content = serializers.SerializerMethodField()
 
     def get_content(self, obj):
@@ -41,32 +45,25 @@ class PostSerializer(serializers.ModelSerializer):
         return Post.objects.create(ogp= opengraph.OpenGraph(url=data["link"]).__str__() if 'link' in data else "",
             link=data.get("link", None), picture=data.get("picture", None), content=data["content"], group=group, creator=current_user)
 
+    def setup_eager_loading(queryset):
+        queryset = queryset.select_related('creator', 'group')
+        queryset = queryset.prefetch_related('flags', 'likes', 'group__users')
+        return queryset
+
     class Meta:
         model = Post
         fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares')
-        depth = 1
-
-class CommentSerializer(serializers.ModelSerializer):
-
-    content = serializers.SerializerMethodField()
-
-    def get_content(self, obj):
-        return censor(obj.content)
-
-    class Meta:
-        model = Comment
-        fields = ('id', 'content', 'created_at', 'post', 'creator', 'likes')
-        depth = 1
-
-    def create(self, data):
-        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
-        current_user = self.context['request'].user
-        data = self.context['request'].data
-        return Comment.objects.create(content=data["content"], post=post, creator=current_user)
+        #depth = 1
 
 class PostSuperuserSerializer(serializers.ModelSerializer):
-
+    creator = NestedUserSerializer(read_only=True)
     filtered_content = serializers.SerializerMethodField()
+
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('creator', 'group')
+        queryset = queryset.prefetch_related('flags', 'likes', 'group__users')
+        return queryset
 
     def get_filtered_content(self, obj):
         return censor(obj.content)
@@ -83,11 +80,38 @@ class PostSuperuserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'shares', 'filtered_content', 'is_deleted')
-        depth = 1
+        fields = ('id', 'created_at', 'content', 'creator', 'group', 'picture', 'link', 'ogp', 'likes', 'flags', 'filtered_content', 'is_deleted')
+        #depth = 1
+
+
+class CommentSerializer(serializers.ModelSerializer):
+
+    creator = NestedUserSerializer(read_only=True)
+    content = serializers.SerializerMethodField()
+
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('creator', 'post')
+        queryset = queryset.prefetch_related('likes', 'post__creator', 'post__group', 'post__likes', 'post__shares', 'post__flags')
+        return queryset
+
+    def get_content(self, obj):
+        return censor(obj.content)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'post', 'creator' , 'likes')
+        #depth = 1
+
+    def create(self, data):
+        post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
+        current_user = self.context['request'].user
+        data = self.context['request'].data
+        return Comment.objects.create(content=data["content"], post=post, creator=current_user)
 
 class CommentSuperuserSerializer(serializers.ModelSerializer):
 
+    creator = NestedUserSerializer(read_only=True)
     filtered_content = serializers.SerializerMethodField()
 
     def get_filtered_content(self, obj):
@@ -102,11 +126,18 @@ class CommentSuperuserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'content', 'created_at', 'post', 'creator', 'filtered_content', 'is_deleted', 'likes')
-        depth = 1
+        #depth = 1
+
 
 class PostLikeSerializer(serializers.ModelSerializer):
 
     post = PostSerializer(required=False)
+
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('user', 'post')
+        queryset = queryset.prefetch_related('post__creator', 'post__group', 'post__likes', 'post__shares', 'post__flags')
+        return queryset
 
     class Meta:
         model = UserLikePost
@@ -121,8 +152,6 @@ class PostLikeSerializer(serializers.ModelSerializer):
         return new_post
 
 class CommentLikeSerializer(serializers.ModelSerializer):
-
-    comment = CommentSerializer(required=False)
 
     class Meta:
         model = UserLikeComment
@@ -141,13 +170,14 @@ class CommentLikeSerializer(serializers.ModelSerializer):
 
 class PostFlagSerializer(serializers.ModelSerializer):
 
+    user = NestedUserSerializer(read_only=True)
     post = PostSerializer(required=False)
     comment = CommentSerializer(required=False)
 
     class Meta:
         model = UserFlagPost
         fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
-        depth = 1
+        #depth = 1
 
     def create(self, data):
         post = Post.objects.get(id=self.context['view'].kwargs.get("pk"))
@@ -158,13 +188,14 @@ class PostFlagSerializer(serializers.ModelSerializer):
 
 class CommentFlagSerializer(serializers.ModelSerializer):
 
+    user = NestedUserSerializer(read_only=True)
     comment = CommentSerializer(required=False)
     post = PostSerializer(required=False)
 
     class Meta:
         model = UserFlagPost
         fields = ('id', 'user', 'post', 'status', 'comment', 'created_at')
-        depth = 1
+        #depth = 1
 
     def create(self, data):
         comment = Comment.objects.get(id=self.context['view'].kwargs.get("pk"))

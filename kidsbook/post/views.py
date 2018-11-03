@@ -1,3 +1,4 @@
+import copy
 from kidsbook.models import *
 from kidsbook.serializers import *
 from kidsbook.permissions import *
@@ -19,86 +20,89 @@ from django.db.models import Case, Count, IntegerField, Sum, When, F
 from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from kidsbook.utils import *
+from django.db import connection, reset_queries
+
 
 User = get_user_model()
 
 class GroupPostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
-#     serializer_class = PostSerializer
     permission_classes = (IsAuthenticated, IsTokenValid, IsInGroup)
 
     def get_serializer_class(self):
-      if self.request.user.role.id <= 1:
-          return PostSuperuserSerializer
-      else:
-          return PostSerializer
+        if self.request.user.role.id <= 1:
+            return PostSuperuserSerializer
+        else:
+            return PostSerializer
 
     def list(self, request, **kwargs):
+
+
         try:
             # Get all posts in the group
-            queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk']))
+            user_role_id = request.user.role.id
+            post_queryset = Post.objects.filter(group__id = kwargs['pk'])
 
             if ('all' in request.query_params
                     and str(request.query_params.get('all', 'false')).lower() == 'true'
-                    and request.user.role.id <= 1
+                    and user_role_id <= 1
                     ):
                 pass
             else:
-                queryset = queryset.exclude(is_deleted=True)
+                post_queryset = post_queryset.exclude(is_deleted=True)
 
-            queryset = queryset.order_by('-created_at')
+            post_queryset = post_queryset.order_by('-created_at')
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(data=queryset, many=True)
-        serializer.is_valid()
+        # Change the Serializer depends on the role of requester
+        if user_role_id <= 1:
+            post_queryset = PostSuperuserSerializer.setup_eager_loading(post_queryset)
+            serializer = PostSuperuserSerializer(post_queryset, many=True)
+        else:
+            post_queryset = PostSerializer.setup_eager_loading(post_queryset)
+            serializer = PostSerializer(post_queryset, many=True)
 
-        response_data = serializer.data.copy()
+        reset_queries()
+        response_data = serializer.data
 
-        really_likes = UserLikeComment.objects.all().filter(like_or_dislike=True)
-        really_likes_users = User.objects.all().filter(id__in=[x.user.id for x in really_likes])
 
-        for post in serializer.data.copy():
-            queryset = UserLikePost.objects.all().filter(post=Post.objects.get(id=post['id']))
-            likes = PostLikeSerializer(queryset, many=True)
-            post['likes_list'] = likes.data.copy()
+        reset_queries()
+        comment_queryset = Comment.objects.filter(post__in=post_queryset).exclude(is_deleted=True)
+        comment_queryset.query.group_by = ['id']
+        comment_queryset = comment_queryset.annotate(
+            like_count=Count('likes')
+        ).order_by('-like_count', '-created_at')
 
-            queryset = Comment.objects.all().filter(post=Post.objects.get(id=post['id'])).exclude(is_deleted=True)
-            queryset.query.group_by = ['id']
-            # queryset = queryset.annotate(
-            #     like_count=Sum(
-            #         Case(
-            #             When(likes__in=really_likes_users, then=1),
-            #             default=0, output_field=IntegerField()
-            #         )
-            #     )
-            # ).order_by('-like_count', '-created_at')[:3]
+        comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
 
-            # queryset = queryset.annotate(
-            #     like_count=Count(
-            #         'likes',
-            #         likes__in = User.objects.all().filter(id__in= [x.user.id for x in UserLikeComment.objects.all().filter(comment=Comment.objects.get(id=)).filter(like_or_dislike=True)])
-            #     )
-            # ).order_by('-like_count', '-created_at')[:3]
+        comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
 
-            queryset = queryset.annotate(
-                like_count=Count('likes')
-            ).order_by('-like_count', '-created_at')[:3]
 
-            comments = CommentSerializer(queryset, many=True)
-            comments_data = comments.data.copy()
+        reset_queries()
+        likes_queryset = UserLikePost.objects.filter(post__in=post_queryset).exclude(like_or_dislike=False)
+        likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
+        likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
+
+
+
+        for post in iter(response_data):
+            post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], copy.deepcopy(likes_queryset_data)))
+            comments_data = list(filter(lambda comment: str(comment['post']) == post['id'], copy.deepcopy(comments_serializer_data)))[:3]
             for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
-            comment_data = clean_data_iterative(comments_data, 'post')
-            post['comments'] = comments_data.copy()
+            # comment_data = clean_data_iterative(comments_data, 'post')
+            post['comments'] = comments_data
             post['comments'] = clean_data_iterative(post['comments'], 'likes')
-        return Response({'data': serializer.data})
+
+        return Response({'data': response_data})
 
     def post(self, request, *args, **kwargs):
-        try:
-            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+        # try:
+        #     return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+        # except Exception as exc:
+        #     return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupFlaggedList(generics.ListAPIView):
     queryset = Post.objects.all()
@@ -113,8 +117,8 @@ class GroupFlaggedList(generics.ListAPIView):
             serializer = self.get_serializer(data=queryset, many=True)
             serializer.is_valid()
 #         return Response({'data': serializer.data})
-            queryset = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
-            post_queryset = UserFlagPost.objects.all().filter(post__in=queryset).order_by('-created_at')
+            queryset = Post.objects.filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
+            post_queryset = UserFlagPost.objects.filter(post__in=queryset).order_by('-created_at')
 
             # all_posts = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk']))
             # queryset = Comment.objects.all().filter(post__in = all_posts).exclude(flags__isnull = True)
@@ -123,7 +127,7 @@ class GroupFlaggedList(generics.ListAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        response_data = PostFlagSerializer(post_queryset, many=True).data.copy()
+        response_data = PostFlagSerializer(post_queryset, many=True).data
         post_data = []
         comment_data = []
 
@@ -148,7 +152,7 @@ class PostLike(generics.ListCreateAPIView):
     def list(self, request, **kwargs):
         try:
             queryset = self.get_queryset().filter(post = Post.objects.get(id=kwargs['pk'])).filter(like_or_dislike=True)
-        except Exception  as exc:
+        except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=queryset, many=True)
         serializer.is_valid()
@@ -262,8 +266,6 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
-        # for key, value in request.POST.iteritems():
-        #     print((key, value))
         update_data = request.data.dict()
         try:
             Post.objects.filter(id=kwargs.get('pk', None)).update(**update_data)
@@ -317,7 +319,7 @@ class PostCommentList(generics.ListCreateAPIView):
 
         for comment in serializer.data:
             comment['like_count'] = len(comment['likes'])
-            comment['likers'] = [x['id'] for x in comment['likes']]
+            comment['likers'] = [x for x in comment['likes']]
         response_data = clean_data_iterative(serializer.data, 'likes')
         return Response({'data': serializer.data})
 
