@@ -72,9 +72,10 @@ class GroupPostList(generics.ListCreateAPIView):
         comment_queryset.query.group_by = ['id']
         comment_queryset = comment_queryset.annotate(
             like_count=Count('likes')
-        ).order_by('-like_count', '-created_at')[:3]
+        ).order_by('-like_count', '-created_at')
 
         comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
+
         comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
         print(len(connection.queries))
 
@@ -86,11 +87,11 @@ class GroupPostList(generics.ListCreateAPIView):
         print(len(connection.queries))
 
         for post in iter(response_data):
-            post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], likes_queryset_data))
-            comments_data = list(filter(lambda comment: str(comment['post']) == post['id'], comments_serializer_data))[:3]
+            post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], copy.deepcopy(likes_queryset_data)))
+            comments_data = list(filter(lambda comment: str(comment['post']) == post['id'], copy.deepcopy(comments_serializer_data)))[:3]
             for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
-            comment_data = clean_data_iterative(comments_data, 'post')
+            # comment_data = clean_data_iterative(comments_data, 'post')
             post['comments'] = comments_data
             post['comments'] = clean_data_iterative(post['comments'], 'likes')
 
