@@ -23,6 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'a5)t3&0wu-u*8ti(ru_b72vmz8d3pliuuqh8b7i_t^e(aci-1l'
 
+NOTIFICATION_SECRET_KEY = '1234567890'
+NOTIFICATION_ENDPOINT = 'https://notify.kidsbook.ml/notify'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

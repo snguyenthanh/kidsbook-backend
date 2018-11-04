@@ -612,3 +612,51 @@ def TestUserPost(self):
         self.assertTrue(
             response.data.get('data', {}).get('content') == 'This is new'
         )
+
+class TestUserSetting(APITestCase):
+    def setUp(self):
+        # A user to modify
+        username = "Doggo"
+        email = "Mc"
+        password = 'dogface'
+        self.user = User.objects.create_user(username=username,
+                                            email_address=email,
+                                            password=password)
+        self.user_token = self.get_token(self.user)
+        self.url = "{}/user/setting/".format(url_prefix,self.user.id)
+
+    def get_token(self, user):
+        token = generate_token(user)
+        return 'Bearer {0}'.format(token.decode('utf-8'))
+
+    def changes_reflect_in_response(self, request_changes, previous_state, current_state):
+        difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
+
+        for key, prev_val in iter(previous_state.items()):
+            # If the un-modified value changes
+            if key not in request_changes and current_state.get(key, '') != prev_val:
+                return False
+
+            # If the un-modified value doesnt match
+            if key in request_changes and isinstance(request_changes[key], str) and request_changes[key] != current_state.get(key, ''):
+                return False
+        return True
+
+    def test_get_user_setting(self):
+        response = self.client.get(self.url, HTTP_AUTHORIZATION=self.user_token)
+        self.assertEqual(200, response.status_code)
+
+    def test_update_user_setting(self):
+        prev_state = self.client.get(self.url, HTTP_AUTHORIZATION=self.user_token).data.get('data', {})
+
+        new_changes = {
+            'receive_notifications': False
+        }
+
+        response = self.client.post(self.url, data=new_changes, HTTP_AUTHORIZATION=self.user_token)
+        self.assertEqual(202, response.status_code)
+
+        cur_state = self.client.get(self.url, HTTP_AUTHORIZATION=self.user_token).data.get('data', {})
+        self.assertTrue(
+            self.changes_reflect_in_response(new_changes, prev_state, cur_state)
+        )

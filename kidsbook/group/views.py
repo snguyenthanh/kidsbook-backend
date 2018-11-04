@@ -9,6 +9,7 @@ from uuid import UUID
 from kidsbook.serializers import *
 from kidsbook.models import *
 from kidsbook.permissions import *
+from kidsbook.utils import *
 
 User = get_user_model()
 
@@ -26,9 +27,8 @@ def get_groups(request):
 
     try:
         groups = Group.objects.all()
-        # groups = request.user.group_users.all()
-    except Exception:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    except Exception as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = GroupSerializer(groups, many=True)
     return Response({'data': serializer.data})
@@ -39,8 +39,8 @@ def create_group(request):
 
     try:
         creator = request.user
-    except Exception:
-        return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = GroupSerializer(data=request_data)
 
@@ -82,12 +82,42 @@ def group(request):
 def add_member_to_group(user, group):
     group.add_member(user)
 
+    payload = {
+        'user': user,
+        'group': group,
+        'content': 'You have been added to group {}'.format(group.name)
+    }
+    noti = Notification.objects.create(**payload)
+    noti_user = NotificationUser.objects.get(user_id=user.id)
+    noti_user.number_of_unseen += 1
+    noti_user.save()
+
+    # Push the notification to all users in group
+    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+        noti_serializer = NotificationSerializer(noti).data
+        push_notification(noti_serializer)
+
 def delete_member_from_group(user, group):
     # Remove the link between the user and group
     if user.id == group.creator.id:
         raise ValueError('Cannot delete the Creator from the group.')
 
     GroupMember.objects.get(user_id=user.id, group_id=group.id).delete()
+
+    payload = {
+        'user': user,
+        'group': group,
+        'content': 'You have been removed from group {}'.format(group.name)
+    }
+    noti = Notification.objects.create(**payload)
+    noti_user = NotificationUser.objects.get(user_id=user.id)
+    noti_user.number_of_unseen += 1
+    noti_user.save()
+
+    # Push the notification to all users in group
+    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+        noti_serializer = NotificationSerializer(noti).data
+        push_notification(noti_serializer)
 
 @api_view(['POST', 'DELETE'])
 @permission_classes((IsAuthenticated, IsTokenValid, IsSuperUser))
@@ -126,8 +156,8 @@ def get_all_members_in_group(request, **kargs):
         else:
             serializer = UserPublicSerializer(users, many=True)
         return Response({'data': serializer.data})
-    except Exception:
-        pass
+    except Exception as exc:
+        Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -193,8 +223,8 @@ def delete_group(request, **kargs):
             # The relations in GroupMember table are also auto-removed
             target_group.delete()
             return Response({}, status=status.HTTP_202_ACCEPTED)
-    except Exception:
-        pass
+    except Exception as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'error': 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 

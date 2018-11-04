@@ -30,6 +30,16 @@ Status Code | Method | Description
 404 | `GET`, `POST`, `DELETE` | URL not found.
 405 | `GET`, `POST`, `DELETE` | The sender does not has permissions to perform this action. Handled by custom logic.
 
+## 5. Notifications
+Notifications are created when:
+- A group that the user is in has new posts.
+- The post of  the user has 1 more like/dislike.
+- The comment of  the user has 1 more like/dislike.
+- Another user comments on the user's post.
+- Another user comments on a post that the user comments.
+- The user is added to a group.
+- The user is removed from a group.
+
 # Web API References
 
 Column `Arguments` refers to the keyword arguments in the requests' body.
@@ -65,8 +75,17 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /users/ | | Get all superusers, all users in the same group or have no groups or created by the requester. | IsAuthenticated, IsSuperUser | User:*list*
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
 
+## 3. User Setting
+`GET` | /user/setting/ | | Get all settings of the requester. | IsAuthenticated | UserSetting:*dict*
+`POST` | /user/setting/ | | Update the settings of the requester. | IsAuthenticated | UserSetting:*dict*
 
-## 3. Post
+## 3. Notifications
+Method | Endpoint | Arguments | Description | Permissions | Return
+--- | --- | --- | --- | --- | --- |
+`GET` | /notifications/ | | Get at most 50 notifications and the count of unseen ones of the requester. | IsAuthenticated | Notification:*list*
+`POST` | /notifications/ | | Reset the count of unseen notifications to 0. | IsAuthenticated | NotificationUser:*dict*
+
+## 4. Post
 
 ```
 All posts and comments are censored by replacing the each letter with a asterisk `*`.
@@ -75,7 +94,7 @@ All posts and comments are censored by replacing the each letter with a asterisk
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /group/<group_id>/posts/ | | Get all posts in the group (exclude deleted ones). | IsAuthenticated, IsInGroup | Post: *list*
-`GET` | /group/<group_id>/posts/?all=<bool> | | Get all posts in the group (include deleted ones). `bool` is case-insensitive. | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
+`GET` | /group/<group_id>/posts/?all=*bool* | | Get all posts in the group (include deleted ones). `bool` is case-insensitive. | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
 `POST` | /group/<group_id>/posts/ | * | Create a post in the group. | IsAuthenticated, IsInGroup | Post: *dict*
 `GET` | group/<group_id>/flagged/ | Get all flagged posts in the group. | IsAuthenticated, IsInGroup, IsSuperUser | Post: *list*
 `GET` | /post/<post_id>/ | | Get post's details by ID. | IsAuthenticated, HasAccessToPost | Post: *dict*
@@ -86,7 +105,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /post/<post_id>/shares/ | | Get all shares of the post. | IsAuthenticated, HasAccessToPost | UserSharePost: *list*
 `POST` | /post/<post_id>/shares/ | | User `shares` the post.  | IsAuthenticated, HasAccessToPost | UserSharePost: *dict*
 `GET` | /post/<post_id>/comments/ | | Get all comments of the post (exclude deleted ones). | IsAuthenticated, HasAccessToPost | Comment: *list*
-`GET` | /post/<post_id>/comments/?all=<bool> | | Get all comments of the post (include deleted ones). `bool` is case-insensitive.. | IsAuthenticated, HasAccessToPost, IsSuperUser | Comment: *list*
+`GET` | /post/<post_id>/comments/?all=*bool* | | Get all comments of the post (include deleted ones). `bool` is case-insensitive.. | IsAuthenticated, HasAccessToPost, IsSuperUser | Comment: *list*
 `POST` | /post/<post_id>/comments/ | content:*str* | Create a comment for the post. | IsAuthenticated, HasAccessToPost | Comment: *dict*
 `GET` | /post/<post_id>/flags/ | | Get all flags of the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *list*
 `POST` | /post/<post_id>/flags/ | status:*str* | Create a flag for the post. | IsAuthenticated, HasAccessToPost | UserFlagPost: *dict*
@@ -98,7 +117,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /comment/<comment_id>/flags/ | | Get the flags of the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *list*
 `POST` | /comment/<comment_id>/flags/ | status:*str* | Create a flag for the comment. | IsAuthenticated, HasAccessToComment | UserFlagPost: *dict*
 
-## 4. Group
+## 6. Group
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
@@ -111,7 +130,7 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `DELETE` | /group/<group_id>/user/<user_id>/ | | Remove the user to the group. | IsAuthenticated, IsGroupCreator | {}
 `DELETE` | /group/<group_id>/delete/ | | Remove the group. | IsAuthenticated, IsGroupCreator| {}
 
-## 5. Batch
+## 7. Batch
 An URL argument `file_name` is required by [FileUploadParser](https://www.django-rest-framework.org/api-guide/parsers/#fileuploadparser).
 
 A header row is required for the `.csv` files. The headers allowed include:

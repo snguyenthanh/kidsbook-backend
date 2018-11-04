@@ -5,20 +5,9 @@ from kidsbook.permissions import *
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth.decorators import login_required, user_passes_test
-# from django.contrib.auth.models import User
-from rest_framework.permissions import IsAuthenticated
-
-from django.http import (
-    HttpResponse, HttpResponseNotFound, JsonResponse
-)
-from django.contrib.auth import (
-    authenticate, login, logout
-)
-from django.db.models import Case, Count, IntegerField, Sum, When, F
-
-from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.db.models import Case, Count, IntegerField, Sum, When, F
+from django.contrib.auth import get_user_model
 from kidsbook.utils import *
 from django.db import connection, reset_queries
 
@@ -89,6 +78,7 @@ class GroupPostList(generics.ListCreateAPIView):
         for post in iter(response_data):
             post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], copy.deepcopy(likes_queryset_data)))
             comments_data = list(filter(lambda comment: str(comment['post']) == post['id'], copy.deepcopy(comments_serializer_data)))[:3]
+
             for comment in comments_data:
                 comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
             # comment_data = clean_data_iterative(comments_data, 'post')
@@ -98,11 +88,39 @@ class GroupPostList(generics.ListCreateAPIView):
         return Response({'data': response_data})
 
     def post(self, request, *args, **kwargs):
-        return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
-        # try:
-        #     return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
-        # except Exception as exc:
-        #     return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            created_post = self.create(request, *args, **kwargs).data
+
+            # Create a notification for all users in group
+            action_user = request.user
+            group = Group.objects.get(id=kwargs.get('pk'))
+            payload = {
+                'post': Post.objects.get(id=created_post.get('id', '')),
+                'action_user': action_user,
+                'group': group ,
+                'content': "{} created a new post in group {}".format(action_user.username, group.name)
+            }
+
+            users_in_group = GroupMember.objects.filter(group_id=group.id)
+
+            for user in iter(users_in_group):
+                if user.user.id != request.user.id:
+                    payload['user'] = User.objects.get(id=user.user.id)
+                    noti = Notification.objects.create(**payload)
+
+                    # Increase notification count by 1
+                    noti_user = NotificationUser.objects.get(user_id=user.user.id)
+                    noti_user.number_of_unseen += 1
+                    noti_user.save()
+
+                    # Push the notification to all users in group
+                    if UserSetting.objects.get(user_id=user.user.id).receive_notifications:
+                        noti_serializer = NotificationSerializer(noti).data
+                        push_notification(noti_serializer)
+
+            return Response({'data': created_post}, status=status.HTTP_202_ACCEPTED)
+        except Exception as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupFlaggedList(generics.ListAPIView):
     queryset = Post.objects.all()
@@ -160,9 +178,46 @@ class PostLike(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            liked_post = self.create(request, *args, **kwargs).data
+
+            # Create a notification for the post's owner
+            action_user = request.user
+            post = Post.objects.get(id=kwargs.get('pk', ''))
+
+            if request.user.id != post.creator:
+                group = Group.objects.get(id=post.group.id)
+                action = request.data.get('like_or_dislike', None)
+                if not action or str(action).lower() == 'true':
+                    action = 'likes'
+                else:
+                    action = 'dislikes'
+
+                payload = {
+                    'post': post,
+                    'action_user': action_user,
+                    'group': group,
+                    'content': "{} {} your post".format(action_user.username, action)
+                }
+
+                user = User.objects.get(id=post.creator.id)
+
+                payload['user'] = user
+                noti = Notification.objects.create(**payload)
+
+                # Increase notification count by 1
+                noti_user = NotificationUser.objects.get(user_id=user.id)
+                noti_user.number_of_unseen += 1
+                noti_user.save()
+
+                # Push the notification to the user
+                if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                    noti_serializer = NotificationSerializer(noti).data
+                    push_notification(noti_serializer)
+
+            return Response({'data': liked_post}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CommentLike(generics.ListCreateAPIView):
     queryset = UserLikeComment.objects.all()
@@ -180,7 +235,44 @@ class CommentLike(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            comment_data = self.create(request, *args, **kwargs).data
+            comment = Comment.objects.get(id=comment_data.get('comment', {}).get('id', ''))
+
+            # Create a notification for the post's owner
+            action_user = request.user
+            post = Post.objects.get(id=comment.post.id)
+
+            if request.user.id != comment.creator.id:
+                group = Group.objects.get(id=post.group.id)
+                action = request.data.get('like_or_dislike', None)
+                if not action or str(action).lower() == 'true':
+                    action = 'likes'
+                else:
+                    action = 'dislikes'
+
+                payload = {
+                    'post': post,
+                    'action_user': action_user,
+                    'group': group,
+                    'comment': comment,
+                    'content': "{} {} your comment".format(action_user.username, action)
+                }
+
+                user = User.objects.get(id=comment.creator.id)
+
+                payload['user'] = user
+                noti = Notification.objects.create(**payload)
+
+                # Increase notification count by 1
+                noti_user = NotificationUser.objects.get(user_id=user.id)
+                noti_user.number_of_unseen += 1
+                noti_user.save()
+
+                # Push the notification to the user
+                if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                    noti_serializer = NotificationSerializer(noti).data
+                    push_notification(noti_serializer)
+            return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -325,7 +417,54 @@ class PostCommentList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            return Response({'data': self.create(request, *args, **kwargs).data}, status=status.HTTP_202_ACCEPTED)
+            comment_data = self.create(request, *args, **kwargs).data
+            comment = Comment.objects.get(id=comment_data.get('id', ''))
+
+            action_user = request.user
+            group = Group.objects.get(id=comment.post.group.id)
+            post =  Post.objects.get(id=comment.post.id)
+            payload = {
+                'post': post,
+                'action_user': action_user,
+                'group': group,
+                'comment': comment
+            }
+
+            # Create a notification for the post's owner
+            post_owner = User.objects.get(id=comment.post.creator.id)
+            payload['user'] = post_owner
+            payload['content'] = "{} commented on your post".format(action_user.username)
+            noti = Notification.objects.create(**payload)
+            noti_user = NotificationUser.objects.get(user_id=post_owner.id)
+            noti_user.number_of_unseen += 1
+            noti_user.save()
+
+            # Push the notification to all users in group
+            if UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
+                noti_serializer = NotificationSerializer(noti).data
+                push_notification(noti_serializer)
+
+            # Create a notification for all users commented in the post
+            all_comments_creators = Comment.objects.filter(post_id=post.id).distinct().values_list('creator', flat=True)
+            users_commented = User.objects.filter(id__in=all_comments_creators)
+
+            for user in iter(users_commented):
+                if user.id != request.user.id:
+                    payload['user'] = User.objects.get(id=user.id)
+                    payload['content'] = "{} commented on a post that you also commented".format(action_user.username)
+                    noti = Notification.objects.create(**payload)
+
+                    # Increase notification count by 1
+                    noti_user = NotificationUser.objects.get(user_id=user.id)
+                    noti_user.number_of_unseen += 1
+                    noti_user.save()
+
+                    # Push the notification to all users in group
+                    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                        noti_serializer = NotificationSerializer(noti).data
+                        push_notification(noti_serializer)
+
+            return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
