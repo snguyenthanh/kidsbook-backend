@@ -1,5 +1,15 @@
 from django.conf import settings
 import requests
+import json
+from uuid import UUID
+
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
 
 def clean_data(data, *args):
     for field in args:
@@ -19,7 +29,7 @@ def push_notification(send_data: dict):
     try:
         response = requests.post(
                         url,
-                        data=send_data,
+                        data=json.dumps(send_data, cls=UUIDEncoder),
                         headers={'Connection': 'close'},
                         timeout=2       # 2 seconds
                     )
