@@ -91,11 +91,10 @@ class GroupPostList(generics.ListCreateAPIView):
                     noti_user.number_of_unseen += 1
                     noti_user.save()
 
-                    ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-                    ## Push the notification to all users in group
-                    # if UserSetting.objects.get(user_id=user.user.id).receive_notifications:
-                    #     noti_serializer = NotificationSerializer(noti).data
-                    #     push_notification(noti_serializer)
+                    # Push the notification to all users in group
+                    if UserSetting.objects.get(user_id=user.user.id).receive_notifications:
+                        noti_serializer = NotificationSerializer(noti).data
+                        push_notification(noti_serializer)
 
             return Response({'data': created_post}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
@@ -181,11 +180,10 @@ class PostLike(generics.ListCreateAPIView):
                 noti_user.number_of_unseen += 1
                 noti_user.save()
 
-                ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-                ## Push the notification to the user
-                # if UserSetting.objects.get(user_id=user.id).receive_notifications:
-                #     noti_serializer = NotificationSerializer(noti).data
-                #     push_notification(noti_serializer)
+                # Push the notification to the user
+                if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                    noti_serializer = NotificationSerializer(noti).data
+                    push_notification(noti_serializer)
 
             return Response({'data': liked_post}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
@@ -240,11 +238,10 @@ class CommentLike(generics.ListCreateAPIView):
                 noti_user.number_of_unseen += 1
                 noti_user.save()
 
-                ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-                ## Push the notification to the user
-                # if UserSetting.objects.get(user_id=user.id).receive_notifications:
-                #     noti_serializer = NotificationSerializer(noti).data
-                #     push_notification(noti_serializer)
+                # Push the notification to the user
+                if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                    noti_serializer = NotificationSerializer(noti).data
+                    push_notification(noti_serializer)
             return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -400,11 +397,10 @@ class PostCommentList(generics.ListCreateAPIView):
             noti_user.number_of_unseen += 1
             noti_user.save()
 
-            ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-            ## Push the notification to all users in group
-            # if UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
-            #     noti_serializer = NotificationSerializer(noti).data
-            #     push_notification(noti_serializer)
+            # Push the notification to all users in group
+            if UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
+                noti_serializer = NotificationSerializer(noti).data
+                push_notification(noti_serializer)
 
             # Create a notification for all users commented in the post
             all_comments_creators = Comment.objects.filter(post_id=post.id).distinct().values_list('creator', flat=True)
@@ -421,11 +417,10 @@ class PostCommentList(generics.ListCreateAPIView):
                     noti_user.number_of_unseen += 1
                     noti_user.save()
 
-                    ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-                    ## Push the notification to all users in group
-                    # if UserSetting.objects.get(user_id=user.id).receive_notifications:
-                    #     noti_serializer = NotificationSerializer(noti).data
-                    #     push_notification(noti_serializer)
+                    # Push the notification to all users in group
+                    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                        noti_serializer = NotificationSerializer(noti).data
+                        push_notification(noti_serializer)
 
             return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
         except Exception as exc:

@@ -88,11 +88,10 @@ def add_member_to_group(user, group):
     noti_user.number_of_unseen += 1
     noti_user.save()
 
-    ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-    ## Push the notification to all users in group
-    # if UserSetting.objects.get(user_id=user.id).receive_notifications:
-    #     noti_serializer = NotificationSerializer(noti).data
-    #     push_notification(noti_serializer)
+    # Push the notification to all users in group
+    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+        noti_serializer = NotificationSerializer(noti).data
+        push_notification(noti_serializer)
 
 def delete_member_from_group(user, group):
     # Remove the link between the user and group
@@ -111,11 +110,10 @@ def delete_member_from_group(user, group):
     noti_user.number_of_unseen += 1
     noti_user.save()
 
-    ## TEMPORARILY DISABLE THIS UNTIL THE MICROSERVICE IS READY TO INTEGRATE
-    ## Push the notification to all users in group
-    # if UserSetting.objects.get(user_id=user.id).receive_notifications:
-    #     noti_serializer = NotificationSerializer(noti).data
-    #     push_notification(noti_serializer)
+    # Push the notification to all users in group
+    if UserSetting.objects.get(user_id=user.id).receive_notifications:
+        noti_serializer = NotificationSerializer(noti).data
+        push_notification(noti_serializer)
 
 @api_view(['POST', 'DELETE'])
 @permission_classes((IsAuthenticated, IsTokenValid, IsGroupCreator))
