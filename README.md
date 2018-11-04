@@ -75,9 +75,11 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /users/ | | Get all superusers, all users in the same group or have no groups or created by the requester. | IsAuthenticated, IsSuperUser | User:*list*
 `GET` | /users/non_group/ | | Get all users who are not in any groups. | IsAuthenticated, IsSuperUser | User:*list*
 
-## 3. User Setting
+## 3. Setting
+Method | Endpoint | Arguments | Description | Permissions | Return
+--- | --- | --- | --- | --- | --- |
 `GET` | /user/setting/ | | Get all settings of the requester. | IsAuthenticated | UserSetting:*dict*
-`POST` | /user/setting/ | | Update the settings of the requester. | IsAuthenticated | UserSetting:*dict*
+`POST` | /user/setting/ | * | Update the settings of the requester. | IsAuthenticated | UserSetting:*dict*
 
 ## 3. Notifications
 Method | Endpoint | Arguments | Description | Permissions | Return

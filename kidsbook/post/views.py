@@ -129,19 +129,12 @@ class GroupFlaggedList(generics.ListAPIView):
 
     def list(self, request, **kwargs):
         try:
-#             queryset = self.get_queryset().filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags=[]).order_by('-created_at')
-#         except Exception:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.get_serializer(data=queryset, many=True)
-            serializer.is_valid()
-#         return Response({'data': serializer.data})
             queryset = Post.objects.filter(group = Group.objects.get(id=kwargs['pk'])).exclude(flags__isnull = True)
             post_queryset = UserFlagPost.objects.filter(post__in=queryset).order_by('-created_at')
 
             # all_posts = Post.objects.all().filter(group = Group.objects.get(id=kwargs['pk']))
             # queryset = Comment.objects.all().filter(post__in = all_posts).exclude(flags__isnull = True)
             # comment_queryset = UserFlagPost.objects.all().filter(comment__in=queryset).order_by('-created_at')
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
