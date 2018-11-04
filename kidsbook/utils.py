@@ -23,14 +23,18 @@ def clean_data_iterative(data, *args):
     return data
 
 def push_notification(send_data: dict):
-    kargs['secretKey'] = getattr(settings, "NOTIFICATION_SECRET_KEY", None)
+    send_data['secretKey'] = getattr(settings, "NOTIFICATION_SECRET_KEY", None)
     url = getattr(settings, "NOTIFICATION_ENDPOINT", None)
-
+    headers = {
+        'application/json',
+        'Connection': 'close'
+    }
+    
     try:
         response = requests.post(
                         url,
                         data=json.dumps(send_data, cls=UUIDEncoder),
-                        headers={'Connection': 'close'},
+                        headers=headers,
                         timeout=2       # 2 seconds
                     )
     except Exception:
