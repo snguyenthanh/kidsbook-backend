@@ -26,10 +26,10 @@ def push_notification(send_data: dict):
     send_data['secretKey'] = getattr(settings, "NOTIFICATION_SECRET_KEY", None)
     url = getattr(settings, "NOTIFICATION_ENDPOINT", None)
     headers = {
-        'application/json',
+        'Content-type': 'application/json',
         'Connection': 'close'
     }
-    
+
     try:
         response = requests.post(
                         url,
