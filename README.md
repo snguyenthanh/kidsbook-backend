@@ -50,6 +50,10 @@ However, only the fields defined in the [serializers](./kidsbook/serializers.py)
 
 ## 1. User
 
+```
+When a virtual user is created, it will be automatically added to all groups the creator is in.
+```
+
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |
 `GET` | /user/<user_id>/ | | Get the user's information. | IsAuthenticated | User: *dict*
@@ -61,6 +65,8 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `GET` | /user/virtual_users/ | | Get all `virtual` users created by the requester. | IsAuthenticated, IsSuperUser | User: *list*
 `POST` | /user/logout/ | | Disable the requester's token. | IsAuthenticated | {}
 `POST` | /user/update/<user_id/ | * (If update password then need `oldPassword` and `password`) | Update an user using the given arguments. | IsAuthenticated. The requester must be either the creator of the user, the user himself or a superuser in a same group. | User: *dict*
+`POST` | /user/record_time/ |'timestamp': The current epoch time | Ping request to record time. | IsAuthenticated | {}
+
 
 ## 2. Users
 
@@ -80,6 +86,10 @@ Method | Endpoint | Arguments | Description | Permissions | Return
 `POST` | /notifications/ | | Reset the count of unseen notifications to 0. | IsAuthenticated | NotificationUser:*dict*
 
 ## 4. Post
+
+```
+All posts and comments are censored by replacing the each letter with a asterisk `*`.
+```
 
 Method | Endpoint | Arguments | Description | Permissions | Return
 --- | --- | --- | --- | --- | --- |

@@ -29,7 +29,7 @@ class TestGroup(APITestCase):
                 return False
 
             # If the un-modified value doesnt match
-            if key in request_changes and request_changes[key] != current_state.get(key, ''):
+            if key in request_changes and str(request_changes[key]).lower() != str(current_state.get(key, '')).lower():
                 return False
         return True
 
@@ -347,3 +347,70 @@ class TestGroupManage(APITestCase):
 
         response = self.client.delete(url, HTTP_AUTHORIZATION=token)
         self.assertEqual(403, response.status_code)
+
+
+class TestGroupSettings(APITestCase):
+    def setUp(self):
+        self.url = url_prefix + '/group/'
+
+        # Creator
+        self.username = "john"
+        self.email = "john@snow.com"
+        self.password = "you_know_nothing"
+        self.creator = User.objects.create_superuser(username=self.username, email_address=self.email, password=self.password)
+        token = generate_token(self.creator)
+        self.creator_token = 'Bearer {0}'.format(token.decode('utf-8'))
+
+        # A member
+        username = "sabaton"
+        email = "heavy@metal.com"
+        password = "you_know_nothing"
+        self.member = User.objects.create_user(username=username, email_address=email, password=password)
+        token = generate_token(self.member)
+        self.member_token = 'Bearer {0}'.format(token.decode('utf-8'))
+
+        # Create a group
+        response = self.client.post(url_prefix + '/group/', {"name": "testing group"}, HTTP_AUTHORIZATION=self.creator_token)
+        self.group = Group.objects.get(id=response.data.get('data', {}).get('id'))
+        self.url = "{}/group/{}/setting/".format(url_prefix, self.group.id)
+        self.group.add_member(self.member)
+
+    def changes_reflect_in_response(self, request_changes, previous_state, current_state):
+        difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
+
+        for key, prev_val in iter(previous_state.items()):
+            # If the un-modified value changes
+            if key not in request_changes and current_state.get(key, '') != prev_val:
+                return False
+
+            # If the un-modified value doesnt match
+            if key in request_changes and str(request_changes[key]).lower() != str(current_state.get(key, '')).lower():
+                return False
+        return True
+
+    def test_get_group_settings(self):
+        response = self.client.get(self.url, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(200, response.status_code)
+
+
+    def test_update_group_settings_by_creator(self):
+        prev_state = self.client.get(self.url, HTTP_AUTHORIZATION=self.creator_token).data.get('data', {})
+
+        changes = {
+            'is_like_enabled': 'false'
+        }
+
+        response = self.client.post(self.url, data=changes, HTTP_AUTHORIZATION=self.creator_token)
+        self.assertEqual(202, response.status_code)
+
+        cur_state = self.client.get(self.url, HTTP_AUTHORIZATION=self.creator_token).data.get('data', {})
+        self.assertTrue(
+            self.changes_reflect_in_response(changes, prev_state, cur_state)
+        )
+
+    def test_update_group_settings_by_non_creator(self):
+        changes = {
+            'is_like_enabled': 'false'
+        }
+        response = self.client.post(self.url, changes, HTTP_AUTHORIZATION=self.member_token)
+        self.assertEqual(405, response.status_code)

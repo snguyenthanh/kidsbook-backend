@@ -14,7 +14,9 @@ urlpatterns = [
     # View all members public profile of this group
     path('<uuid:pk>/users/', views.get_all_members_in_group),
 
+    # Delete a group
     path('<uuid:pk>/delete/', views.delete_group),
 
-    # path('<group_id')
+    # Get / update group settings
+    path('<uuid:pk>/setting/', views.group_settings),
 ]

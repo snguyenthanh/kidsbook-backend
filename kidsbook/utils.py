@@ -2,7 +2,13 @@ from django.conf import settings
 import requests
 import json
 from uuid import UUID
+import datetime
+import pytz
+from profanity import profanity
+from kidsbook.models import *
 
+
+profanity.set_censor_characters("*")
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -10,6 +16,7 @@ class UUIDEncoder(json.JSONEncoder):
             # if the obj is uuid, we simply return the value of uuid
             return obj.hex
         return json.JSONEncoder.default(self, obj)
+      
 
 def clean_data(data, *args):
     for field in args:
@@ -39,3 +46,18 @@ def push_notification(send_data: dict):
                     )
     except Exception:
         pass
+
+def censor(text: str):
+    return profanity.censor(text)
+  
+def usage_time(user, num_days):
+  arr = []
+  tz = pytz.timezone('Asia/Singapore')
+  for i in range(num_days):
+    day = (datetime.datetime.now(tz) - datetime.timedelta(days=i)).date()
+    if(ScreenTime.objects.filter(user=user, date=day)):
+      time = ScreenTime.objects.get(user=user, date=day).total_time
+    else:
+      time = 0
+    arr.append(time)
+  return arr

@@ -10,11 +10,10 @@ class IsTokenValid(permissions.BasePermission):
         is_allowed_user = True
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
-            is_blackListed = BlackListedToken.objects.get(user=user_id, token=token)
-            if is_blackListed:
+            if BlackListedToken.objects.filter(user=user_id, token=token).exist():
                 is_allowed_user = False
         except Exception:
-            is_allowed_user = True
+            pass
         return is_allowed_user
 
 class IsOwner(permissions.BasePermission):

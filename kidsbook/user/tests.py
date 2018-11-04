@@ -405,7 +405,7 @@ class TestUserUpdate(APITestCase):
         # Create a group
         response = self.client.post(url_prefix + '/group/', {"name": "testing group by a random stranger"}, HTTP_AUTHORIZATION=self.get_token(self.creator))
         group = Group.objects.get(id=response.data.get('data', {}).get('id', ''))
-        group.add_member(self.modify_user)
+        # group.add_member(self.modify_user)
 
         # Create a random superuser
         username = "chris"
@@ -507,6 +507,7 @@ class TestUpdateVirtualUser(APITestCase):
         password = self.password
         self.superuser = User.objects.create_superuser(username=username, email_address=email, password=password)
         self.superuser_token = self.get_token(self.superuser)
+        self.group.add_member(self.superuser)
 
     def get_token(self, user):
         token_response = self.client.post(self.url + 'login/', data={'email_address': user.email_address, 'password': self.password})
@@ -526,13 +527,15 @@ class TestUpdateVirtualUser(APITestCase):
         }
         response = self.client.post(url_prefix + '/user/register/', payload, HTTP_AUTHORIZATION=self.creator_token)
         virtual_user = User.objects.get(id=response.data.get('data', {}).get('id', ''))
-        self.group.add_member(virtual_user)
+        #self.group.add_member(virtual_user)
+
+        new_update_url = "{}update/{}/".format(self.url, virtual_user.id)
 
         data = {
             'username': 'Not_doggo',
             'description': 'Corki'
         }
-        response = self.client.post(self.update_url, data=data, HTTP_AUTHORIZATION=self.superuser_token)
+        response = self.client.post("{}update/{}/".format(self.url, virtual_user.id), data=data, HTTP_AUTHORIZATION=self.superuser_token)
         self.assertEqual(202, response.status_code)
 
 
