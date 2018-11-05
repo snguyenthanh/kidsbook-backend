@@ -246,8 +246,13 @@ class PostShare(generics.ListCreateAPIView):
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostSerializer
     permission_classes = (IsAuthenticated, IsTokenValid, HasAccessToPost)
+
+    def get_serializer_class(self):
+        if self.request.user.role.id <= 1:
+            return PostSuperuserSerializer
+        else:
+            return PostSerializer
 
     def get(self, request, *args, **kwargs):
         post_id = kwargs.get('pk', None)
@@ -260,8 +265,34 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
             if post.is_deleted and not request.user.is_superuser:
                 return Response({'error': 'Post not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-            serializer = PostSerializer(post)
-            return Response({'data': serializer.data})
+            user_role_id = request.user.role.id
+
+            # Change the Serializer depends on the role of requester
+            if user_role_id <= 1:
+                serializer = PostSuperuserSerializer(post)
+            else:
+                serializer = PostSerializer(post)
+            
+            response_data = serializer.data
+
+            reset_queries()
+            comment_queryset = Comment.objects.filter(post=post).exclude(is_deleted=True)
+            comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
+            comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
+
+            reset_queries()
+            likes_queryset = UserLikePost.objects.filter(post=post).exclude(like_or_dislike=False)
+            likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
+            likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
+            response_data['likes_list'] = list(filter(lambda like: like['post']['id'] == response_data['id'], copy.deepcopy(likes_queryset_data)))
+            comments_data = list(filter(lambda comment: str(comment['post']) == response_data['id'], copy.deepcopy(comments_serializer_data)))[:3]
+            for comment in comments_data:
+                comment['creator'] = {'id':comment['creator']['id'], 'username': comment['creator']['username']}
+            # comment_data = clean_data_iterative(comments_data, 'post')
+            response_data['comments'] = comments_data
+            response_data['comments'] = clean_data_iterative(response_data['comments'], 'likes')
+
+            return Response({'data': response_data})
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
