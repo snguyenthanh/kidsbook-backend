@@ -28,7 +28,7 @@ class UserSettingSerializer(serializers.ModelSerializer):
         model = UserSetting
         fields = ('id', 'user', 'receive_notifications')
         depth = 1
-        
+
 class NestedUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -62,16 +62,19 @@ class PostSerializer(serializers.ModelSerializer):
         #depth = 1
 
 class NotificationSerializer(serializers.ModelSerializer):
+    user = NestedUserSerializer(read_only=True)
+    action_user = NestedUserSerializer(read_only=True)
+
     class Meta:
         model = Notification
         fields = ('id', 'created_at', 'content', 'user', 'group', 'post', 'action_user')
-        depth = 1
+        #depth = 1
 
 class NotificationUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationUser
         fields = ('id', 'user', 'number_of_unseen')
-        depth = 1
+        #depth = 1
 
 class PostSuperuserSerializer(serializers.ModelSerializer):
     creator = NestedUserSerializer(read_only=True)

@@ -24,11 +24,12 @@ def get_notifications(request):
     """
 
     try:
-        notifications = Notification.objects.filter(user_id=request.user.id).order_by('-created_at')
+        requester_id = request.user.id
+        notifications = Notification.objects.filter(user_id=requester_id).order_by('-created_at')
         if len(notifications) > 50:
             notifications = notifications[:50]
 
-        number_of_unseen = NotificationUser.objects.get(user_id=request.user.id).number_of_unseen
+        number_of_unseen = NotificationUser.objects.get(user_id=requester_id).number_of_unseen
     except Exception as exc:
         return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

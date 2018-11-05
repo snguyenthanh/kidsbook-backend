@@ -193,17 +193,18 @@ class PostLike(generics.ListCreateAPIView):
                 }
 
                 user = User.objects.get(id=post.creator.id)
+                user_id = user.id
 
                 payload['user'] = user
                 noti = Notification.objects.create(**payload)
 
                 # Increase notification count by 1
-                noti_user = NotificationUser.objects.get(user_id=user.id)
+                noti_user = NotificationUser.objects.get(user_id=user_id)
                 noti_user.number_of_unseen += 1
                 noti_user.save()
 
-                # Push the notification to the user
-                if UserSetting.objects.get(user_id=user.id).receive_notifications:
+                # Push the notification to the creator
+                if UserSetting.objects.get(user_id=user_id).receive_notifications:
                     noti_serializer = NotificationSerializer(noti).data
                     push_notification(noti_serializer)
 
@@ -413,9 +414,11 @@ class PostCommentList(generics.ListCreateAPIView):
             comment_data = self.create(request, *args, **kwargs).data
             comment = Comment.objects.get(id=comment_data.get('id', ''))
 
+            # Create a notification for the post's owner
             action_user = request.user
-            group = Group.objects.get(id=comment.post.group.id)
+            action_user_id = action_user.id
             post =  Post.objects.get(id=comment.post.id)
+            group = Group.objects.get(id=comment.post.group.id)
             payload = {
                 'post': post,
                 'action_user': action_user,
@@ -423,7 +426,6 @@ class PostCommentList(generics.ListCreateAPIView):
                 'comment': comment
             }
 
-            # Create a notification for the post's owner
             post_owner = User.objects.get(id=comment.post.creator.id)
             payload['user'] = post_owner
             payload['content'] = "{} commented on your post".format(action_user.username)
@@ -432,8 +434,8 @@ class PostCommentList(generics.ListCreateAPIView):
             noti_user.number_of_unseen += 1
             noti_user.save()
 
-            # Push the notification to all users in group
-            if UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
+            # Push the notification to the post's owner
+            if action_user_id != post_owner.id and UserSetting.objects.get(user_id=post_owner.id).receive_notifications:
                 noti_serializer = NotificationSerializer(noti).data
                 push_notification(noti_serializer)
 
@@ -442,7 +444,7 @@ class PostCommentList(generics.ListCreateAPIView):
             users_commented = User.objects.filter(id__in=all_comments_creators)
 
             for user in iter(users_commented):
-                if user.id != request.user.id:
+                if user.id != action_user_id:
                     payload['user'] = User.objects.get(id=user.id)
                     payload['content'] = "{} commented on a post that you also commented".format(action_user.username)
                     noti = Notification.objects.create(**payload)
@@ -452,7 +454,7 @@ class PostCommentList(generics.ListCreateAPIView):
                     noti_user.number_of_unseen += 1
                     noti_user.save()
 
-                    # Push the notification to all users in group
+                    # Push the notification to all users commented in the post
                     if UserSetting.objects.get(user_id=user.id).receive_notifications:
                         noti_serializer = NotificationSerializer(noti).data
                         push_notification(noti_serializer)

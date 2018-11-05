@@ -92,7 +92,7 @@ def add_member_to_group(user, group):
     noti_user.number_of_unseen += 1
     noti_user.save()
 
-    # Push the notification to all users in group
+    # Push the notification the newly added user
     if UserSetting.objects.get(user_id=user.id).receive_notifications:
         noti_serializer = NotificationSerializer(noti).data
         push_notification(noti_serializer)
@@ -114,7 +114,7 @@ def delete_member_from_group(user, group):
     noti_user.number_of_unseen += 1
     noti_user.save()
 
-    # Push the notification to all users in group
+    # Push the notification to the deleted user
     if UserSetting.objects.get(user_id=user.id).receive_notifications:
         noti_serializer = NotificationSerializer(noti).data
         push_notification(noti_serializer)
