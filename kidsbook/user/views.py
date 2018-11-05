@@ -114,6 +114,16 @@ class Register(APIView):
         if user_role in ('USER', 'VIRTUAL_USER') and not teacher:
             return Response({'error': "A creator's ID is required."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+        if 'email_address' not in request_data:
+            return Response({'error': "Missing email address."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        elif User.objects.filter(email_address=request_data['email_address']).exists():
+            return Response({'error': "The email address is already in used."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        if 'username' not in request_data:
+            return Response({'error': "Missing username."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        elif User.objects.filter(username=request_data['username']).exists():
+            return Response({'error': "The username is already in used."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         if teacher:
             try:
                 teacher = User.objects.get(id=teacher)
@@ -289,7 +299,7 @@ class GetInfoUser(generics.ListAPIView):
                 is_correct_virtual = user.teacher and user.teacher.id == request.user.id
                 if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
-                    
+
                     ## TODO: Factor this into UserSerializer( Tried but some configuration error)
                     if('num_days' in request.data):
                         num_days = request.data['num_days']
