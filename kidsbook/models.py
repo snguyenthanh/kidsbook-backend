@@ -183,7 +183,7 @@ class Group(models.Model):
         group_member = GroupMember(group=self, user=user)
         group_member.save()
         if(user.is_superuser):
-            for virtual_user in User.objects.filter(teacher=user):
+            for virtual_user in User.objects.filter(teacher=user, role_id=3):
                 group_member = GroupMember(group=self, user=virtual_user)
                 group_member.save()
 
