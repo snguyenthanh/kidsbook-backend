@@ -20,7 +20,6 @@ from django.db.models import Case, Count, IntegerField, Sum, When, F
 from django.contrib.auth import get_user_model, get_user
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from kidsbook.utils import *
-from django.db import connection, reset_queries
 
 
 User = get_user_model()
@@ -63,11 +62,8 @@ class GroupPostList(generics.ListCreateAPIView):
             post_queryset = PostSerializer.setup_eager_loading(post_queryset)
             serializer = PostSerializer(post_queryset, many=True)
 
-        reset_queries()
         response_data = serializer.data
 
-
-        reset_queries()
         comment_queryset = Comment.objects.filter(post__in=post_queryset).exclude(is_deleted=True)
         comment_queryset.query.group_by = ['id']
         comment_queryset = comment_queryset.annotate(
@@ -75,16 +71,11 @@ class GroupPostList(generics.ListCreateAPIView):
         ).order_by('-like_count', '-created_at')
 
         comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
-
         comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
 
-
-        reset_queries()
         likes_queryset = UserLikePost.objects.filter(post__in=post_queryset).exclude(like_or_dislike=False)
         likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
         likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
-
-
 
         for post in iter(response_data):
             post['likes_list'] = list(filter(lambda like: like['post']['id'] == post['id'], copy.deepcopy(likes_queryset_data)))
@@ -272,15 +263,13 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
                 serializer = PostSuperuserSerializer(post)
             else:
                 serializer = PostSerializer(post)
-            
+
             response_data = serializer.data
 
-            reset_queries()
             comment_queryset = Comment.objects.filter(post=post).exclude(is_deleted=True)
             comment_queryset = CommentSerializer.setup_eager_loading(comment_queryset)
             comments_serializer_data = CommentSerializer(comment_queryset, many=True).data
 
-            reset_queries()
             likes_queryset = UserLikePost.objects.filter(post=post).exclude(like_or_dislike=False)
             likes_queryset = PostLikeSerializer.setup_eager_loading(likes_queryset)
             likes_queryset_data = PostLikeSerializer(likes_queryset, many=True).data
