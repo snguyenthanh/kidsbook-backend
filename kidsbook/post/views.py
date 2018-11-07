@@ -173,9 +173,13 @@ class PostLike(generics.ListCreateAPIView):
         try:
             liked_post = self.create(request, *args, **kwargs).data
 
+            # Do not push notifications if the post is deleted
+            post = Post.objects.get(id=kwargs.get('pk', ''))
+            if post.is_deleted:
+                return Response({'data': liked_post}, status=status.HTTP_202_ACCEPTED)
+
             # Create a notification for the post's owner
             action_user = request.user
-            post = Post.objects.get(id=kwargs.get('pk', ''))
 
             if request.user.id != post.creator:
                 group = Group.objects.get(id=post.group.id)
@@ -230,6 +234,10 @@ class CommentLike(generics.ListCreateAPIView):
         try:
             comment_data = self.create(request, *args, **kwargs).data
             comment = Comment.objects.get(id=comment_data.get('comment', {}).get('id', ''))
+
+            # Do not push notifications if the post is deleted
+            if comment.is_deleted:
+                return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
 
             # Create a notification for the post's owner
             action_user = request.user
@@ -419,8 +427,14 @@ class PostCommentList(generics.ListCreateAPIView):
             comment = Comment.objects.get(id=comment_data.get('id', ''))
 
             action_user = request.user
+            post = Post.objects.get(id=comment.post.id)
+
+            # Do not push notifications if the post is deleted
+            if post.is_deleted:
+                return Response({'data': comment_data}, status=status.HTTP_202_ACCEPTED)
+
+            # Initial for notifications
             group = Group.objects.get(id=comment.post.group.id)
-            post =  Post.objects.get(id=comment.post.id)
             payload = {
                 'post': post,
                 'action_user': action_user,
