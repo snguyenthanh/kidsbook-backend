@@ -350,7 +350,7 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
                 serializer = PostSuperuserSerializer(post)
             else:
                 serializer = PostSerializer(post)
-                
+
             return Response({'data': serializer.data})
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -475,12 +475,12 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
         comment_id = kwargs.get('pk', None)
 
         if comment_id and not Comment.objects.filter(id=comment_id).exists():
-            return Response({'error': 'Comment not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             comment = Comment.objects.get(id=comment_id)
             if comment.is_deleted and not request.user.is_superuser:
-                return Response({'error': 'Comment not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
 
             serializer = CommentSerializer(comment)
             return Response({'data': serializer.data})

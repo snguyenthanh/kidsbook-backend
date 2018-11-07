@@ -158,7 +158,7 @@ class Update(generics.RetrieveUpdateDestroyAPIView):
     def post(self, request, **kargs):
         target_user_id = kargs['pk']
         if not User.objects.filter(id=target_user_id).exists():
-            return Response({'error': 'User not found.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Required Superuser
         keywords_require_superuser = ('email_address', 'realname')
@@ -289,7 +289,7 @@ class GetInfoUser(generics.ListAPIView):
                 is_correct_virtual = user.teacher and user.teacher.id == request.user.id
                 if(request.user.is_superuser or request.user.id == user.id or is_correct_virtual):
                     self.serializer_class = UserSerializer
-                    
+
                     ## TODO: Factor this into UserSerializer( Tried but some configuration error)
                     if('num_days' in request.data):
                         num_days = request.data['num_days']

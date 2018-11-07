@@ -75,6 +75,9 @@ class TestPost(APITestCase):
         difference = { k : current_state[k] for k in set(current_state) - set(previous_state) }
 
         for key, prev_val in iter(previous_state.items()):
+            if key in ('filtered_content',):
+                continue
+
             # If the un-modified value changes
             if key not in request_changes and current_state.get(key, '') != prev_val:
                 return False
@@ -157,7 +160,7 @@ class TestPost(APITestCase):
         self.assertTrue(
             len(response.data.get('data', [])) == 2
         )
-        
+
         second_post = response.data.get('data', [])[1]
         comments = second_post.get('comments', [])
         self.assertTrue(
@@ -547,7 +550,7 @@ class TestPost(APITestCase):
         self.client.delete(url, HTTP_AUTHORIZATION=self.creator_token)
         response = self.client.get(url, HTTP_AUTHORIZATION=self.member_token)
 
-        self.assertEqual(405, response.status_code)
+        self.assertEqual(404, response.status_code)
 
     def test_update_comment_by_id(self):
         url = "{}/comment/{}/".format(url_prefix, self.comment.id)
