@@ -337,15 +337,20 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, *args, **kwargs):
         post_id = kwargs.get('pk', None)
 
-        if post_id and not Post.objects.filter(id=post_id).exists():
-            return Response({'error': 'Post not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if not post_id or not Post.objects.filter(id=post_id).exists():
+            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
+            requester = request.user
             post = Post.objects.get(id=post_id)
-            if post.is_deleted and not request.user.is_superuser:
-                return Response({'error': 'Post not found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            if post.is_deleted and not requester.is_superuser:
+                return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            serializer = PostSerializer(post)
+            if requester.is_superuser:
+                serializer = PostSuperuserSerializer(post)
+            else:
+                serializer = PostSerializer(post)
+                
             return Response({'data': serializer.data})
         except Exception as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
