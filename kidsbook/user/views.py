@@ -305,14 +305,24 @@ class GetInfoUser(generics.ListAPIView):
                 if('role' in response_data):
                     response_data['role'] = response_data['role']['id']
                 comments = Comment.objects.all().filter(creator=user)
+                comments_data = CommentSerializer(comments, many=True).data
+                    
                 response_data['num_comment'] = len(comments)
-
+                print(comments_data)
                 post_like_received = 0
                 if('user_posts' in response_data):
                     response_data['user_posts'] = list(map(lambda post: post['id'], response_data['user_posts']))
                     for post_id in response_data['user_posts']:
                         post_like = UserLikePost.objects.all().filter(post=Post.objects.get(id=post_id)).filter(like_or_dislike=True)
                         post_like_received += len(post_like)
+                for idx, post_id in enumerate(response_data['user_posts']):
+                    post_comments = list(filter(lambda comment: str(comment['post']) == str(post_id), comments_data))
+                    for idx2, current_comment in enumerate(post_comments):
+                        post_comments[idx2] = current_comment['id']
+                    post_likes_received = len(UserLikePost.objects.all().filter(post=Post.objects.get(id=post_id)).filter(like_or_dislike=True))
+                    response_data['user_posts'][idx] = {'id': post_id, 'post_comments': post_comments, 'post_likes_received': post_likes_received}
+
+                # response_data['num_']
                 response_data['num_like_received'] = post_like_received
 
                 posts_likes_given = UserLikePost.objects.all().filter(user=user).filter(like_or_dislike=True)
@@ -321,8 +331,8 @@ class GetInfoUser(generics.ListAPIView):
                 if(len(time_arr) > 0):
                     response_data['time_history'] = time_arr
                 return Response({'data': response_data})
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
 
         return Response({'error' : 'Bad request.'}, status=status.HTTP_400_BAD_REQUEST)
 
