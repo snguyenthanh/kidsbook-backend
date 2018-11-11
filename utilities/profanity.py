@@ -2,7 +2,7 @@ from itertools import product
 from typing import Set, List
 from string import ascii_lowercase, digits
 import os.path
-
+import sys
 
 ## GLOBAL VARIABLES ##
 censor_wordset = set()
@@ -13,7 +13,7 @@ replacement_mapping = {
     'u': ('u', '*', 'v'),
     'v': ('v', '*', 'u'),
     'l': ('l', '1'),
-    'e': ('e', '*'),
+    'e': ('e', '*', '3'),
     's': ('s', '$')
 }
 
@@ -42,7 +42,7 @@ def load_censor_words_from_file():
             set(generate_patterns_from_word(word))
         )
 
-    # The default wordlist takes ~2MB of memory
+    # The default wordlist takes ~5MB of memory
     censor_wordset = all_words
 
 def generate_patterns_from_word(word: str) -> Set[str]:
@@ -105,6 +105,7 @@ def censor(text: str, censor_char: str='*') -> str:
         censor_char = str(censor_char)
 
     load_censor_words_from_file()
+    print(sys.getsizeof(censor_wordset))
     return hide_swear_words(text, censor_char)
 
 
