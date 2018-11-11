@@ -157,7 +157,7 @@ class TestPost(APITestCase):
         self.assertTrue(
             len(response.data.get('data', [])) == 2
         )
-        
+
         second_post = response.data.get('data', [])[1]
         comments = second_post.get('comments', [])
         self.assertTrue(
@@ -673,7 +673,7 @@ class TestCensorship(APITestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            'Stop talking ****, *****',
+            'Stop talking ****, ****',
             response.data.get('data', {}).get('content', '')
         )
 
