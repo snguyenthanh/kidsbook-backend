@@ -5,8 +5,10 @@ from uuid import UUID
 import datetime
 import pytz
 from kidsbook.models import *
-from utilities import profanity
+from better_profanity import profanity
 
+# Pre-load the censor words
+profanity.load_censor_words()
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -14,7 +16,6 @@ class UUIDEncoder(json.JSONEncoder):
             # if the obj is uuid, we simply return the value of uuid
             return obj.hex
         return json.JSONEncoder.default(self, obj)
-
 
 def clean_data(data, *args):
     for field in args:
